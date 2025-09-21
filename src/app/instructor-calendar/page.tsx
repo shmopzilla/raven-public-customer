@@ -406,13 +406,13 @@ export default function InstructorCalendarPage() {
                           +{instructorResorts.length - 1}
                         </div>
                         {/* Tooltip */}
-                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-2 bg-black/90 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-2 bg-white text-black text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 whitespace-nowrap">
                           <div className="flex flex-col gap-1">
                             {instructorResorts.slice(1).map((resort, index) => (
-                              <div key={resort.id || index}>{resort.name}</div>
+                              <div key={resort.id || index} className="whitespace-nowrap">{resort.name}</div>
                             ))}
                           </div>
-                          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-black/90"></div>
+                          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-white"></div>
                         </div>
                       </div>
                     )}
@@ -469,14 +469,12 @@ export default function InstructorCalendarPage() {
           {/* Calendar Container - Responsive width */}
           <div className="w-full lg:w-[485px] lg:flex-shrink-0">
           <div
-            className="w-full"
+            className="w-full relative overflow-hidden"
             style={{
               display: 'flex',
               maxWidth: '485px',
-              padding: 'clamp(16px, 4vw, 32px)',
+              maxHeight: 'calc(100vh - 120px)',
               flexDirection: 'column',
-              alignItems: 'flex-start',
-              gap: '28px',
               borderRadius: '12px',
               border: '1px solid rgba(255, 255, 255, 0.10)',
               background: 'rgba(255, 255, 255, 0.05)',
@@ -484,6 +482,19 @@ export default function InstructorCalendarPage() {
               backdropFilter: 'blur(32px)'
             }}
           >
+            {/* Scrollable Content Area */}
+            <div
+              className="overflow-y-auto"
+              style={{
+                padding: 'clamp(16px, 4vw, 32px)',
+                paddingBottom: selectedDaysCount > 0 ? '32px' : 'clamp(16px, 4vw, 32px)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+                gap: '28px',
+                flex: 1
+              }}
+            >
             {/* Pricing Title */}
             <div
               style={{
@@ -538,10 +549,20 @@ export default function InstructorCalendarPage() {
                 className="w-full"
               />
             )}
+            </div>
 
-            {/* Action Button - Only show when days are selected */}
+            {/* Sticky Action Button Container - Only show when days are selected */}
             {selectedDaysCount > 0 && (
-              <div style={{ width: '100%' }}>
+              <div
+                className="sticky bottom-0 left-0 right-0 z-10"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  backdropFilter: 'blur(32px)',
+                  borderTop: '1px solid rgba(255, 255, 255, 0.10)',
+                  padding: 'clamp(16px, 4vw, 32px)',
+                  paddingTop: '20px'
+                }}
+              >
                 <ActionButton
                   selectedDays={selectedDaysCount}
                   onClick={() => console.log(`Select sessions for ${selectedDaysCount} day(s) clicked`)}
