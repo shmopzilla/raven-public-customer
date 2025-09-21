@@ -73,7 +73,7 @@ export function DisciplineInfo({
       </div>
 
       {/* Price Tag */}
-      <div className="backdrop-blur-[10px] backdrop-filter bg-[rgba(255,255,255,0.1)] box-border content-stretch flex gap-2 h-5 items-center justify-center pb-[9px] pt-2 px-2 relative rounded-[8px] shrink-0">
+      <div className="backdrop-blur-[10px] backdrop-filter bg-[rgba(255,255,255,0.1)] box-border content-stretch flex gap-2 h-5 items-center justify-center pb-[7px] pt-2 px-2 relative rounded-[8px] shrink-0">
         <div className="font-['Archivo'] font-medium leading-[0] not-italic relative shrink-0 text-[12px] text-nowrap text-white tracking-[0.06px]">
           <p className="leading-[1.4] whitespace-pre">€{minPrice}/h</p>
         </div>
