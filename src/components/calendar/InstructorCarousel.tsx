@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
@@ -19,10 +19,100 @@ interface InstructorCarouselProps {
 
 export function InstructorCarousel({ images, className = '' }: InstructorCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [isVisible, setIsVisible] = useState(true)
   const [isScrolling, setIsScrolling] = useState(false)
+  const [dimensions, setDimensions] = useState({
+    imageWidth: 300,
+    imageHeight: 250,
+    gap: 20,
+    maxVisible: 3
+  })
+
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+
+  // Set up responsive dimensions based on container width
+  useEffect(() => {
+    console.log('InstructorCarousel: useEffect initializing, containerRef present:', !!containerRef.current)
+
+    const updateDimensions = (containerWidth: number) => {
+      console.log('InstructorCarousel: Container width:', containerWidth)
+
+      // More aggressive sizing strategy: account for space constraints
+      const preferredImageWidth = 300
+      const minImageWidth = 200 // Reduced from 240 for better scaling
+      const margin = 32 // Account for some margin
+
+      let config = { maxVisible: 1, imageWidth: minImageWidth, gap: 12 }
+
+      // Try 3 images at preferred size (300px each + gaps)
+      const width3At300 = 3 * preferredImageWidth + 2 * 20 + margin // 980px total
+      if (containerWidth >= width3At300) {
+        config = { maxVisible: 3, imageWidth: preferredImageWidth, gap: 20 }
+        console.log('InstructorCarousel: Using 3 images at 300px')
+      }
+      // Try 3 images scaled down
+      else if (containerWidth >= 3 * minImageWidth + 2 * 16 + margin) { // 664px total
+        const scaledWidth = Math.floor((containerWidth - margin - 2 * 16) / 3)
+        config = { maxVisible: 3, imageWidth: Math.max(scaledWidth, minImageWidth), gap: 16 }
+        console.log('InstructorCarousel: Using 3 scaled images at', config.imageWidth + 'px')
+      }
+      // Try 2 images at preferred size (300px each + gaps)
+      else if (containerWidth >= 2 * preferredImageWidth + 1 * 20 + margin) { // 652px total
+        config = { maxVisible: 2, imageWidth: preferredImageWidth, gap: 20 }
+        console.log('InstructorCarousel: Using 2 images at 300px')
+      }
+      // Try 2 images scaled down
+      else if (containerWidth >= 2 * minImageWidth + 1 * 16 + margin) { // 448px total
+        const scaledWidth = Math.floor((containerWidth - margin - 16) / 2)
+        config = { maxVisible: 2, imageWidth: Math.max(scaledWidth, minImageWidth), gap: 16 }
+        console.log('InstructorCarousel: Using 2 scaled images at', config.imageWidth + 'px')
+      }
+      // Fall back to 1 image
+      else {
+        const singleWidth = Math.max(containerWidth - margin, minImageWidth)
+        config = { maxVisible: 1, imageWidth: Math.min(singleWidth, preferredImageWidth), gap: 12 }
+        console.log('InstructorCarousel: Using 1 image at', config.imageWidth + 'px')
+      }
+
+      const finalDimensions = {
+        ...config,
+        imageHeight: Math.round((config.imageWidth * 5) / 6) // Maintain 6:5 aspect ratio
+      }
+
+      console.log('InstructorCarousel: Final dimensions:', finalDimensions)
+      setDimensions(finalDimensions)
+    }
+
+    if (!containerRef.current) {
+      console.log('InstructorCarousel: containerRef is null, will retry on next render')
+      return
+    }
+
+    console.log('InstructorCarousel: Setting up ResizeObserver')
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      console.log('InstructorCarousel: ResizeObserver triggered with', entries.length, 'entries')
+      for (const entry of entries) {
+        const width = entry.contentRect.width
+        console.log('InstructorCarousel: New container width from ResizeObserver:', width)
+        updateDimensions(width)
+      }
+    })
+
+    // Set initial dimensions
+    const initialWidth = containerRef.current.offsetWidth
+    console.log('InstructorCarousel: Initial container width:', initialWidth)
+    updateDimensions(initialWidth)
+
+    resizeObserver.observe(containerRef.current)
+
+    return () => {
+      console.log('InstructorCarousel: Cleaning up ResizeObserver')
+      resizeObserver.disconnect()
+    }
+  }, [containerRef.current]) // Re-run when containerRef.current changes
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -38,23 +128,33 @@ export function InstructorCarousel({ images, className = '' }: InstructorCarouse
     return null
   }
 
-  // Show maximum of 3 images, let photo count determine container width
-  const maxVisibleImages = Math.min(3, images.length)
-  const containerWidth = maxVisibleImages * 300 + (maxVisibleImages - 1) * 20 // 300px per image + 20px gap between
+  // Debug current dimensions
+  console.log('InstructorCarousel: Current dimensions state:', dimensions)
+  console.log('InstructorCarousel: Rendering with images count:', images.length)
 
-  // Navigation controls - cycle through but stop at boundaries
-  const canGoNext = currentIndex < images.length - maxVisibleImages
-  const canGoPrev = currentIndex > 0
+  // Use responsive dimensions for layout calculations
+  const maxVisibleImages = Math.min(dimensions.maxVisible, images.length)
+  const calculatedContainerWidth = maxVisibleImages * dimensions.imageWidth + (maxVisibleImages - 1) * dimensions.gap
+
+  // Calculate total pages for page-based navigation
+  const totalPages = Math.ceil(images.length / maxVisibleImages)
+  const currentPage = Math.floor(currentIndex / maxVisibleImages)
+
+  // Navigation controls - page-based navigation
+  const canGoNext = currentPage < totalPages - 1
+  const canGoPrev = currentPage > 0
 
   const nextSlide = () => {
     if (canGoNext) {
-      setCurrentIndex((prev) => prev + 1)
+      const nextPageStartIndex = (currentPage + 1) * maxVisibleImages
+      setCurrentIndex(Math.min(nextPageStartIndex, images.length - maxVisibleImages))
     }
   }
 
   const prevSlide = () => {
     if (canGoPrev) {
-      setCurrentIndex((prev) => prev - 1)
+      const prevPageStartIndex = (currentPage - 1) * maxVisibleImages
+      setCurrentIndex(Math.max(prevPageStartIndex, 0))
     }
   }
 
@@ -80,7 +180,7 @@ export function InstructorCarousel({ images, className = '' }: InstructorCarouse
           clearTimeout(scrollTimeoutRef.current)
         }
 
-        // Determine scroll direction and navigate
+        // Determine scroll direction and navigate by page
         if (deltaX > 0 && canGoNext) {
           nextSlide()
         } else if (deltaX < 0 && canGoPrev) {
@@ -96,22 +196,27 @@ export function InstructorCarousel({ images, className = '' }: InstructorCarouse
   }
 
   return (
-    <div className={`w-full ${className}`}>
+    <div ref={containerRef} className={`w-full ${className}`}>
       {/* Navigation arrows positioned above images */}
       <div className="flex justify-between items-center mb-4">
-        <h3
-          style={{
-            color: '#FFF',
-            fontFamily: 'var(--type-font-family-headers, Archivo)',
-            fontSize: 'var(--font-size-display-h5, 20px)',
-            fontStyle: 'normal',
-            fontWeight: 500,
-            lineHeight: 'var(--line-height-display-h5, 24px)',
-            letterSpacing: '0.1px'
-          }}
-        >
-          Photos
-        </h3>
+        <div>
+          <h3
+            style={{
+              color: '#FFF',
+              fontFamily: 'var(--type-font-family-headers, Archivo)',
+              fontSize: 'var(--font-size-display-h5, 20px)',
+              fontStyle: 'normal',
+              fontWeight: 500,
+              lineHeight: 'var(--line-height-display-h5, 24px)',
+              letterSpacing: '0.1px'
+            }}
+          >
+            Photos
+          </h3>
+          <div style={{ color: '#999', fontSize: '12px', marginTop: '4px' }}>
+            {dimensions.maxVisible} images at {dimensions.imageWidth}px (gap: {dimensions.gap}px)
+          </div>
+        </div>
 
         {images.length > maxVisibleImages && (
           <div className="flex gap-2">
@@ -138,19 +243,18 @@ export function InstructorCarousel({ images, className = '' }: InstructorCarouse
         )}
       </div>
 
-      {/* Images container - dynamic width based on photo count */}
+      {/* Images container - fully responsive width */}
       <div
-        className="flex gap-5 overflow-hidden select-none"
-        style={{
-          width: `${containerWidth}px`
-        }}
+        className="flex overflow-hidden select-none transition-all duration-300 ease-in-out w-full"
+        style={{ gap: `${dimensions.gap}px` }}
         onWheel={handleWheel}
       >
         <div
           ref={scrollContainerRef}
-          className="flex gap-5 transition-transform duration-300 ease-in-out"
+          className="flex transition-transform duration-300 ease-in-out"
           style={{
-            transform: `translateX(-${currentIndex * 320}px)` // 300px + 20px gap
+            gap: `${dimensions.gap}px`,
+            transform: `translateX(-${currentIndex * (dimensions.imageWidth + dimensions.gap)}px)`
           }}
         >
           <AnimatePresence>
@@ -166,10 +270,10 @@ export function InstructorCarousel({ images, className = '' }: InstructorCarouse
                 whileTap={{ scale: 0.98 }}
               >
                 <div
-                  className="relative overflow-hidden rounded-lg bg-gray-800"
+                  className="relative overflow-hidden rounded-lg bg-gray-800 transition-all duration-300 ease-in-out"
                   style={{
-                    width: '300px',
-                    height: '250px'
+                    width: `${dimensions.imageWidth}px`,
+                    height: `${dimensions.imageHeight}px`
                   }}
                 >
                   <img
@@ -200,15 +304,20 @@ export function InstructorCarousel({ images, className = '' }: InstructorCarouse
         </div>
       </div>
 
-      {/* Dots indicator - only show if more images than visible */}
-      {images.length > maxVisibleImages && (
+      {/* Dots indicator - show pages, only if more than one page */}
+      {totalPages > 1 && (
         <div className="flex justify-center gap-2 mt-4">
-          {Array.from({ length: images.length - maxVisibleImages + 1 }).map((_, index) => (
+          {Array.from({ length: totalPages }).map((_, pageIndex) => (
             <button
-              key={index}
-              onClick={() => setCurrentIndex(index)}
+              key={pageIndex}
+              onClick={() => {
+                const targetIndex = pageIndex === totalPages - 1
+                  ? Math.max(images.length - maxVisibleImages, 0)
+                  : pageIndex * maxVisibleImages
+                setCurrentIndex(targetIndex)
+              }}
               className={`w-2 h-2 rounded-full transition-all duration-200 ${
-                index === currentIndex
+                pageIndex === currentPage
                   ? 'bg-white'
                   : 'bg-white/30 hover:bg-white/50'
               }`}

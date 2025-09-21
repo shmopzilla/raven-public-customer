@@ -308,7 +308,7 @@ export default function InstructorCalendarPage() {
         {/* Main Content Container */}
         <div className="flex flex-col lg:flex-row items-start gap-6 lg:gap-8 w-full max-w-[1920px] px-4 sm:px-6 lg:px-8">
           {/* Instructor Avatar and Info */}
-          <div className="w-full lg:flex-1 lg:min-w-[400px] flex flex-col gap-8 lg:gap-10">
+          <div className="w-full lg:max-w-[calc(100%-485px-2rem)] lg:min-w-[400px] flex flex-col gap-8 lg:gap-10">
             {/* Profile Area */}
             <div className="flex items-center gap-3">
               <InstructorAvatar
