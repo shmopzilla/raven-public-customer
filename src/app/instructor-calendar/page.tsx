@@ -7,6 +7,7 @@ import { DataInfoTooltip } from '@/components/calendar/DataInfoTooltip'
 import { DisciplinesList } from '@/components/calendar/DisciplinesList'
 import { ActionButton } from '@/components/calendar/ActionButton'
 import { InstructorAvatar } from '@/components/calendar/InstructorAvatar'
+import { InstructorCarousel } from '@/components/calendar/InstructorCarousel'
 
 interface Instructor {
   id: string
@@ -30,6 +31,8 @@ export default function InstructorCalendarPage() {
   const [selectionMode, setSelectionMode] = useState<'single' | 'range'>('range')
   const [instructorResorts, setInstructorResorts] = useState<any[]>([])
   const [loadingResorts, setLoadingResorts] = useState(false)
+  const [instructorImages, setInstructorImages] = useState<any[]>([])
+  const [loadingImages, setLoadingImages] = useState(false)
 
   // Fetch all instructors via API on page load
   useEffect(() => {
@@ -178,6 +181,41 @@ export default function InstructorCalendarPage() {
     fetchInstructorResorts()
   }, [selectedInstructorId])
 
+  // Fetch instructor images when instructor changes
+  useEffect(() => {
+    async function fetchInstructorImages() {
+      if (!selectedInstructorId) {
+        console.log('No instructor selected, skipping images fetch')
+        return
+      }
+
+      console.log('Fetching instructor images via API for instructor:', selectedInstructorId)
+      setLoadingImages(true)
+
+      try {
+        const url = `/api/calendar/instructor-images?instructorId=${selectedInstructorId}`
+        const response = await fetch(url)
+        const result = await response.json()
+        console.log('API Instructor images result:', result)
+
+        if (!response.ok) {
+          console.error('API Failed to fetch instructor images:', JSON.stringify(result))
+          setInstructorImages([])
+        } else {
+          console.log('Found instructor images via API:', result.data?.length || 0)
+          setInstructorImages(result.data || [])
+        }
+      } catch (err: any) {
+        console.error('Error fetching instructor images via API:', err)
+        setInstructorImages([])
+      } finally {
+        setLoadingImages(false)
+      }
+    }
+
+    fetchInstructorImages()
+  }, [selectedInstructorId])
+
   const handleInstructorChange = (instructorId: string) => {
     setSelectedInstructorId(instructorId)
   }
@@ -238,7 +276,7 @@ export default function InstructorCalendarPage() {
     <div className="min-h-screen bg-black">
       {/* Sticky Header Bar */}
       <div className="fixed top-0 left-0 right-0 z-50 bg-black/95 backdrop-blur-sm border-b border-gray-800/50">
-        <div className="max-w-6xl mx-auto px-6 py-4">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             {/* Left side - Title */}
             <h1 className="text-white text-xl font-bold">Instructor Calendar</h1>
@@ -268,9 +306,9 @@ export default function InstructorCalendarPage() {
       {/* Main Content - with top padding to account for fixed header */}
       <div className="pt-20 min-h-screen flex items-center justify-center">
         {/* Main Content Container */}
-        <div className="flex items-start gap-8 max-w-[1280px] w-full px-6">
+        <div className="flex flex-col lg:flex-row items-start gap-6 lg:gap-8 w-full max-w-[1920px] px-4 sm:px-6 lg:px-8">
           {/* Instructor Avatar and Info */}
-          <div className="flex-1 flex flex-col gap-10">
+          <div className="w-full lg:flex-1 lg:min-w-[400px] flex flex-col gap-8 lg:gap-10">
             {/* Profile Area */}
             <div className="flex items-center gap-3">
               <InstructorAvatar
@@ -418,15 +456,24 @@ export default function InstructorCalendarPage() {
                 )}
               </div>
             )}
+
+            {/* Instructor Images Carousel */}
+            {selectedInstructorId && (
+              <InstructorCarousel
+                images={instructorImages}
+                className="w-full"
+              />
+            )}
           </div>
 
-          {/* Calendar Container - Fixed width 485px */}
-          <div className="w-[485px]">
+          {/* Calendar Container - Responsive width */}
+          <div className="w-full lg:w-[485px] lg:flex-shrink-0">
           <div
+            className="w-full"
             style={{
               display: 'flex',
-              width: '485px',
-              padding: '32px',
+              maxWidth: '485px',
+              padding: 'clamp(16px, 4vw, 32px)',
               flexDirection: 'column',
               alignItems: 'flex-start',
               gap: '28px',

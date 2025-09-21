@@ -7,6 +7,29 @@ import type { SupabaseResponse } from './types'
  * ⚠️ Only use in API routes and server components - never expose to client
  */
 
+export async function getInstructorImagesServer(instructorId: string): Promise<SupabaseResponse<any[]>> {
+  try {
+    console.log('Server: Fetching images for instructor:', instructorId)
+
+    const { data, error } = await supabaseServer
+      .from('instructor_images')
+      .select('*')
+      .eq('instructor_id', instructorId)
+      .order('created_at', { ascending: true })
+
+    if (error) {
+      console.error('Server: Failed to fetch instructor images:', error)
+      return { data: null, error }
+    }
+
+    console.log('Server: Found instructor images:', data?.length || 0)
+    return { data: data || [], error: null }
+  } catch (error) {
+    console.error('Server: Error fetching instructor images:', error)
+    return { data: null, error: error as Error }
+  }
+}
+
 export async function getInstructorsServer(): Promise<SupabaseResponse<any[]>> {
   try {
     const { data, error } = await supabaseServer
