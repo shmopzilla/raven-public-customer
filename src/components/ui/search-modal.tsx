@@ -124,7 +124,7 @@ export interface Location {
   country_code: string;
   average_price: number;
   currency: string;
-  image_url: string;
+  thumbnail_url: string;
   description?: string;
   created_at?: string;
   updated_at?: string;
@@ -208,7 +208,7 @@ const defaultLocations: Location[] = [
     country_code: "FR",
     average_price: 380,
     currency: "EUR",
-    image_url: "/assets/images/ski-bg-1.png",
+    thumbnail_url: "/assets/images/ski-bg-1.png",
     description: "Luxury resort in Les 3 Vallées, world's largest ski area"
   },
   {
@@ -218,7 +218,7 @@ const defaultLocations: Location[] = [
     country_code: "FR",
     average_price: 320,
     currency: "EUR",
-    image_url: "/assets/images/ski-bg-2.png",
+    thumbnail_url: "/assets/images/ski-bg-2.png",
     description: "Heart of Les 3 Vallées with traditional Alpine architecture"
   },
   {
@@ -228,7 +228,7 @@ const defaultLocations: Location[] = [
     country_code: "FR",
     average_price: 340,
     currency: "EUR",
-    image_url: "/assets/images/ski-bg-3.png",
+    thumbnail_url: "/assets/images/ski-bg-3.png",
     description: "Highest ski resort in Europe at 2,300m altitude"
   },
   {
@@ -238,7 +238,7 @@ const defaultLocations: Location[] = [
     country_code: "FR",
     average_price: 280,
     currency: "EUR",
-    image_url: "https://images.unsplash.com/photo-1551524164-bb8b0c4dda5e?w=400&h=300&fit=crop&crop=center&q=80",
+    thumbnail_url: "https://images.unsplash.com/photo-1551524164-bb8b0c4dda5e?w=400&h=300&fit=crop&crop=center&q=80",
     description: "Family-friendly resort in Les 3 Vallées"
   },
   {
@@ -248,7 +248,7 @@ const defaultLocations: Location[] = [
     country_code: "FR",
     average_price: 260,
     currency: "EUR",
-    image_url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop&crop=center&q=80",
+    thumbnail_url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop&crop=center&q=80",
     description: "Charming village resort in Les 3 Vallées"
   },
 
@@ -260,7 +260,7 @@ const defaultLocations: Location[] = [
     country_code: "FR",
     average_price: 310,
     currency: "EUR",
-    image_url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop&crop=center&q=80",
+    thumbnail_url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop&crop=center&q=80",
     description: "High-altitude resort with glacier skiing"
   },
   {
@@ -270,7 +270,7 @@ const defaultLocations: Location[] = [
     country_code: "FR",
     average_price: 350,
     currency: "EUR",
-    image_url: "https://images.unsplash.com/photo-1605540436563-5bca919ae766?w=400&h=300&fit=crop&crop=center&q=80",
+    thumbnail_url: "https://images.unsplash.com/photo-1605540436563-5bca919ae766?w=400&h=300&fit=crop&crop=center&q=80",
     description: "World-class resort in Espace Killy"
   },
 
@@ -282,7 +282,7 @@ const defaultLocations: Location[] = [
     country_code: "FR",
     average_price: 400,
     currency: "EUR",
-    image_url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop&crop=center&q=80",
+    thumbnail_url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop&crop=center&q=80",
     description: "Birthplace of extreme skiing, home of the first Winter Olympics"
   },
 
@@ -294,7 +294,7 @@ const defaultLocations: Location[] = [
     country_code: "FR",
     average_price: 290,
     currency: "EUR",
-    image_url: "https://images.unsplash.com/photo-1551524164-6cf2ac44c8e8?w=400&h=300&fit=crop&crop=center&q=80",
+    thumbnail_url: "https://images.unsplash.com/photo-1551524164-6cf2ac44c8e8?w=400&h=300&fit=crop&crop=center&q=80",
     description: "Car-free resort in Portes du Soleil area"
   },
   {
@@ -304,7 +304,7 @@ const defaultLocations: Location[] = [
     country_code: "FR",
     average_price: 270,
     currency: "EUR",
-    image_url: "https://images.unsplash.com/photo-1605540436563-5bca919ae766?w=400&h=300&fit=crop&crop=center&q=80",
+    thumbnail_url: "https://images.unsplash.com/photo-1605540436563-5bca919ae766?w=400&h=300&fit=crop&crop=center&q=80",
     description: "Traditional Alpine town in Portes du Soleil"
   },
   {
@@ -314,7 +314,7 @@ const defaultLocations: Location[] = [
     country_code: "FR",
     average_price: 250,
     currency: "EUR",
-    image_url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop&crop=center&q=80",
+    thumbnail_url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop&crop=center&q=80",
     description: "Charming traditional village in Portes du Soleil"
   },
 
@@ -326,7 +326,7 @@ const defaultLocations: Location[] = [
     country_code: "FR",
     average_price: 280,
     currency: "EUR",
-    image_url: "https://images.unsplash.com/photo-1551524164-bb8b0c4dda5e?w=400&h=300&fit=crop&crop=center&q=80",
+    thumbnail_url: "https://images.unsplash.com/photo-1551524164-bb8b0c4dda5e?w=400&h=300&fit=crop&crop=center&q=80",
     description: "Large ski area in Paradiski domain"
   },
   {
@@ -336,7 +336,7 @@ const defaultLocations: Location[] = [
     country_code: "FR",
     average_price: 290,
     currency: "EUR",
-    image_url: "https://images.unsplash.com/photo-1605540436563-5bca919ae766?w=400&h=300&fit=crop&crop=center&q=80",
+    thumbnail_url: "https://images.unsplash.com/photo-1605540436563-5bca919ae766?w=400&h=300&fit=crop&crop=center&q=80",
     description: "Modern resort architecture in Paradiski"
   },
 
@@ -348,7 +348,7 @@ const defaultLocations: Location[] = [
     country_code: "FR",
     average_price: 320,
     currency: "EUR",
-    image_url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop&crop=center&q=80",
+    thumbnail_url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop&crop=center&q=80",
     description: "Famous for 21 hairpin bends and glacier skiing"
   },
   {
@@ -358,7 +358,7 @@ const defaultLocations: Location[] = [
     country_code: "FR",
     average_price: 300,
     currency: "EUR",
-    image_url: "https://images.unsplash.com/photo-1551524164-6cf2ac44c8e8?w=400&h=300&fit=crop&crop=center&q=80",
+    thumbnail_url: "https://images.unsplash.com/photo-1551524164-6cf2ac44c8e8?w=400&h=300&fit=crop&crop=center&q=80",
     description: "Europe's largest skiable glacier"
   },
   {
@@ -368,7 +368,7 @@ const defaultLocations: Location[] = [
     country_code: "FR",
     average_price: 270,
     currency: "EUR",
-    image_url: "https://images.unsplash.com/photo-1605540436563-5bca919ae766?w=400&h=300&fit=crop&crop=center&q=80",
+    thumbnail_url: "https://images.unsplash.com/photo-1605540436563-5bca919ae766?w=400&h=300&fit=crop&crop=center&q=80",
     description: "Diverse terrain with authentic Alpine villages"
   },
   {
@@ -378,7 +378,7 @@ const defaultLocations: Location[] = [
     country_code: "FR",
     average_price: 240,
     currency: "EUR",
-    image_url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop&crop=center&q=80",
+    thumbnail_url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop&crop=center&q=80",
     description: "Purpose-built resort near Nice"
   },
 
@@ -390,7 +390,7 @@ const defaultLocations: Location[] = [
     country_code: "FR",
     average_price: 260,
     currency: "EUR",
-    image_url: "https://images.unsplash.com/photo-1551524164-bb8b0c4dda5e?w=400&h=300&fit=crop&crop=center&q=80",
+    thumbnail_url: "https://images.unsplash.com/photo-1551524164-bb8b0c4dda5e?w=400&h=300&fit=crop&crop=center&q=80",
     description: "Traditional Savoyard village resort"
   },
   {
@@ -400,7 +400,7 @@ const defaultLocations: Location[] = [
     country_code: "FR",
     average_price: 240,
     currency: "EUR",
-    image_url: "https://images.unsplash.com/photo-1605540436563-5bca919ae766?w=400&h=300&fit=crop&crop=center&q=80",
+    thumbnail_url: "https://images.unsplash.com/photo-1605540436563-5bca919ae766?w=400&h=300&fit=crop&crop=center&q=80",
     description: "Authentic mountain village with Nordic skiing"
   },
   {
@@ -410,7 +410,7 @@ const defaultLocations: Location[] = [
     country_code: "FR",
     average_price: 420,
     currency: "EUR",
-    image_url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop&crop=center&q=80",
+    thumbnail_url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop&crop=center&q=80",
     description: "Chic resort with luxury hotels and spas"
   },
 
@@ -422,7 +422,7 @@ const defaultLocations: Location[] = [
     country_code: "FR",
     average_price: 180,
     currency: "EUR",
-    image_url: "https://images.unsplash.com/photo-1551524164-6cf2ac44c8e8?w=400&h=300&fit=crop&crop=center&q=80",
+    thumbnail_url: "https://images.unsplash.com/photo-1551524164-6cf2ac44c8e8?w=400&h=300&fit=crop&crop=center&q=80",
     description: "Largest ski resort in French Pyrenees"
   },
   {
@@ -432,7 +432,7 @@ const defaultLocations: Location[] = [
     country_code: "FR",
     average_price: 170,
     currency: "EUR",
-    image_url: "https://images.unsplash.com/photo-1605540436563-5bca919ae766?w=400&h=300&fit=crop&crop=center&q=80",
+    thumbnail_url: "https://images.unsplash.com/photo-1605540436563-5bca919ae766?w=400&h=300&fit=crop&crop=center&q=80",
     description: "Largest ski area in Pyrenees including La Mongie and Barèges"
   },
   {
@@ -442,7 +442,7 @@ const defaultLocations: Location[] = [
     country_code: "FR",
     average_price: 160,
     currency: "EUR",
-    image_url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop&crop=center&q=80",
+    thumbnail_url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop&crop=center&q=80",
     description: "Historic spa town with excellent snow record"
   },
   {
@@ -452,7 +452,7 @@ const defaultLocations: Location[] = [
     country_code: "FR",
     average_price: 150,
     currency: "EUR",
-    image_url: "https://images.unsplash.com/photo-1551524164-bb8b0c4dda5e?w=400&h=300&fit=crop&crop=center&q=80",
+    thumbnail_url: "https://images.unsplash.com/photo-1551524164-bb8b0c4dda5e?w=400&h=300&fit=crop&crop=center&q=80",
     description: "High-altitude Pyrenees resort with panoramic views"
   },
   {
@@ -462,7 +462,7 @@ const defaultLocations: Location[] = [
     country_code: "FR",
     average_price: 140,
     currency: "EUR",
-    image_url: "https://images.unsplash.com/photo-1605540436563-5bca919ae766?w=400&h=300&fit=crop&crop=center&q=80",
+    thumbnail_url: "https://images.unsplash.com/photo-1605540436563-5bca919ae766?w=400&h=300&fit=crop&crop=center&q=80",
     description: "Highest resort in French Pyrenees"
   },
   {
@@ -472,7 +472,7 @@ const defaultLocations: Location[] = [
     country_code: "FR",
     average_price: 135,
     currency: "EUR",
-    image_url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop&crop=center&q=80",
+    thumbnail_url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop&crop=center&q=80",
     description: "Family-friendly Pyrenees resort"
   },
   {
@@ -482,7 +482,7 @@ const defaultLocations: Location[] = [
     country_code: "FR",
     average_price: 130,
     currency: "EUR",
-    image_url: "https://images.unsplash.com/photo-1551524164-6cf2ac44c8e8?w=400&h=300&fit=crop&crop=center&q=80",
+    thumbnail_url: "https://images.unsplash.com/photo-1551524164-6cf2ac44c8e8?w=400&h=300&fit=crop&crop=center&q=80",
     description: "Modern Pyrenees resort with varied terrain"
   },
 
@@ -494,7 +494,7 @@ const defaultLocations: Location[] = [
     country_code: "FR",
     average_price: 280,
     currency: "EUR",
-    image_url: "https://images.unsplash.com/photo-1551524164-bb8b0c4dda5e?w=400&h=300&fit=crop&crop=center&q=80",
+    thumbnail_url: "https://images.unsplash.com/photo-1551524164-bb8b0c4dda5e?w=400&h=300&fit=crop&crop=center&q=80",
     description: "Purpose-built resort in Grand Massif"
   },
   {
@@ -504,7 +504,7 @@ const defaultLocations: Location[] = [
     country_code: "FR",
     average_price: 250,
     currency: "EUR",
-    image_url: "https://images.unsplash.com/photo-1605540436563-5bca919ae766?w=400&h=300&fit=crop&crop=center&q=80",
+    thumbnail_url: "https://images.unsplash.com/photo-1605540436563-5bca919ae766?w=400&h=300&fit=crop&crop=center&q=80",
     description: "Historic stone village in Grand Massif"
   },
   {
@@ -514,7 +514,7 @@ const defaultLocations: Location[] = [
     country_code: "FR",
     average_price: 230,
     currency: "EUR",
-    image_url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop&crop=center&q=80",
+    thumbnail_url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop&crop=center&q=80",
     description: "Family resort in Grand Massif area"
   }
 ];
@@ -551,9 +551,9 @@ const LocationCard = ({
       
       {/* Location Image */}
       <div className="absolute left-0 rounded-xl size-[57px] top-0 overflow-hidden group-hover:scale-105 transition-transform duration-200 bg-gray-600">
-        {location.image_url ? (
-          <img 
-            src={location.image_url} 
+        {location.thumbnail_url ? (
+          <img
+            src={location.thumbnail_url}
             alt={`${location.name} ski resort`}
             className="w-full h-full object-cover rounded-xl"
             onError={(e) => {

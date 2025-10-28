@@ -356,3 +356,25 @@ export async function getInstructorDisciplinesServer(instructorId: string): Prom
     return { data: null, error: error as Error }
   }
 }
+
+export async function getResortsServer(): Promise<SupabaseResponse<any[]>> {
+  try {
+    console.log('Server: Fetching all resorts from resorts table')
+
+    const { data, error } = await supabaseServer
+      .from('resorts')
+      .select('*')
+      .order('name')
+
+    if (error) {
+      console.error('Server: Failed to fetch resorts:', error)
+      return { data: null, error }
+    }
+
+    console.log(`Server: Found ${data?.length || 0} resorts`)
+    return { data: data || [], error: null }
+  } catch (error) {
+    console.error('Server: Error fetching resorts:', error)
+    return { data: null, error: error as Error }
+  }
+}

@@ -10,7 +10,7 @@ export const fallbackLocations: Location[] = [
     country_code: "FR",
     average_price: 380,
     currency: "EUR",
-    image_url: "/assets/images/courchevel.jpg",
+    thumbnail_url: "/assets/images/courchevel.jpg",
     description: "Luxury resort in Les 3 Vallées, world's largest ski area"
   },
   {
@@ -20,7 +20,7 @@ export const fallbackLocations: Location[] = [
     country_code: "FR",
     average_price: 320,
     currency: "EUR",
-    image_url: "/assets/images/meribel.jpg",
+    thumbnail_url: "/assets/images/meribel.jpg",
     description: "Heart of Les 3 Vallées with traditional Alpine architecture"
   },
   {
@@ -30,7 +30,7 @@ export const fallbackLocations: Location[] = [
     country_code: "FR",
     average_price: 340,
     currency: "EUR",
-    image_url: "/assets/images/val-thorens.jpg",
+    thumbnail_url: "/assets/images/val-thorens.jpg",
     description: "Europe's highest ski resort with glacier skiing"
   },
   {
@@ -40,7 +40,7 @@ export const fallbackLocations: Location[] = [
     country_code: "FR",
     average_price: 280,
     currency: "EUR",
-    image_url: "/assets/images/les-menuires.jpg",
+    thumbnail_url: "/assets/images/les-menuires.jpg",
     description: "Modern resort in Les 3 Vallées with ski-in ski-out access"
   },
   {
@@ -50,7 +50,7 @@ export const fallbackLocations: Location[] = [
     country_code: "FR", 
     average_price: 260,
     currency: "EUR",
-    image_url: "/assets/images/saint-martin.jpg",
+    thumbnail_url: "/assets/images/saint-martin.jpg",
     description: "Authentic Savoyard village connected to Les 3 Vallées"
   },
   
@@ -62,7 +62,7 @@ export const fallbackLocations: Location[] = [
     country_code: "FR",
     average_price: 250,
     currency: "EUR", 
-    image_url: "/assets/images/la-plagne.jpg",
+    thumbnail_url: "/assets/images/la-plagne.jpg",
     description: "Purpose-built resort with extensive high-altitude skiing"
   },
   {
@@ -72,7 +72,7 @@ export const fallbackLocations: Location[] = [
     country_code: "FR",
     average_price: 270,
     currency: "EUR",
-    image_url: "/assets/images/les-arcs.jpg",
+    thumbnail_url: "/assets/images/les-arcs.jpg",
     description: "Modern architecture meets extensive off-piste terrain"
   },
   
@@ -84,7 +84,7 @@ export const fallbackLocations: Location[] = [
     country_code: "FR",
     average_price: 350,
     currency: "EUR",
-    image_url: "/assets/images/val-disere.jpg",
+    thumbnail_url: "/assets/images/val-disere.jpg",
     description: "High-altitude resort with guaranteed snow and vibrant nightlife"
   },
   {
@@ -94,7 +94,7 @@ export const fallbackLocations: Location[] = [
     country_code: "FR",
     average_price: 310,
     currency: "EUR",
-    image_url: "/assets/images/tignes.jpg", 
+    thumbnail_url: "/assets/images/tignes.jpg", 
     description: "Glacier skiing and modern facilities at high altitude"
   },
   
@@ -106,7 +106,7 @@ export const fallbackLocations: Location[] = [
     country_code: "FR",
     average_price: 290,
     currency: "EUR",
-    image_url: "/assets/images/chamonix.jpg",
+    thumbnail_url: "/assets/images/chamonix.jpg",
     description: "Birthplace of extreme skiing with legendary off-piste terrain"
   },
   
@@ -118,7 +118,7 @@ export const fallbackLocations: Location[] = [
     country_code: "FR",
     average_price: 240,
     currency: "EUR",
-    image_url: "/assets/images/avoriaz.jpg",
+    thumbnail_url: "/assets/images/avoriaz.jpg",
     description: "Car-free resort with stunning architecture and tree skiing"
   },
   {
@@ -128,7 +128,7 @@ export const fallbackLocations: Location[] = [
     country_code: "FR",
     average_price: 200,
     currency: "EUR",
-    image_url: "/assets/images/chatel.jpg",
+    thumbnail_url: "/assets/images/chatel.jpg",
     description: "Traditional Alpine village with access to vast ski area"
   },
   {
@@ -138,7 +138,7 @@ export const fallbackLocations: Location[] = [
     country_code: "FR",
     average_price: 220,
     currency: "EUR", 
-    image_url: "/assets/images/morzine.jpg",
+    thumbnail_url: "/assets/images/morzine.jpg",
     description: "Year-round resort town with easy access to multiple ski areas"
   },
   
@@ -150,7 +150,7 @@ export const fallbackLocations: Location[] = [
     country_code: "FR",
     average_price: 260,
     currency: "EUR",
-    image_url: "/assets/images/alpe-dhuez.jpg",
+    thumbnail_url: "/assets/images/alpe-dhuez.jpg",
     description: "Island in the sky with 300+ days of sunshine annually"
   },
   
@@ -162,7 +162,7 @@ export const fallbackLocations: Location[] = [
     country_code: "FR",
     average_price: 240,
     currency: "EUR",
-    image_url: "/assets/images/les-deux-alpes.jpg",
+    thumbnail_url: "/assets/images/les-deux-alpes.jpg",
     description: "Europe's largest skiable glacier with summer skiing"
   },
   
@@ -174,7 +174,7 @@ export const fallbackLocations: Location[] = [
     country_code: "FR",
     average_price: 210,
     currency: "EUR",
-    image_url: "/assets/images/serre-chevalier.jpg",
+    thumbnail_url: "/assets/images/serre-chevalier.jpg",
     description: "Authentic villages with extensive intermediate terrain"
   },
   
@@ -186,7 +186,7 @@ export const fallbackLocations: Location[] = [
     country_code: "FR",
     average_price: 190,
     currency: "EUR",
-    image_url: "/assets/images/la-rosiere.jpg",
+    thumbnail_url: "/assets/images/la-rosiere.jpg",
     description: "Sunny slopes with views of Mont Blanc massif"
   },
   
@@ -198,7 +198,7 @@ export const fallbackLocations: Location[] = [
     country_code: "CH",
     average_price: 420,
     currency: "EUR",
-    image_url: "/assets/images/verbier.jpg",
+    thumbnail_url: "/assets/images/verbier.jpg",
     description: "Legendary off-piste skiing and vibrant après-ski scene"
   },
   
@@ -210,7 +210,7 @@ export const fallbackLocations: Location[] = [
     country_code: "FR",
     average_price: 180,
     currency: "EUR",
-    image_url: "/assets/images/la-clusaz.jpg",
+    thumbnail_url: "/assets/images/la-clusaz.jpg",
     description: "Charming traditional village with family-friendly slopes"
   },
   {
@@ -220,7 +220,7 @@ export const fallbackLocations: Location[] = [
     country_code: "FR",
     average_price: 170,
     currency: "EUR",
-    image_url: "/assets/images/le-grand-bornand.jpg",
+    thumbnail_url: "/assets/images/le-grand-bornand.jpg",
     description: "Authentic Savoyard village with excellent Nordic skiing"
   },
   {
@@ -230,7 +230,7 @@ export const fallbackLocations: Location[] = [
     country_code: "FR",
     average_price: 380,
     currency: "EUR",
-    image_url: "/assets/images/megeve.jpg",
+    thumbnail_url: "/assets/images/megeve.jpg",
     description: "Elegant resort with luxury shopping and fine dining"
   },
   {
@@ -240,7 +240,7 @@ export const fallbackLocations: Location[] = [
     country_code: "FR",
     average_price: 200,
     currency: "EUR",
-    image_url: "/assets/images/saint-gervais.jpg",
+    thumbnail_url: "/assets/images/saint-gervais.jpg",
     description: "Thermal spa town with access to Mont Blanc ski areas"
   },
   {
@@ -250,7 +250,7 @@ export const fallbackLocations: Location[] = [
     country_code: "FR",
     average_price: 230,
     currency: "EUR",
-    image_url: "/assets/images/flaine.jpg",
+    thumbnail_url: "/assets/images/flaine.jpg",
     description: "High-altitude resort with snow-sure skiing and modern architecture"
   },
   {
@@ -260,7 +260,7 @@ export const fallbackLocations: Location[] = [
     country_code: "FR",
     average_price: 210,
     currency: "EUR",
-    image_url: "/assets/images/les-gets.jpg",
+    thumbnail_url: "/assets/images/les-gets.jpg",
     description: "Traditional mountain village with tree-lined slopes"
   },
   {
@@ -270,7 +270,7 @@ export const fallbackLocations: Location[] = [
     country_code: "FR",
     average_price: 190,
     currency: "EUR",
-    image_url: "/assets/images/samoens.jpg",
+    thumbnail_url: "/assets/images/samoens.jpg",
     description: "Historic village with access to Grand Massif ski area"
   },
   {
@@ -280,7 +280,7 @@ export const fallbackLocations: Location[] = [
     country_code: "FR",
     average_price: 180,
     currency: "EUR",
-    image_url: "/assets/images/morillon.jpg",
+    thumbnail_url: "/assets/images/morillon.jpg",
     description: "Family-friendly resort in the Grand Massif domain"
   },
   {
@@ -290,7 +290,7 @@ export const fallbackLocations: Location[] = [
     country_code: "FR",
     average_price: 170,
     currency: "EUR",
-    image_url: "/assets/images/sixt.jpg",
+    thumbnail_url: "/assets/images/sixt.jpg",
     description: "Scenic village at the heart of a nature reserve"
   },
   {
@@ -300,7 +300,7 @@ export const fallbackLocations: Location[] = [
     country_code: "FR",
     average_price: 160,
     currency: "EUR",
-    image_url: "/assets/images/valloire.jpg",
+    thumbnail_url: "/assets/images/valloire.jpg",
     description: "Authentic village with extensive intermediate skiing"
   },
   {
@@ -310,7 +310,7 @@ export const fallbackLocations: Location[] = [
     country_code: "FR",
     average_price: 150,
     currency: "EUR",
-    image_url: "/assets/images/valmeinier.jpg",
+    thumbnail_url: "/assets/images/valmeinier.jpg",
     description: "High-altitude resort with stunning mountain views"
   },
   {
@@ -320,7 +320,7 @@ export const fallbackLocations: Location[] = [
     country_code: "FR", 
     average_price: 140,
     currency: "EUR",
-    image_url: "/assets/images/orelle.jpg",
+    thumbnail_url: "/assets/images/orelle.jpg",
     description: "Gateway to Les 3 Vallées with authentic mountain atmosphere"
   }
 ];
@@ -355,13 +355,13 @@ export const fallbackSportDisciplines: SportDiscipline[] = [
     image_url: "/assets/icons/skiing.png"
   },
   {
-    id: "snowboarding", 
+    id: "snowboarding",
     name: "Snowboarding",
     image_url: "/assets/icons/snowboarding.png"
   },
   {
     id: "ski-touring",
-    name: "Ski-Touring", 
+    name: "Ski-Touring",
     image_url: "/assets/icons/Ski-Touring.png"
   },
   {
@@ -381,7 +381,7 @@ export const fallbackSportDisciplines: SportDiscipline[] = [
   },
   {
     id: "telemark",
-    name: "Telemark", 
+    name: "Telemark",
     image_url: "/assets/icons/telemark.png"
   },
   {

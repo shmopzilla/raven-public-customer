@@ -341,13 +341,40 @@ export default function EnhancedRavenLanding() {
     const fetchData = async () => {
       setIsDataLoading(true);
       setDataError(null);
-      
-      // Use fallback data directly since Supabase is not configured
-      setLocations(fallbackLocations);
-      setFetchedSportOptions(fallbackSportOptions);
-      setFetchedSportDisciplines(fallbackSportDisciplines);
-      setSelectedSport(fallbackSportOptions.find(option => option.id === 'all-sports') || fallbackSportOptions[0]);
-      setIsDataLoading(false);
+
+      try {
+        // Fetch resorts from API endpoint
+        const resortsResponse = await fetch('/api/resorts');
+        let locationsData = fallbackLocations;
+
+        if (resortsResponse.ok) {
+          const resortsResult = await resortsResponse.json();
+          if (resortsResult.success && resortsResult.data) {
+            console.log('Successfully fetched resorts from API:', resortsResult.data.length);
+            locationsData = resortsResult.data;
+          } else {
+            console.warn('API returned unsuccessful response, using fallback data');
+          }
+        } else {
+          console.warn('Failed to fetch resorts from API, using fallback data');
+        }
+
+        setLocations(locationsData);
+        setFetchedSportOptions(fallbackSportOptions);
+        setFetchedSportDisciplines(fallbackSportDisciplines);
+        setSelectedSport(fallbackSportOptions.find(option => option.id === 'all-sports') || fallbackSportOptions[0]);
+
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        setDataError('Failed to load data');
+        // Use fallback data on error
+        setLocations(fallbackLocations);
+        setFetchedSportOptions(fallbackSportOptions);
+        setFetchedSportDisciplines(fallbackSportDisciplines);
+        setSelectedSport(fallbackSportOptions.find(option => option.id === 'all-sports') || fallbackSportOptions[0]);
+      } finally {
+        setIsDataLoading(false);
+      }
     };
 
     fetchData();
