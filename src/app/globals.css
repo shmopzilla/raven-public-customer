@@ -65,3 +65,21 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .frosted-glass {
+    /* 1. Set a semi-transparent background */
+    background: rgba(255, 255, 255, 0.2); /* White with 20% opacity */
+
+    /* 2. Apply the main blur effect to the content *behind* the element */
+    backdrop-filter: blur(10px);
+
+    /* 3. For Safari compatibility, you may need a vendor prefix */
+    -webkit-backdrop-filter: blur(10px);
+
+    /* 4. Optional: Add a subtle border and rounded corners for the "glass" look */
+    border-radius: 100px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  }
+}

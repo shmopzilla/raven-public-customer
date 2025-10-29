@@ -32,17 +32,76 @@ export async function getInstructorImagesServer(instructorId: string): Promise<S
 
 export async function getInstructorsServer(): Promise<SupabaseResponse<any[]>> {
   try {
-    const { data, error } = await supabaseServer
+    console.log('Server: Fetching instructors with languages...')
+
+    // First, get all instructors
+    const { data: instructors, error: instructorsError } = await supabaseServer
       .from('instructors')
       .select('*')
       .order('first_name')
 
-    if (error) {
-      console.error('Server: Failed to fetch instructors:', error)
-      return { data: null, error }
+    if (instructorsError) {
+      console.error('Server: Failed to fetch instructors:', instructorsError)
+      return { data: null, error: instructorsError }
     }
 
-    return { data: data || [], error: null }
+    if (!instructors || instructors.length === 0) {
+      return { data: [], error: null }
+    }
+
+    // Get all instructor IDs
+    const instructorIds = instructors.map(instructor => instructor.id)
+
+    // Fetch languages for all instructors
+    const { data: userLanguages, error: languagesError } = await supabaseServer
+      .from('user_languages')
+      .select('user_id, name')
+      .in('user_id', instructorIds)
+
+    if (languagesError) {
+      console.error('Server: Failed to fetch user languages:', languagesError)
+      // Continue without languages data if fetch fails
+    }
+
+    // Fetch images for all instructors
+    const { data: instructorImages, error: imagesError } = await supabaseServer
+      .from('instructor_images')
+      .select('instructor_id, image_url')
+      .in('instructor_id', instructorIds)
+      .order('created_at', { ascending: true })
+
+    if (imagesError) {
+      console.error('Server: Failed to fetch instructor images:', imagesError)
+      // Continue without images data if fetch fails
+    }
+
+    // Map languages to instructors
+    const languagesMap = new Map<string, string[]>()
+    userLanguages?.forEach(ul => {
+      if (!languagesMap.has(ul.user_id)) {
+        languagesMap.set(ul.user_id, [])
+      }
+      languagesMap.get(ul.user_id)?.push(ul.name)
+    })
+
+    // Map images to instructors
+    const imagesMap = new Map<string, string[]>()
+    instructorImages?.forEach(img => {
+      if (!imagesMap.has(img.instructor_id)) {
+        imagesMap.set(img.instructor_id, [])
+      }
+      imagesMap.get(img.instructor_id)?.push(img.image_url)
+    })
+
+    // Add languages and images to each instructor
+    const instructorsWithData = instructors.map(instructor => ({
+      ...instructor,
+      languages: languagesMap.get(instructor.id) || [],
+      images: imagesMap.get(instructor.id) || []
+    }))
+
+    console.log(`Server: Found ${instructorsWithData.length} instructors with languages and images`)
+    return { data: instructorsWithData, error: null }
   } catch (error) {
     console.error('Server: Error fetching instructors:', error)
     return { data: null, error: error as Error }

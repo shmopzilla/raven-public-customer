@@ -20,86 +20,6 @@ import { fallbackLocations, fallbackSportOptions, fallbackSportDisciplines } fro
 import { useSearch } from "@/lib/contexts/search-context";
 import { AnimatedTooltip } from "@/components/ui/animated-tooltip";
 
-// SportDropdown component for landing page search bar
-const SportDropdown = ({
-  selectedSport,
-  onSportChange,
-  isOpen,
-  onToggle,
-  sportOptions = []
-}: {
-  selectedSport: SportOption;
-  onSportChange: (sport: SportOption) => void;
-  isOpen: boolean;
-  onToggle: () => void;
-  sportOptions?: SportOption[];
-}) => {
-  return (
-    <div className="relative">
-      {/* Sport Pill Button */}
-      <button
-        onClick={onToggle}
-        className="flex items-center gap-2 bg-[rgba(255,255,255,0.15)] hover:bg-[rgba(255,255,255,0.2)] transition-colors duration-200 rounded-full px-3 py-1.5 text-sm font-['Archivo'] font-medium text-[#ffffff]"
-      >
-        <span>{selectedSport.icon}</span>
-        <span>{selectedSport.name}</span>
-        <motion.svg
-          width="12"
-          height="12"
-          viewBox="0 0 12 12"
-          fill="none"
-          className="text-[#cbcbd2]"
-          animate={{
-            rotate: isOpen ? 180 : 0
-          }}
-          transition={{ duration: 0.2 }}
-        >
-          <path
-            d="M3 4.5L6 7.5L9 4.5"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </motion.svg>
-      </button>
-
-      {/* Dropdown Menu */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: -10 }}
-        animate={{
-          opacity: isOpen ? 1 : 0,
-          scale: isOpen ? 1 : 0.95,
-          y: isOpen ? 0 : -10
-        }}
-        transition={{ duration: 0.2 }}
-        className={`absolute top-full right-0 mt-2 bg-[rgba(255,255,255,0.15)] backdrop-blur-[25px] rounded-lg overflow-hidden shadow-lg border border-[rgba(255,255,255,0.1)] z-50 ${
-          isOpen ? 'pointer-events-auto' : 'pointer-events-none'
-        }`}
-        style={{ minWidth: '150px' }}
-      >
-        {sportOptions.map((sport) => (
-          <button
-            key={sport.id}
-            onClick={() => {
-              onSportChange(sport);
-              onToggle();
-            }}
-            className={`w-full flex items-center gap-3 px-4 py-3 text-left font-['Archivo'] font-medium text-sm transition-colors duration-200 ${
-              selectedSport.id === sport.id
-                ? 'bg-[rgba(255,255,255,0.2)] text-[#ffffff]'
-                : 'text-[#cbcbd2] hover:bg-[rgba(255,255,255,0.1)] hover:text-[#ffffff]'
-            }`}
-          >
-            <span className="text-base">{sport.icon}</span>
-            <span>{sport.name}</span>
-          </button>
-        ))}
-      </motion.div>
-    </div>
-  );
-};
-
 // ========================================
 // ASSET CONSTANTS
 // Images referenced by Figma design (commented out as unused)
@@ -307,16 +227,13 @@ export default function EnhancedRavenLanding() {
   const [scrollOpacity, setScrollOpacity] = useState(1); // Background fade opacity
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false); // Search modal state
   const [searchValue, setSearchValue] = useState(""); // Search input value
-  const [selectedSport, setSelectedSport] = useState<SportOption>(fallbackSportOptions[3]); // Selected sport for search - default to "All Sports"
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false); // Sport dropdown state
   const [modalStep, setModalStep] = useState<ModalStep>('location'); // Modal step state
   const [selectedLocation, setSelectedLocation] = useState<Location | undefined>(); // Selected location from modal
   const [selectedSports, setSelectedSports] = useState<string[]>([]); // Selected sports from modal
   const [participantCounts, setParticipantCounts] = useState<ParticipantCounts>({ adults: 0, teenagers: 0, children: 0 }); // Participant counts
-  
+
   // Data fetching state
   const [locations, setLocations] = useState<Location[]>([]);
-  const [fetchedSportOptions, setFetchedSportOptions] = useState<SportOption[]>([]);
   const [fetchedSportDisciplines, setFetchedSportDisciplines] = useState<SportDiscipline[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [dataError, setDataError] = useState<string | null>(null);
@@ -360,18 +277,14 @@ export default function EnhancedRavenLanding() {
         }
 
         setLocations(locationsData);
-        setFetchedSportOptions(fallbackSportOptions);
         setFetchedSportDisciplines(fallbackSportDisciplines);
-        setSelectedSport(fallbackSportOptions.find(option => option.id === 'all-sports') || fallbackSportOptions[0]);
 
       } catch (error) {
         console.error('Error fetching data:', error);
         setDataError('Failed to load data');
         // Use fallback data on error
         setLocations(fallbackLocations);
-        setFetchedSportOptions(fallbackSportOptions);
         setFetchedSportDisciplines(fallbackSportDisciplines);
-        setSelectedSport(fallbackSportOptions.find(option => option.id === 'all-sports') || fallbackSportOptions[0]);
       } finally {
         setIsDataLoading(false);
       }
@@ -548,8 +461,8 @@ export default function EnhancedRavenLanding() {
           {/* SEARCH BAR */}
           {/* Exact Figma specifications */}
           {/* ======================================== */}
-          <motion.div 
-            className="bg-[rgba(255,255,255,0.1)] flex items-center px-6 py-4 rounded-[100px] w-full hover:bg-[rgba(255,255,255,0.15)] transition-colors duration-200 cursor-pointer"
+          <motion.div
+            className="group frosted-glass flex items-center px-6 py-4 w-full hover:bg-[rgba(255,255,255,0.25)] transition-colors duration-200 cursor-pointer"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.3 }}
@@ -563,7 +476,7 @@ export default function EnhancedRavenLanding() {
               height="24"
               viewBox="0 0 24 24"
               fill="none"
-              className="w-6 h-6 shrink-0 text-[#9696a5]"
+              className="w-6 h-6 shrink-0 text-[#9696a5] group-hover:text-white transition-colors duration-200"
             >
               <path
                 d="M21 21L16.5 16.5M19 11C19 15.4183 15.4183 19 11 19C6.58172 19 3 15.4183 3 11C3 6.58172 6.58172 3 11 3C15.4183 3 19 6.58172 19 11Z"
@@ -574,19 +487,8 @@ export default function EnhancedRavenLanding() {
               />
             </svg>
             {/* Search Placeholder Text */}
-            <div className="flex-1 bg-transparent text-[#9696a5] font-archivo text-base tracking-[0.08px] leading-5 min-w-0 overflow-hidden whitespace-nowrap ml-4">
+            <div className="flex-1 bg-transparent text-[#9696a5] group-hover:text-white font-archivo text-base tracking-[0.08px] leading-5 min-w-0 overflow-hidden whitespace-nowrap ml-4 transition-colors duration-200">
               Find Instructors
-            </div>
-            
-            {/* Sport Selection Pill */}
-            <div className="flex items-center ml-4" onClick={(e) => e.stopPropagation()}>
-              <SportDropdown
-                selectedSport={selectedSport}
-                onSportChange={setSelectedSport}
-                isOpen={isDropdownOpen}
-                onToggle={() => setIsDropdownOpen(!isDropdownOpen)}
-                sportOptions={fetchedSportOptions.length > 0 ? fetchedSportOptions : fallbackSportOptions}
-              />
             </div>
           </motion.div>
 
@@ -1080,7 +982,7 @@ export default function EnhancedRavenLanding() {
         isOpen={isSearchModalOpen}
         onClose={handleModalClose}
         locations={locations}
-        sportOptions={fetchedSportOptions.length > 0 ? fetchedSportOptions : fallbackSportOptions}
+        sportOptions={fallbackSportOptions}
         sportDisciplines={fetchedSportDisciplines.length > 0 ? fetchedSportDisciplines : fallbackSportDisciplines}
         onLocationSelect={handleLocationSelect}
         searchValue={searchValue}
