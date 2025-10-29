@@ -6,7 +6,11 @@ import { motion } from 'motion/react';
 import { useSearch } from '@/lib/contexts/search-context';
 import { UserIcon } from '@/components/icons';
 
-export function StickySearchHeader() {
+interface StickySearchHeaderProps {
+  onSearchClick?: () => void;
+}
+
+export function StickySearchHeader({ onSearchClick }: StickySearchHeaderProps = {}) {
   const [isScrolled, setIsScrolled] = useState(false);
   const { searchCriteria, formatSearchSummary } = useSearch();
 
@@ -48,6 +52,7 @@ export function StickySearchHeader() {
           }`}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
+          onClick={onSearchClick}
         >
           {/* Search Icon */}
           <svg
