@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { motion } from 'motion/react';
 import { useSearch } from '@/lib/contexts/search-context';
 import { UserIcon } from '@/components/icons';
@@ -34,20 +35,38 @@ export function StickySearchHeader() {
     >
       <div className="flex items-center justify-between px-12 py-6">
         {/* Raven Logo */}
-        <div className="flex items-center">
-          <h1 className="font-['PP_Editorial_New'] text-3xl text-white font-normal">
+        <Link href="/raven" className="flex items-center cursor-pointer group">
+          <h1 className="font-['PP_Editorial_New'] text-3xl text-white font-normal transition-opacity duration-200 group-hover:opacity-80">
             Raven
           </h1>
-        </div>
+        </Link>
 
         {/* Search Bar */}
         <motion.div
-          className={`bg-[rgba(255,255,255,0.1)] backdrop-blur-[10px] rounded-[100px] px-6 py-4 transition-all duration-300 ${
+          className={`group frosted-glass flex items-center px-6 py-4 hover:bg-[rgba(255,255,255,0.25)] transition-colors duration-200 cursor-pointer ${
             isScrolled ? 'w-[500px]' : 'w-[696px]'
           }`}
-          whileHover={{ bg: 'rgba(255,255,255,0.15)' }}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
-          <p className="font-['Archivo'] text-white text-[16px] text-center leading-[20px] tracking-[0.08px]">
+          {/* Search Icon */}
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            className="w-6 h-6 shrink-0 text-[#9696a5] group-hover:text-white transition-colors duration-200"
+          >
+            <path
+              d="M21 21L16.5 16.5M19 11C19 15.4183 15.4183 19 11 19C6.58172 19 3 15.4183 3 11C3 6.58172 6.58172 3 11 3C15.4183 3 19 6.58172 19 11Z"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          {/* Search Summary Text */}
+          <p className="flex-1 font-['Archivo'] text-[#9696a5] group-hover:text-white text-[16px] text-center leading-[20px] tracking-[0.08px] transition-colors duration-200 ml-4">
             {searchSummary || "Search for instructors..."}
           </p>
         </motion.div>
