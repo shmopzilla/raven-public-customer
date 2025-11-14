@@ -195,7 +195,7 @@ export default function SearchResultsPage() {
     }
 
     fetchInstructors();
-  }, [searchCriteria.location, searchCriteria.startDate, searchCriteria.endDate, selectedDisciplines]);
+  }, [searchCriteria?.location, searchCriteria?.startDate, searchCriteria?.endDate, selectedDisciplines]);
 
   // Data fetching and modal pre-filling are now handled by SearchContext
   // No need for local data fetching or manual pre-filling!

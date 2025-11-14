@@ -114,7 +114,7 @@ export function SearchProvider({ children }: SearchProviderProps) {
   const [selectedSports, setSelectedSports] = useState<string[]>([]);
   const [selectedDisciplines, setSelectedDisciplines] = useState<string[]>([]);
   const [participantCounts, setParticipantCounts] = useState<ParticipantCounts>({
-    adults: 2,
+    adults: 0,
     teenagers: 0,
     children: 0,
   });
@@ -222,7 +222,7 @@ export function SearchProvider({ children }: SearchProviderProps) {
     setSelectedDates({ startDate: null, endDate: null });
     setSelectedSports([]);
     setSelectedDisciplines([]);
-    setParticipantCounts({ adults: 2, teenagers: 0, children: 0 });
+    setParticipantCounts({ adults: 0, teenagers: 0, children: 0 });
     setCurrentStep('location');
   };
 
