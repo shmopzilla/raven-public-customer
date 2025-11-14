@@ -437,3 +437,216 @@ export async function getResortsServer(): Promise<SupabaseResponse<any[]>> {
     return { data: null, error: error as Error }
   }
 }
+
+export async function searchInstructorsServer(params: {
+  location?: string
+  startDate?: string
+  endDate?: string
+  disciplineIds?: string[]
+  limit?: number
+  offset?: number
+}): Promise<SupabaseResponse<any[]>> {
+  try {
+    const { location, startDate, endDate, disciplineIds, limit = 20, offset = 0 } = params
+
+    console.log('Server: Searching instructors with params:', params)
+
+    // Step 1: Get all instructors with their basic data
+    const { data: instructors, error: instructorsError } = await supabaseServer
+      .from('instructors')
+      .select('*')
+      .order('first_name')
+
+    if (instructorsError) {
+      console.error('Server: Failed to fetch instructors:', instructorsError)
+      return { data: null, error: instructorsError }
+    }
+
+    if (!instructors || instructors.length === 0) {
+      return { data: [], error: null }
+    }
+
+    const instructorIds = instructors.map(i => i.id)
+
+    // Step 2: Get active offers for all instructors
+    const { data: offers, error: offersError } = await supabaseServer
+      .from('instructor_offers')
+      .select('id, instructor_id, hourly_rate_weekday')
+      .in('instructor_id', instructorIds)
+      .eq('status', 'active')
+
+    if (offersError) {
+      console.error('Server: Failed to fetch offers:', offersError)
+      return { data: null, error: offersError }
+    }
+
+    if (!offers || offers.length === 0) {
+      console.log('Server: No active offers found')
+      return { data: [], error: null }
+    }
+
+    const offerIds = offers.map(o => o.id)
+
+    // Step 3: Filter by location (resort name) if provided
+    let validOfferIds = offerIds
+    if (location) {
+      const { data: resortMatches, error: resortsError } = await supabaseServer
+        .from('instructor_offer_resorts')
+        .select(`
+          offer_id,
+          resorts!inner(name)
+        `)
+        .in('offer_id', offerIds)
+        .ilike('resorts.name', `%${location}%`)
+
+      if (resortsError) {
+        console.error('Server: Failed to filter by resort:', resortsError)
+      } else if (resortMatches && resortMatches.length > 0) {
+        validOfferIds = resortMatches.map(r => r.offer_id)
+        console.log(`Server: Filtered to ${validOfferIds.length} offers by location: ${location}`)
+      } else {
+        console.log('Server: No offers found for location:', location)
+        return { data: [], error: null }
+      }
+    }
+
+    // Step 4: Filter by disciplines if provided
+    if (disciplineIds && disciplineIds.length > 0) {
+      const { data: disciplineMatches, error: disciplinesError } = await supabaseServer
+        .from('instructor_offer_disciplines')
+        .select('offer_id')
+        .in('offer_id', validOfferIds)
+        .in('discipline_id', disciplineIds)
+
+      if (disciplinesError) {
+        console.error('Server: Failed to filter by disciplines:', disciplinesError)
+      } else if (disciplineMatches && disciplineMatches.length > 0) {
+        validOfferIds = disciplineMatches.map(d => d.offer_id)
+        console.log(`Server: Filtered to ${validOfferIds.length} offers by disciplines`)
+      } else {
+        console.log('Server: No offers found for disciplines:', disciplineIds)
+        return { data: [], error: null }
+      }
+    }
+
+    // Get instructors with valid offers
+    const validInstructorIds = [...new Set(
+      offers.filter(o => validOfferIds.includes(o.id)).map(o => o.instructor_id)
+    )]
+
+    console.log(`Server: Found ${validInstructorIds.length} instructors with valid offers`)
+
+    // Step 5: Filter out fully booked instructors if date range provided
+    let availableInstructorIds = validInstructorIds
+    if (startDate && endDate) {
+      const { data: bookings, error: bookingsError } = await supabaseServer
+        .from('bookings')
+        .select('instructor_id, id')
+        .in('instructor_id', validInstructorIds)
+        .or(`start_date.lte.${endDate},end_date.gte.${startDate}`)
+
+      if (bookingsError) {
+        console.error('Server: Failed to fetch bookings:', bookingsError)
+      } else if (bookings && bookings.length > 0) {
+        const bookingIds = bookings.map(b => b.id)
+
+        // Get booking items for these bookings in the date range
+        const { data: bookingItems, error: itemsError } = await supabaseServer
+          .from('booking_items')
+          .select('booking_id')
+          .in('booking_id', bookingIds)
+          .gte('date', startDate)
+          .lte('date', endDate)
+
+        if (!itemsError && bookingItems && bookingItems.length > 0) {
+          // Get instructor IDs with bookings
+          const bookedInstructorIds = new Set(
+            bookings
+              .filter(b => bookingItems.some(bi => bi.booking_id === b.id))
+              .map(b => b.instructor_id)
+          )
+
+          // Exclude fully booked instructors
+          availableInstructorIds = validInstructorIds.filter(id => !bookedInstructorIds.has(id))
+          console.log(`Server: Filtered out ${bookedInstructorIds.size} booked instructors, ${availableInstructorIds.length} available`)
+        }
+      }
+    }
+
+    if (availableInstructorIds.length === 0) {
+      console.log('Server: No available instructors found')
+      return { data: [], error: null }
+    }
+
+    // Step 6: Get languages for available instructors
+    const { data: userLanguages, error: languagesError } = await supabaseServer
+      .from('user_languages')
+      .select('user_id, name')
+      .in('user_id', availableInstructorIds)
+
+    if (languagesError) {
+      console.error('Server: Failed to fetch languages:', languagesError)
+    }
+
+    // Step 7: Get images for available instructors
+    const { data: instructorImages, error: imagesError } = await supabaseServer
+      .from('instructor_images')
+      .select('instructor_id, image_url')
+      .in('instructor_id', availableInstructorIds)
+      .order('created_at', { ascending: true })
+
+    if (imagesError) {
+      console.error('Server: Failed to fetch images:', imagesError)
+    }
+
+    // Step 8: Aggregate data per instructor
+    const languagesMap = new Map<string, string[]>()
+    userLanguages?.forEach(ul => {
+      if (!languagesMap.has(ul.user_id)) {
+        languagesMap.set(ul.user_id, [])
+      }
+      languagesMap.get(ul.user_id)?.push(ul.name)
+    })
+
+    const imagesMap = new Map<string, string[]>()
+    instructorImages?.forEach(img => {
+      if (!imagesMap.has(img.instructor_id)) {
+        imagesMap.set(img.instructor_id, [])
+      }
+      imagesMap.get(img.instructor_id)?.push(img.image_url)
+    })
+
+    const pricesMap = new Map<string, number>()
+    offers.forEach(offer => {
+      if (validOfferIds.includes(offer.id) && offer.hourly_rate_weekday) {
+        const current = pricesMap.get(offer.instructor_id)
+        if (!current || offer.hourly_rate_weekday < current) {
+          pricesMap.set(offer.instructor_id, offer.hourly_rate_weekday)
+        }
+      }
+    })
+
+    // Step 9: Build result set with pagination
+    const results = availableInstructorIds
+      .map(instructorId => {
+        const instructor = instructors.find(i => i.id === instructorId)
+        if (!instructor) return null
+
+        return {
+          ...instructor,
+          languages: languagesMap.get(instructorId) || [],
+          images: imagesMap.get(instructorId) || [],
+          minPrice: pricesMap.get(instructorId) || null
+        }
+      })
+      .filter(Boolean)
+      .slice(offset, offset + limit)
+
+    console.log(`Server: Returning ${results.length} instructors (offset: ${offset}, limit: ${limit})`)
+    return { data: results, error: null }
+
+  } catch (error) {
+    console.error('Server: Error searching instructors:', error)
+    return { data: null, error: error as Error }
+  }
+}

@@ -79,7 +79,7 @@ const actionShotSets = [
   ],
 ];
 
-// Helper to create hybrid instructor data (real name/age/avatar/languages/images + mock other fields)
+// Helper to create hybrid instructor data (real name/age/avatar/languages/images/price + mock other fields)
 function createHybridInstructor(dbInstructor: any, index: number): Instructor {
   return {
     id: dbInstructor.id,
@@ -97,12 +97,13 @@ function createHybridInstructor(dbInstructor: any, index: number): Instructor {
     actionShotUrls: dbInstructor.images && dbInstructor.images.length > 0
       ? dbInstructor.images
       : actionShotSets[index % actionShotSets.length],
+    // REAL DATA: price from database (with fallback to mock)
+    priceHourlyEuros: dbInstructor.minPrice || priceOptions[index % priceOptions.length],
     // MOCK DATA: everything else
     nationality: nationalities[index % nationalities.length],
     sport: sports[index % sports.length],
-    priceHourlyEuros: priceOptions[index % priceOptions.length],
     tagline: taglines[index % taglines.length],
-    available: index % 3 !== 0, // 2 out of 3 are available
+    available: true, // All results from search are available (booked instructors are excluded)
   };
 }
 
@@ -122,28 +123,61 @@ export default function SearchResultsPage() {
 
   const displayedInstructors = allInstructors.slice(0, displayedCount);
   const hasMore = displayedCount < allInstructors.length;
+  const { selectedDisciplines } = useSearch();
 
   const handleCardClick = (instructorId: string) => {
     console.log("Navigate to instructor profile:", instructorId);
     router.push(`/raven/profile/${instructorId}`);
   };
 
-  // Fetch real instructors on mount
+  // Fetch instructors based on search criteria
   useEffect(() => {
     async function fetchInstructors() {
       try {
         setIsLoadingInitial(true);
         setError(null);
 
-        console.log("Fetching instructors from API...");
-        const response = await fetch("/api/calendar/instructors");
+        // Build query params from search criteria
+        const params = new URLSearchParams();
+
+        if (searchCriteria.location) {
+          params.append('location', searchCriteria.location);
+        }
+
+        if (searchCriteria.startDate) {
+          params.append('startDate', searchCriteria.startDate);
+        }
+
+        if (searchCriteria.endDate) {
+          params.append('endDate', searchCriteria.endDate);
+        }
+
+        // Add selected disciplines to search
+        if (selectedDisciplines && selectedDisciplines.length > 0) {
+          params.append('disciplineIds', selectedDisciplines.join(','));
+        }
+
+        params.append('limit', '100'); // Get more results for client-side pagination
+        params.append('offset', '0');
+
+        console.log("Searching instructors with criteria:", {
+          location: searchCriteria.location,
+          startDate: searchCriteria.startDate,
+          endDate: searchCriteria.endDate,
+          disciplines: selectedDisciplines
+        });
+
+        const endpoint = `/api/search/instructors?${params.toString()}`;
+        console.log("Fetching from:", endpoint);
+
+        const response = await fetch(endpoint);
         const result = await response.json();
 
         if (!response.ok || !result.data) {
           throw new Error(result.error || "Failed to fetch instructors");
         }
 
-        console.log(`Found ${result.data.length} instructors from database`);
+        console.log(`Found ${result.data.length} instructors matching search criteria`);
 
         // Create hybrid instructors: real name/age/avatar/languages/images + mock other fields
         const hybridInstructors = result.data.map((dbInstructor: any, index: number) =>
@@ -151,6 +185,7 @@ export default function SearchResultsPage() {
         );
 
         setAllInstructors(hybridInstructors);
+        setDisplayedCount(INITIAL_LOAD_COUNT); // Reset pagination
       } catch (err: any) {
         console.error("Error fetching instructors:", err);
         setError(err.message || "Failed to load instructors");
@@ -160,7 +195,7 @@ export default function SearchResultsPage() {
     }
 
     fetchInstructors();
-  }, []);
+  }, [searchCriteria.location, searchCriteria.startDate, searchCriteria.endDate, selectedDisciplines]);
 
   // Data fetching and modal pre-filling are now handled by SearchContext
   // No need for local data fetching or manual pre-filling!
