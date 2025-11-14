@@ -99,6 +99,7 @@ export function Calendar({
   // Navigation handlers with animation state
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [direction, setDirection] = useState<'left' | 'right'>('right')
+  const [isMonthDropdownOpen, setIsMonthDropdownOpen] = useState(false)
 
   // Quick navigation functions - memoized for performance
   const goToToday = useCallback(() => {
@@ -133,15 +134,34 @@ export function Calendar({
           break
         case 'Escape':
           event.preventDefault()
-          // Clear selection
-          setSelectedRange({ startDate: null, endDate: null })
+          // Close dropdown if open, otherwise clear selection
+          if (isMonthDropdownOpen) {
+            setIsMonthDropdownOpen(false)
+          } else {
+            setSelectedRange({ startDate: null, endDate: null })
+          }
           break
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [currentMonth, currentYear, isTransitioning])
+  }, [currentMonth, currentYear, isTransitioning, isMonthDropdownOpen])
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    if (!isMonthDropdownOpen) return
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+      if (!target.closest('[data-month-dropdown]')) {
+        setIsMonthDropdownOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [isMonthDropdownOpen])
 
   const goToPreviousMonth = useCallback(() => {
     if (isTransitioning) return
@@ -174,6 +194,27 @@ export function Calendar({
       setTimeout(() => setIsTransitioning(false), 50)
     }, 150)
   }, [isTransitioning, currentMonth, currentYear])
+
+  // Month/Year selection handlers
+  const handleMonthSelect = useCallback((month: number) => {
+    if (isTransitioning) return
+    setCurrentMonth(month)
+    setIsMonthDropdownOpen(false)
+  }, [isTransitioning])
+
+  const handleYearChange = useCallback((increment: number) => {
+    if (isTransitioning) return
+    setCurrentYear(currentYear + increment)
+  }, [isTransitioning, currentYear])
+
+  // Generate year range (current year ± 5 years)
+  const yearRange = useMemo(() => {
+    const years = []
+    for (let i = -5; i <= 5; i++) {
+      years.push(currentYear + i)
+    }
+    return years
+  }, [currentYear])
 
   // Helper functions for range selection - memoized for performance
   const isDateInRange = useCallback((date: string): boolean => {
@@ -248,29 +289,90 @@ export function Calendar({
     >
         {/* Month Header */}
         <div className="flex items-center justify-between w-full">
+          {/* Left Arrow - Bigger */}
           <motion.button
             onClick={goToPreviousMonth}
             disabled={isTransitioning}
-            className="text-white hover:text-blue-400 transition-all duration-200 p-3 rounded-lg hover:bg-white hover:bg-opacity-10 disabled:opacity-50"
+            className="text-white hover:text-blue-400 transition-all duration-200 p-4 rounded-lg hover:bg-white hover:bg-opacity-10 disabled:opacity-50 text-2xl"
             aria-label="Previous month"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.15 }}
+            whileTap={{ scale: 0.9 }}
           >
             ←
           </motion.button>
 
-          <div className="flex items-center gap-2">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={`${currentMonth}-${currentYear}`}
-                initial={{ opacity: 0, x: direction === 'right' ? 20 : -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: direction === 'right' ? -20 : 20 }}
-                transition={{ duration: 0.2, ease: "easeInOut" }}
-                className="text-white text-lg font-medium"
-              >
-                {monthNames[currentMonth]} {currentYear}
-              </motion.div>
+          {/* Month/Year Dropdown */}
+          <div className="flex items-center gap-3 relative" data-month-dropdown>
+            <button
+              onClick={() => setIsMonthDropdownOpen(!isMonthDropdownOpen)}
+              className="text-white text-lg font-medium hover:text-blue-400 transition-colors px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-10 flex items-center gap-2"
+            >
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={`${currentMonth}-${currentYear}`}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {monthNames[currentMonth]} {currentYear}
+                </motion.span>
+              </AnimatePresence>
+              <span className={cn(
+                "text-sm transition-transform duration-200",
+                isMonthDropdownOpen && "rotate-180"
+              )}>
+                ▼
+              </span>
+            </button>
+
+            {/* Dropdown Menu */}
+            <AnimatePresence>
+              {isMonthDropdownOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute top-full mt-2 left-0 bg-[#1a1a1f] border border-white/20 rounded-xl shadow-2xl p-4 z-50 min-w-[320px]"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* Year Selector */}
+                  <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
+                    <button
+                      onClick={() => handleYearChange(-1)}
+                      className="text-white hover:text-blue-400 p-2 rounded hover:bg-white/10 transition-all"
+                    >
+                      ←
+                    </button>
+                    <span className="text-white font-semibold text-lg">{currentYear}</span>
+                    <button
+                      onClick={() => handleYearChange(1)}
+                      className="text-white hover:text-blue-400 p-2 rounded hover:bg-white/10 transition-all"
+                    >
+                      →
+                    </button>
+                  </div>
+
+                  {/* Month Grid */}
+                  <div className="grid grid-cols-3 gap-2">
+                    {monthNames.map((month, index) => (
+                      <button
+                        key={month}
+                        onClick={() => handleMonthSelect(index)}
+                        className={cn(
+                          "px-3 py-2 rounded-lg text-sm font-medium transition-all",
+                          currentMonth === index
+                            ? "bg-blue-400/20 text-blue-400 border border-blue-400/40"
+                            : "text-white/70 hover:text-white hover:bg-white/10"
+                        )}
+                      >
+                        {month.slice(0, 3)}
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
             </AnimatePresence>
 
             {/* Today button - only show if not current month */}
@@ -279,7 +381,7 @@ export function Calendar({
                 onClick={goToToday}
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="ml-2 px-2 py-1 text-xs bg-blue-400 bg-opacity-20 text-blue-400 rounded-md hover:bg-opacity-30 transition-colors"
+                className="ml-2 px-3 py-2 text-xs bg-blue-400 bg-opacity-20 text-blue-400 rounded-md hover:bg-opacity-30 transition-colors"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -288,24 +390,25 @@ export function Calendar({
             )}
           </div>
 
+          {/* Right Arrow - Bigger */}
           <motion.button
             onClick={goToNextMonth}
             disabled={isTransitioning}
-            className="text-white hover:text-blue-400 transition-all duration-200 p-3 rounded-lg hover:bg-white hover:bg-opacity-10 disabled:opacity-50"
+            className="text-white hover:text-blue-400 transition-all duration-200 p-4 rounded-lg hover:bg-white hover:bg-opacity-10 disabled:opacity-50 text-2xl"
             aria-label="Next month"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.15 }}
+            whileTap={{ scale: 0.9 }}
           >
             →
           </motion.button>
         </div>
 
         {/* Weekday Headers */}
-        <div className="flex gap-1 w-full">
+        <div className="flex w-full">
           {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((day) => (
             <div
               key={day}
-              className="flex-1 text-center text-xs font-medium text-white text-opacity-60 py-2"
+              className="flex-1 text-center text-sm font-medium text-white text-opacity-60 py-3"
             >
               {day}
             </div>
@@ -320,12 +423,12 @@ export function Calendar({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="flex flex-col w-full"
+            className="flex flex-col w-full gap-0.5"
           >
             {calendarRows.map((row, rowIndex) => (
               <div
                 key={rowIndex}
-                className="flex gap-1 w-full"
+                className="flex gap-0.5 w-full"
               >
                 {row.map((dayData, dayIndex) => (
                   <motion.div
@@ -337,7 +440,7 @@ export function Calendar({
                       delay: (rowIndex * 7 + dayIndex) * 0.01,
                       ease: "easeOut"
                     }}
-                    className="flex-1 h-16 flex items-center justify-center"
+                    className="flex-1 h-20 flex items-center justify-center"
                   >
                     <CalendarDay
                       date={dayData.date}
@@ -351,7 +454,7 @@ export function Calendar({
                       isInRange={isDateInRange(dayData.date)}
                       isSelectable={true}
                       onClick={() => handleDayClick(dayData.date, dayData.dayNumber)}
-                      className="h-12 w-full"
+                      className="h-full w-full"
                     />
                   </motion.div>
                 ))}

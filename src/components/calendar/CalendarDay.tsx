@@ -37,9 +37,9 @@ export const CalendarDay = memo(function CalendarDay({
         !isSelectable && "cursor-not-allowed opacity-60",
         // Current month styling
         isCurrentMonth ? "opacity-100" : "opacity-50",
-        // Range selection styling - white with 10% opacity, no strokes
-        (isStartDate || isEndDate) && "bg-white/10",
-        isInRange && !isStartDate && !isEndDate && "bg-white/10",
+        // Range selection styling - stronger, more vibrant selected state
+        (isStartDate || isEndDate) && "bg-white/20 border-2 border-white/40",
+        isInRange && !isStartDate && !isEndDate && "bg-white/15 border border-white/20",
         // Rounded corners for range
         isStartDate && !isEndDate && "rounded-l-xl rounded-r-none",
         isEndDate && !isStartDate && "rounded-r-xl rounded-l-none",
@@ -64,9 +64,9 @@ export const CalendarDay = memo(function CalendarDay({
       {/* Day Number */}
       <motion.div
         className={cn(
-          "font-['Archivo'] font-medium text-[14px] text-center tracking-[0.07px] w-12 leading-[18px] relative",
+          "font-['Archivo'] font-semibold text-[18px] text-center tracking-tight w-full leading-tight relative",
           isCurrentMonth ? "text-white" : "text-white/50",
-          (isStartDate || isEndDate) && "text-white font-semibold",
+          (isStartDate || isEndDate) && "text-white font-bold text-[20px]",
           isToday && "font-bold"
         )}
         data-name="day-number"
