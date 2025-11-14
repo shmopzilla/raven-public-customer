@@ -5,41 +5,11 @@ import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
 import { InstructorProfileCard } from "@/components/raven/instructor-profile-card";
 import { StickySearchHeader } from "@/components/raven/sticky-search-header";
-import { SearchModal } from "@/components/ui/search-modal";
+import { GlobalSearchModal } from "@/components/ui/global-search-modal";
 import { Instructor } from "@/lib/mock-data/instructors";
 import { useSearch } from "@/lib/contexts/search-context";
-import {
-  fallbackLocations,
-  fallbackSportOptions,
-  fallbackSportDisciplines,
-} from "@/lib/fallback-data";
 
-// Types from SearchModal
-interface Location {
-  id: string;
-  name: string;
-  pricePerDayEuros: number;
-}
-
-interface SportOption {
-  id: string;
-  name: string;
-  icon: React.ReactNode;
-}
-
-interface SportDiscipline {
-  id: string;
-  sportId: string;
-  name: string;
-}
-
-type ModalStep = "location" | "sport" | "participants";
-
-interface ParticipantCounts {
-  adults: number;
-  teenagers: number;
-  children: number;
-}
+// Types are now exported from SearchContext - no need to redefine them here
 
 const INITIAL_LOAD_COUNT = 6;
 const LOAD_MORE_COUNT = 6;
@@ -147,22 +117,8 @@ export default function SearchResultsPage() {
   const observerRef = useRef<HTMLDivElement>(null);
   const { searchCriteria, setSearchCriteria } = useSearch();
 
-  // Modal state management
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentStep, setCurrentStep] = useState<ModalStep>("location");
-  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
-  const [selectedSports, setSelectedSports] = useState<string[]>([]);
-  const [selectedDisciplines, setSelectedDisciplines] = useState<string[]>([]);
-  const [participantCounts, setParticipantCounts] = useState<ParticipantCounts>({
-    adults: 0,
-    teenagers: 0,
-    children: 0,
-  });
-
-  // Data sources
-  const [locations, setLocations] = useState<Location[]>(fallbackLocations);
-  const [sportOptions] = useState<SportOption[]>(fallbackSportOptions);
-  const [disciplines] = useState<SportDiscipline[]>(fallbackSportDisciplines);
+  // Modal state and data are now managed globally via SearchContext
+  // No local state needed!
 
   const displayedInstructors = allInstructors.slice(0, displayedCount);
   const hasMore = displayedCount < allInstructors.length;
@@ -206,51 +162,8 @@ export default function SearchResultsPage() {
     fetchInstructors();
   }, []);
 
-  // Fetch locations from API
-  useEffect(() => {
-    async function fetchLocations() {
-      try {
-        const response = await fetch("/api/resorts");
-        const result = await response.json();
-
-        if (result.data && result.data.length > 0) {
-          setLocations(result.data);
-        }
-      } catch (err) {
-        console.error("Error fetching locations:", err);
-        // Keep using fallback data on error
-      }
-    }
-
-    fetchLocations();
-  }, []);
-
-  // Pre-fill modal from existing search criteria
-  useEffect(() => {
-    if (!searchCriteria) return;
-
-    if (searchCriteria.location && locations.length > 0) {
-      const location = locations.find(
-        (loc) => loc.name === searchCriteria.location
-      );
-      if (location) {
-        setSelectedLocation(location);
-      }
-    }
-
-    if (searchCriteria.sport) {
-      setSelectedSports([searchCriteria.sport]);
-    }
-
-    if (searchCriteria.participants) {
-      // Convert 2-field format to 3-field format
-      setParticipantCounts({
-        adults: searchCriteria.participants.adults || 0,
-        teenagers: 0,
-        children: searchCriteria.participants.children || 0,
-      });
-    }
-  }, [searchCriteria, locations]);
+  // Data fetching and modal pre-filling are now handled by SearchContext
+  // No need for local data fetching or manual pre-filling!
 
   const loadMore = useCallback(async () => {
     if (isLoadingMore || !hasMore) return;
@@ -264,49 +177,15 @@ export default function SearchResultsPage() {
     setIsLoadingMore(false);
   }, [isLoadingMore, hasMore, allInstructors.length]);
 
-  // Event handlers for modal
+  // Event handlers - now use global context
+  const { openSearchModal } = useSearch();
+
   const handleSearchClick = () => {
-    setIsModalOpen(true);
+    openSearchModal();
   };
 
-  const handleLocationSelect = (location: Location) => {
-    setSelectedLocation(location);
-    setCurrentStep("sport");
-  };
-
-  const handleSportSelect = (sportIds: string[]) => {
-    setSelectedSports(sportIds);
-  };
-
-  const handleDisciplineSelect = (disciplineIds: string[]) => {
-    setSelectedDisciplines(disciplineIds);
-  };
-
-  const handleSearchComplete = (searchData: {
-    location: Location;
-    sports: string[];
-    participants: ParticipantCounts;
-  }) => {
-    // Update search criteria
-    setSearchCriteria({
-      location: searchData.location.name,
-      startDate: "2025-01-19",
-      endDate: "2025-01-26",
-      participants: {
-        adults: searchData.participants.adults,
-        children: searchData.participants.teenagers + searchData.participants.children,
-      },
-      sport: searchData.sports.length > 0 ? searchData.sports[0] : undefined,
-    });
-
-    // Close modal - stay on search page (no navigation needed)
-    setIsModalOpen(false);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setCurrentStep("location");
-  };
+  // All other modal handlers (location, sport, participants, search complete)
+  // are now managed internally by GlobalSearchModal via SearchContext
 
   useEffect(() => {
     setHasInitialized(true);
@@ -448,25 +327,9 @@ export default function SearchResultsPage() {
         )}
       </div>
 
-      {/* Search Modal */}
-      <SearchModal
-        isOpen={isModalOpen}
-        currentStep={currentStep}
-        onClose={handleCloseModal}
-        locations={locations}
-        sportOptions={sportOptions}
-        disciplines={disciplines}
-        onLocationSelect={handleLocationSelect}
-        onSportSelect={handleSportSelect}
-        onDisciplineSelect={handleDisciplineSelect}
-        onSearch={handleSearchComplete}
-        selectedLocation={selectedLocation}
-        selectedSports={selectedSports}
-        selectedDisciplines={selectedDisciplines}
-        participantCounts={participantCounts}
-        onParticipantCountsChange={setParticipantCounts}
-        onStepChange={setCurrentStep}
-      />
+      {/* Global Search Modal - state managed via SearchContext */}
+      {/* shouldNavigate=false means it stays on this page after search */}
+      <GlobalSearchModal shouldNavigate={false} />
     </div>
   );
 }

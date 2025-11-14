@@ -11,6 +11,7 @@ export function Calendar({
   onDayClick,
   onRangeSelect,
   selectionMode = 'single',
+  showBookingIndicators = true,
   className,
   initialMonth = new Date().getMonth(),
   initialYear = new Date().getFullYear()
@@ -342,6 +343,7 @@ export function Calendar({
                       date={dayData.date}
                       dayNumber={dayData.dayNumber}
                       bookingItems={bookingItems}
+                      showBookingIndicators={showBookingIndicators}
                       isCurrentMonth={dayData.isCurrentMonth}
                       isToday={dayData.isToday}
                       isStartDate={isStartDate(dayData.date)}

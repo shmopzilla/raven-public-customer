@@ -2,6 +2,7 @@
 import React from "react";
 import { motion } from "motion/react";
 import { SearchLoadingSpinner } from "@/components/ui/loading-spinner";
+import { Calendar } from "@/components/calendar/Calendar";
 
 // Reusable Button Components
 interface ModalButtonProps {
@@ -142,7 +143,7 @@ export interface SportDiscipline {
   image_url: string;
 }
 
-export type ModalStep = 'location' | 'sport' | 'participants';
+export type ModalStep = 'location' | 'dates' | 'sport' | 'participants';
 
 export interface ParticipantCounts {
   adults: number;
@@ -167,6 +168,8 @@ interface SearchModalProps {
   onStepChange?: (step: ModalStep) => void;
   participantCounts?: ParticipantCounts;
   onParticipantCountsChange?: (counts: ParticipantCounts) => void;
+  selectedDates?: { startDate: string | null; endDate: string | null };
+  onDatesSelect?: (startDate: string, endDate: string) => void;
   onSearch?: (searchData: {
     location: Location;
     sports: string[];
@@ -587,6 +590,8 @@ export const SearchModal = ({
   isLoading = false,
   step = 'location',
   selectedLocation,
+  selectedDates,
+  onDatesSelect,
   selectedSports = [],
   onSportSelect,
   onStepChange,
@@ -691,6 +696,7 @@ export const SearchModal = ({
           <div className="box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative shrink-0 w-full">
             <div className="flex flex-col font-['Archivo'] font-medium justify-center leading-[28px] not-italic relative shrink-0 text-[#ffffff] text-[20px] sm:text-[24px] text-left text-nowrap tracking-[0.12px]">
               {step === 'location' && 'Where to?'}
+              {step === 'dates' && 'When are you visiting?'}
               {step === 'sport' && 'What are you into?'}
               {step === 'participants' && 'How many participants?'}
             </div>
@@ -787,7 +793,32 @@ export const SearchModal = ({
                   )}
                 </>
               )}
-              
+
+              {step === 'dates' && (
+                <div className="w-full">
+                  {/* Calendar for Date Range Selection */}
+                  <Calendar
+                    selectionMode="range"
+                    showBookingIndicators={false}
+                    onRangeSelect={(startDate, endDate) => {
+                      if (startDate && endDate) {
+                        onDatesSelect?.(startDate, endDate);
+                      }
+                    }}
+                    className="w-full"
+                  />
+
+                  {/* Navigation Buttons */}
+                  <ModalNavigationButtons
+                    onBack={() => onStepChange?.('location')}
+                    onNext={() => onStepChange?.('sport')}
+                    backLabel="Back"
+                    nextLabel="Next"
+                    nextDisabled={!selectedDates?.startDate || !selectedDates?.endDate}
+                  />
+                </div>
+              )}
+
               {step === 'sport' && (
                 <div className="w-full">
                   {/* Sport Disciplines Pills */}
@@ -842,7 +873,7 @@ export const SearchModal = ({
                   
                   {/* Navigation Buttons */}
                   <ModalNavigationButtons
-                    onBack={() => onStepChange?.('location')}
+                    onBack={() => onStepChange?.('dates')}
                     onNext={() => onStepChange?.('participants')}
                     backLabel="Back"
                     nextLabel="Next"

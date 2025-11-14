@@ -8,6 +8,7 @@ import { DisciplinesList } from '@/components/calendar/DisciplinesList'
 import { ActionButton } from '@/components/calendar/ActionButton'
 import { InstructorAvatar } from '@/components/calendar/InstructorAvatar'
 import { InstructorCarousel } from '@/components/calendar/InstructorCarousel'
+import { GlobalSearchModal } from '@/components/ui/global-search-modal'
 
 interface Instructor {
   id: string
@@ -592,6 +593,10 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
           </div>
         </div>
       </div>
+
+      {/* Global Search Modal - accessible from profile pages */}
+      {/* shouldNavigate=false means it stays on current page, doesn't navigate to search */}
+      <GlobalSearchModal shouldNavigate={false} />
     </div>
   )
 }

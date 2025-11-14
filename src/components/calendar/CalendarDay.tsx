@@ -7,18 +7,19 @@ import { SlotIndicator } from "./SlotIndicator"
 import { getSlotStates, getBookingItemsForDate } from "@/lib/calendar/utils"
 import type { CalendarDayProps } from "@/lib/calendar/types"
 
-export const CalendarDay = memo(function CalendarDay({ 
-  date, 
-  dayNumber, 
-  bookingItems, 
-  isCurrentMonth = true, 
+export const CalendarDay = memo(function CalendarDay({
+  date,
+  dayNumber,
+  bookingItems,
+  showBookingIndicators = true,
+  isCurrentMonth = true,
   isToday = false,
   isStartDate = false,
   isEndDate = false,
   isInRange = false,
   isSelectable = true,
   onClick,
-  className 
+  className
 }: CalendarDayProps) {
   
   // Get booking items for this specific date
@@ -75,12 +76,14 @@ export const CalendarDay = memo(function CalendarDay({
       </motion.div>
       
       {/* Slot Indicator */}
-      <SlotIndicator 
-        slotState={slotState} 
-        className={cn(
-          !isCurrentMonth && "opacity-50"
-        )}
-      />
+      {showBookingIndicators && (
+        <SlotIndicator
+          slotState={slotState}
+          className={cn(
+            !isCurrentMonth && "opacity-50"
+          )}
+        />
+      )}
       
     </motion.div>
   )

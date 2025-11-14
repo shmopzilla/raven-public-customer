@@ -23,6 +23,7 @@ export interface CalendarDayProps {
   date: string
   dayNumber: number
   bookingItems: BookingItem[]
+  showBookingIndicators?: boolean
   isCurrentMonth?: boolean
   isToday?: boolean
   isStartDate?: boolean
@@ -61,6 +62,7 @@ export interface CalendarProps {
   onDayClick?: (date: string, dayNumber: number) => void
   onRangeSelect?: (startDate: string, endDate: string) => void
   selectionMode?: 'single' | 'range'
+  showBookingIndicators?: boolean
   className?: string
   initialMonth?: number
   initialYear?: number

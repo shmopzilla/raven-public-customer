@@ -15,8 +15,7 @@ import React, { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
-import SearchModal, { Location, SportOption, SportDiscipline, ModalStep, ParticipantCounts } from "@/components/ui/search-modal";
-import { fallbackLocations, fallbackSportOptions, fallbackSportDisciplines } from "@/lib/fallback-data";
+import { GlobalSearchModal } from "@/components/ui/global-search-modal";
 import { useSearch } from "@/lib/contexts/search-context";
 import { AnimatedTooltip } from "@/components/ui/animated-tooltip";
 
@@ -225,18 +224,9 @@ export default function EnhancedRavenLanding() {
   // ========================================
   const [isForAdventurers, setIsForAdventurers] = useState(true); // Toggle switch state
   const [scrollOpacity, setScrollOpacity] = useState(1); // Background fade opacity
-  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false); // Search modal state
-  const [searchValue, setSearchValue] = useState(""); // Search input value
-  const [modalStep, setModalStep] = useState<ModalStep>('location'); // Modal step state
-  const [selectedLocation, setSelectedLocation] = useState<Location | undefined>(); // Selected location from modal
-  const [selectedSports, setSelectedSports] = useState<string[]>([]); // Selected sports from modal
-  const [participantCounts, setParticipantCounts] = useState<ParticipantCounts>({ adults: 0, teenagers: 0, children: 0 }); // Participant counts
 
-  // Data fetching state
-  const [locations, setLocations] = useState<Location[]>([]);
-  const [fetchedSportDisciplines, setFetchedSportDisciplines] = useState<SportDiscipline[]>([]);
-  const [isDataLoading, setIsDataLoading] = useState(true);
-  const [dataError, setDataError] = useState<string | null>(null);
+  // Search modal state is now managed globally via SearchContext
+  // No local state needed!
   // Unused state for checkboxes (commented out)
   // const [checkboxStates, setCheckboxStates] = useState({ // Step 3 card checkboxes
   //   telemark: true,
@@ -251,47 +241,8 @@ export default function EnhancedRavenLanding() {
   //   }));
   // };
 
-  // ========================================
-  // DATA FETCHING EFFECT
-  // ========================================
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsDataLoading(true);
-      setDataError(null);
-
-      try {
-        // Fetch resorts from API endpoint
-        const resortsResponse = await fetch('/api/resorts');
-        let locationsData = fallbackLocations;
-
-        if (resortsResponse.ok) {
-          const resortsResult = await resortsResponse.json();
-          if (resortsResult.success && resortsResult.data) {
-            console.log('Successfully fetched resorts from API:', resortsResult.data.length);
-            locationsData = resortsResult.data;
-          } else {
-            console.warn('API returned unsuccessful response, using fallback data');
-          }
-        } else {
-          console.warn('Failed to fetch resorts from API, using fallback data');
-        }
-
-        setLocations(locationsData);
-        setFetchedSportDisciplines(fallbackSportDisciplines);
-
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        setDataError('Failed to load data');
-        // Use fallback data on error
-        setLocations(fallbackLocations);
-        setFetchedSportDisciplines(fallbackSportDisciplines);
-      } finally {
-        setIsDataLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
+  // Data fetching is now handled globally by SearchContext
+  // No local data fetching needed!
 
   // ========================================
   // SCROLL EFFECT FOR BACKGROUND FADE
@@ -321,65 +272,16 @@ export default function EnhancedRavenLanding() {
   // ========================================
   // SEARCH MODAL HANDLERS
   // ========================================
+  // Get search modal control from context
+  const { openSearchModal } = useSearch();
+
   const handleSearchClick = () => {
-    setModalStep('location'); // Reset to location step
-    setIsSearchModalOpen(true);
+    openSearchModal();
   };
 
-  const handleLocationSelect = (location: Location) => {
-    console.log("Selected location:", location);
-    setSelectedLocation(location);
-    // Advance to the sport selection step
-    setModalStep('sport');
-  };
-
-  const handleSportSelect = (sportIds: string[]) => {
-    console.log("Selected sports:", sportIds);
-    setSelectedSports(sportIds);
-  };
-
-  const handleStepChange = (step: ModalStep) => {
-    console.log("Step changed to:", step);
-    setModalStep(step);
-  };
-
-  const handleParticipantCountsChange = (counts: ParticipantCounts) => {
-    console.log("Participant counts updated:", counts);
-    setParticipantCounts(counts);
-  };
-
-  const handleSearchComplete = (searchData: {
-    location: Location;
-    sports: string[];
-    participants: ParticipantCounts;
-  }) => {
-    console.log("Search completed with data:", searchData);
-    
-    // Set search criteria in context
-    setSearchCriteria({
-      location: searchData.location.name,
-      startDate: "2025-01-19", // Mock dates for now
-      endDate: "2025-01-26",
-      participants: {
-        adults: searchData.participants.adults,
-        children: searchData.participants.teenagers + searchData.participants.children,
-      },
-      sport: searchData.sports.length > 0 ? searchData.sports[0] : undefined,
-    });
-
-    // Navigate to search results
-    router.push('/raven/search');
-  };
-
-  const handleModalClose = () => {
-    setIsSearchModalOpen(false);
-    // Reset modal state when closing
-    setModalStep('location');
-    setSelectedLocation(undefined);
-    setSelectedSports([]);
-    setParticipantCounts({ adults: 0, teenagers: 0, children: 0 });
-    setSearchValue(""); // Reset search field
-  };
+  // All other handlers (location select, dates, sports, participants)
+  // are now managed internally by GlobalSearchModal via SearchContext
+  // Navigation happens automatically after search is submitted
 
   return (
     <div className="bg-black min-h-screen text-white">
@@ -976,27 +878,11 @@ export default function EnhancedRavenLanding() {
       </div>
 
       {/* ======================================== */}
-      {/* SEARCH MODAL */}
+      {/* GLOBAL SEARCH MODAL */}
+      {/* State managed globally via SearchContext - no props needed! */}
+      {/* shouldNavigate=true means it will navigate to /raven/search after submitting */}
       {/* ======================================== */}
-      <SearchModal
-        isOpen={isSearchModalOpen}
-        onClose={handleModalClose}
-        locations={locations}
-        sportOptions={fallbackSportOptions}
-        sportDisciplines={fetchedSportDisciplines.length > 0 ? fetchedSportDisciplines : fallbackSportDisciplines}
-        onLocationSelect={handleLocationSelect}
-        searchValue={searchValue}
-        onSearchChange={setSearchValue}
-        isLoading={isDataLoading}
-        step={modalStep}
-        selectedLocation={selectedLocation}
-        selectedSports={selectedSports}
-        onSportSelect={handleSportSelect}
-        onStepChange={handleStepChange}
-        participantCounts={participantCounts}
-        onParticipantCountsChange={handleParticipantCountsChange}
-        onSearch={handleSearchComplete}
-      />
+      <GlobalSearchModal shouldNavigate={true} />
     </div>
   );
 }

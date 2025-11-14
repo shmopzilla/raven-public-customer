@@ -1,4 +1,4 @@
-import { Location, SportOption, SportDiscipline } from "@/components/ui/search-modal";
+import { Location, SportOption, SportDiscipline } from "@/lib/contexts/search-context";
 
 // Fallback data for development when Supabase is not configured
 export const fallbackLocations: Location[] = [
@@ -14,7 +14,7 @@ export const fallbackLocations: Location[] = [
     description: "Luxury resort in Les 3 Vallées, world's largest ski area"
   },
   {
-    id: "2", 
+    id: "2",
     name: "Méribel",
     country: "France",
     country_code: "FR",
@@ -25,7 +25,7 @@ export const fallbackLocations: Location[] = [
   },
   {
     id: "3",
-    name: "Val Thorens", 
+    name: "Val Thorens",
     country: "France",
     country_code: "FR",
     average_price: 340,
@@ -36,7 +36,7 @@ export const fallbackLocations: Location[] = [
   {
     id: "4",
     name: "Les Menuires",
-    country: "France", 
+    country: "France",
     country_code: "FR",
     average_price: 280,
     currency: "EUR",

@@ -78,7 +78,7 @@ export function InstructorProfileCard({
   return (
     <motion.div
       className={cn(
-        "flex flex-col gap-3 w-full min-w-[364px] max-w-[364px] cursor-pointer group",
+        "flex flex-col gap-3 w-full cursor-pointer group",
         className
       )}
       onClick={onClick}
