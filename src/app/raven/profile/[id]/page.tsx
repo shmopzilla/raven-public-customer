@@ -9,6 +9,10 @@ import { ActionButton } from '@/components/calendar/ActionButton'
 import { InstructorAvatar } from '@/components/calendar/InstructorAvatar'
 import { InstructorCarousel } from '@/components/calendar/InstructorCarousel'
 import { GlobalSearchModal } from '@/components/ui/global-search-modal'
+import { SlotSelectionModal } from '@/components/raven/slot-selection-modal'
+import { ToastNotification } from '@/components/raven/toast-notification'
+import type { SelectedSlot } from '@/lib/types/cart'
+import { useCartStore } from '@/lib/stores/cart-store'
 
 interface Instructor {
   id: string
@@ -23,6 +27,7 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
   const router = useRouter()
   const unwrappedParams = use(params)
   const instructorId = unwrappedParams.id
+  const addToCart = useCartStore((state) => state.addToCart)
 
   const [instructor, setInstructor] = useState<Instructor | null>(null)
   const [bookingItems, setBookingItems] = useState<any[]>([])
@@ -35,10 +40,13 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
   const [selectedEndDate, setSelectedEndDate] = useState<string | null>(null)
   const [selectedDaysCount, setSelectedDaysCount] = useState(0)
   const [selectionMode, setSelectionMode] = useState<'single' | 'range'>('range')
+  const [isSlotModalOpen, setIsSlotModalOpen] = useState(false)
   const [instructorResorts, setInstructorResorts] = useState<any[]>([])
   const [loadingResorts, setLoadingResorts] = useState(false)
   const [instructorImages, setInstructorImages] = useState<any[]>([])
   const [loadingImages, setLoadingImages] = useState(false)
+  const [showToast, setShowToast] = useState(false)
+  const [toastMessage, setToastMessage] = useState('')
 
   // Fetch instructor data on page load
   useEffect(() => {
@@ -577,7 +585,7 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
               >
                 <ActionButton
                   selectedDays={selectedDaysCount}
-                  onClick={() => console.log(`Select sessions for ${selectedDaysCount} day(s) clicked`)}
+                  onClick={() => setIsSlotModalOpen(true)}
                 />
               </div>
             )}
@@ -594,9 +602,48 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
         </div>
       </div>
 
+      {/* Slot Selection Modal */}
+      {selectedStartDate && selectedEndDate && instructor && instructorPricing?.minHourlyRate && (
+        <SlotSelectionModal
+          isOpen={isSlotModalOpen}
+          onClose={() => setIsSlotModalOpen(false)}
+          instructorId={instructorId}
+          instructorName={`${instructor.first_name} ${instructor.last_name}`}
+          startDate={selectedStartDate}
+          endDate={selectedEndDate}
+          bookingItems={bookingItems}
+          hourlyRate={instructorPricing.minHourlyRate}
+          onAddToCart={(selectedSlots: SelectedSlot[]) => {
+            if (!instructor || !instructorPricing?.minHourlyRate) return
+
+            addToCart({
+              instructorId,
+              instructorName: `${instructor.first_name} ${instructor.last_name}`,
+              instructorAvatar: instructor.avatar_url || '',
+              location: instructorResorts[0]?.resorts?.name || 'Unknown Location',
+              discipline: 'Ski Instruction', // Generic for now - can be enhanced later
+              selectedSlots,
+              pricePerHour: instructorPricing.minHourlyRate
+            })
+
+            // Show success toast
+            setToastMessage(`Added ${selectedSlots.length} ${selectedSlots.length === 1 ? 'session' : 'sessions'} to cart`)
+            setShowToast(true)
+          }}
+        />
+      )}
+
       {/* Global Search Modal - accessible from profile pages */}
       {/* shouldNavigate=false means it stays on current page, doesn't navigate to search */}
       <GlobalSearchModal shouldNavigate={false} />
+
+      {/* Toast Notification */}
+      <ToastNotification
+        isVisible={showToast}
+        message={toastMessage}
+        onClose={() => setShowToast(false)}
+        type="success"
+      />
     </div>
   )
 }
