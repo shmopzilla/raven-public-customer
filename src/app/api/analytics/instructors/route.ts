@@ -4,10 +4,11 @@ import type { InstructorsAnalyticsData, InstructorWithAvailability, SlotTypeAggr
 
 export async function GET() {
   try {
-    // Get all instructors
+    // Get all approved instructors
     const { data: instructors, error: instructorsError } = await supabaseServer
       .from('instructors')
       .select('id, first_name, last_name')
+      .eq('profile_status', 1)
       .order('first_name')
 
     if (instructorsError) {

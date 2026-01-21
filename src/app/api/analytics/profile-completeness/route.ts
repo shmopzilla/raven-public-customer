@@ -4,10 +4,11 @@ import type { ProfileCompletenessData, ApiResponse } from '@/lib/analytics/types
 
 export async function GET() {
   try {
-    // Get all instructors with profile data
+    // Get all approved instructors with profile data
     const { data: instructors, error: instructorsError } = await supabaseServer
       .from('instructors')
       .select('id, first_name, last_name, avatar_url, biography, stripe_connected_account_id')
+      .eq('profile_status', 1)
       .order('first_name')
 
     if (instructorsError) {

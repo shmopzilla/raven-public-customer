@@ -20,11 +20,12 @@ export async function GET(
   try {
     const { id } = await params
 
-    // Get instructor info
+    // Get instructor info (only if approved)
     const { data: instructor, error: instructorError } = await supabaseServer
       .from('instructors')
       .select('id, first_name, last_name')
       .eq('id', id)
+      .eq('profile_status', 1)
       .single()
 
     if (instructorError) {

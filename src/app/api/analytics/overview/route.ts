@@ -4,10 +4,11 @@ import type { OverviewData, ApiResponse } from '@/lib/analytics/types'
 
 export async function GET() {
   try {
-    // Get instructor count
+    // Get instructor count (only approved instructors)
     const { count: instructorCount, error: instructorError } = await supabaseServer
       .from('instructors')
       .select('*', { count: 'exact', head: true })
+      .eq('profile_status', 1)
 
     if (instructorError) {
       throw new Error(`Failed to fetch instructors: ${instructorError.message}`)

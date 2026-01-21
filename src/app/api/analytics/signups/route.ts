@@ -8,10 +8,11 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get('startDate')
     const endDate = searchParams.get('endDate')
 
-    // Build instructor query
+    // Build instructor query (only approved instructors)
     let instructorQuery = supabaseServer
       .from('instructors')
       .select('created_at')
+      .eq('profile_status', 1)
 
     if (startDate) {
       instructorQuery = instructorQuery.gte('created_at', startDate)
