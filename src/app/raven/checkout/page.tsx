@@ -99,7 +99,7 @@ export default function CheckoutPage() {
             Booking Confirmed!
           </h2>
           <p className="font-['Archivo'] text-base text-[#d5d5d6] mb-6">
-            Your ski instructor sessions have been booked successfully. You'll receive a confirmation email shortly.
+            Your ski instructor sessions have been booked successfully. You&apos;ll receive a confirmation email shortly.
           </p>
           <p className="font-['Archivo'] text-sm text-[#d5d5d6]">
             Redirecting you back to search...

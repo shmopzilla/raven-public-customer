@@ -140,15 +140,15 @@ export default function SearchResultsPage() {
         // Build query params from search criteria
         const params = new URLSearchParams();
 
-        if (searchCriteria.location) {
+        if (searchCriteria?.location) {
           params.append('location', searchCriteria.location);
         }
 
-        if (searchCriteria.startDate) {
+        if (searchCriteria?.startDate) {
           params.append('startDate', searchCriteria.startDate);
         }
 
-        if (searchCriteria.endDate) {
+        if (searchCriteria?.endDate) {
           params.append('endDate', searchCriteria.endDate);
         }
 
@@ -161,9 +161,9 @@ export default function SearchResultsPage() {
         params.append('offset', '0');
 
         console.log("Searching instructors with criteria:", {
-          location: searchCriteria.location,
-          startDate: searchCriteria.startDate,
-          endDate: searchCriteria.endDate,
+          location: searchCriteria?.location,
+          startDate: searchCriteria?.startDate,
+          endDate: searchCriteria?.endDate,
           disciplines: selectedDisciplines
         });
 
@@ -343,7 +343,7 @@ export default function SearchResultsPage() {
         {!hasMore && allInstructors.length > 0 && (
           <div className="flex justify-center mt-12">
             <p className="font-['Archivo'] text-sm text-[#d5d5d6]">
-              You've seen all {allInstructors.length} available instructors
+              You&apos;ve seen all {allInstructors.length} available instructors
             </p>
           </div>
         )}

@@ -73,7 +73,7 @@ export async function GET(
         startTime: slot.slot_start_time || '',
         endTime: slot.slot_end_time || '',
         weekdays: new Set<number>(),
-        dates: []
+        dates: [] as string[]
       }
 
       // Track weekdays this slot type is configured for

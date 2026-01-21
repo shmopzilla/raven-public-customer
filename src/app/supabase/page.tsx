@@ -242,7 +242,7 @@ export default function SupabaseDashboard() {
             animate={{ opacity: 1 }}
             className="text-center py-12"
           >
-            <p className="text-gray-400 text-lg">No tables found matching "{searchTerm}"</p>
+            <p className="text-gray-400 text-lg">No tables found matching &quot;{searchTerm}&quot;</p>
           </motion.div>
         )}
       </div>

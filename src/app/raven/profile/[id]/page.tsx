@@ -336,7 +336,7 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
           <div className="w-full lg:max-w-[calc(100%-485px-2rem)] lg:min-w-[400px] flex flex-col gap-8 lg:gap-10">
             {/* Profile Area */}
             <div className="flex items-center gap-3">
-              <InstructorAvatar instructor={instructor} />
+              <InstructorAvatar instructor={instructor ?? undefined} />
               {/* Instructor Name and Age */}
               {instructor && (
               <div className="flex flex-col gap-1">

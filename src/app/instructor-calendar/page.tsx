@@ -14,6 +14,8 @@ interface Instructor {
   first_name: string
   last_name: string
   avatar_url?: string
+  date_of_birth?: string
+  biography?: string
 }
 
 export default function InstructorCalendarPage() {
