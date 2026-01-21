@@ -59,6 +59,9 @@ interface SearchContextType {
   clearSearch: () => void;
   formatSearchSummary: () => string;
 
+  // Initialize from URL params (for external Framer redirects)
+  initializeFromUrl: (params: URLSearchParams) => boolean;
+
   // Modal state
   isModalOpen: boolean;
   currentStep: ModalStep;
@@ -249,12 +252,68 @@ export function SearchProvider({ children }: SearchProviderProps) {
     return `${location}, ${startFormatted}-${endFormatted}, ${guestText}`;
   };
 
+  // Initialize search criteria from URL params (for external Framer redirects)
+  // URL format: ?location=Chamonix&startDate=2025-02-01&endDate=2025-02-07&adults=2&children=1&disciplines=1,2
+  const initializeFromUrl = (params: URLSearchParams): boolean => {
+    const location = params.get('location');
+    const startDate = params.get('startDate');
+    const endDate = params.get('endDate');
+    const adults = parseInt(params.get('adults') || '0', 10);
+    const children = parseInt(params.get('children') || '0', 10);
+    const disciplines = params.get('disciplines');
+
+    // Require at least location to initialize
+    if (!location) {
+      return false;
+    }
+
+    // Set search criteria directly
+    const criteria: SearchCriteria = {
+      location,
+      startDate: startDate || '',
+      endDate: endDate || '',
+      participants: {
+        adults: adults || 1, // Default to 1 adult if not specified
+        children: children || 0,
+      },
+    };
+
+    setSearchCriteria(criteria);
+
+    // Also update in-progress selections for consistency
+    // Find the location in our locations list if available
+    const matchedLocation = locations.find(
+      (loc) => loc.name.toLowerCase() === location.toLowerCase()
+    );
+    if (matchedLocation) {
+      setSelectedLocation(matchedLocation);
+    }
+
+    if (startDate && endDate) {
+      setSelectedDates({ startDate, endDate });
+    }
+
+    setParticipantCounts({
+      adults: adults || 1,
+      teenagers: 0,
+      children: children || 0,
+    });
+
+    // Set disciplines if provided
+    if (disciplines) {
+      setSelectedDisciplines(disciplines.split(','));
+    }
+
+    return true;
+  };
+
   const value: SearchContextType = {
     // Final search criteria
     searchCriteria,
     setSearchCriteria,
     clearSearch,
     formatSearchSummary,
+    initializeFromUrl,
 
     // Modal state
     isModalOpen,

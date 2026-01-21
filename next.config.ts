@@ -15,6 +15,7 @@ const nextConfig: NextConfig = {
     // TODO: Fix type errors and remove this
     ignoreBuildErrors: true,
   },
+  // Note: CORS is handled by middleware.ts for API routes
 };
 
 export default nextConfig;

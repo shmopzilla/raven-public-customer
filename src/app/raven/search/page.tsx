@@ -1,13 +1,27 @@
 "use client";
 
-import React, { useState, useCallback, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useCallback, useEffect, useRef, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "motion/react";
 import { InstructorProfileCard } from "@/components/raven/instructor-profile-card";
 import { StickySearchHeader } from "@/components/raven/sticky-search-header";
 import { GlobalSearchModal } from "@/components/ui/global-search-modal";
 import { Instructor } from "@/lib/mock-data/instructors";
 import { useSearch } from "@/lib/contexts/search-context";
+
+// Loading fallback for Suspense
+function SearchLoading() {
+  return (
+    <div className="min-h-screen bg-[#0d0d0f] flex items-center justify-center">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-12 h-12 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+        <span className="font-['Archivo'] text-lg text-white">
+          Loading search...
+        </span>
+      </div>
+    </div>
+  );
+}
 
 // Types are now exported from SearchContext - no need to redefine them here
 
@@ -107,19 +121,36 @@ function createHybridInstructor(dbInstructor: any, index: number): Instructor {
   };
 }
 
-export default function SearchResultsPage() {
+function SearchResultsContent() {
   const router = useRouter();
+  const urlSearchParams = useSearchParams();
   const [allInstructors, setAllInstructors] = useState<Instructor[]>([]);
   const [displayedCount, setDisplayedCount] = useState(INITIAL_LOAD_COUNT);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isLoadingInitial, setIsLoadingInitial] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasInitialized, setHasInitialized] = useState(false);
+  const [urlParamsProcessed, setUrlParamsProcessed] = useState(false);
   const observerRef = useRef<HTMLDivElement>(null);
-  const { searchCriteria, setSearchCriteria } = useSearch();
+  const { searchCriteria, setSearchCriteria, initializeFromUrl } = useSearch();
 
   // Modal state and data are now managed globally via SearchContext
   // No local state needed!
+
+  // Initialize from URL params on mount (for external Framer redirects)
+  useEffect(() => {
+    if (urlParamsProcessed) return;
+
+    // Check if URL has search params
+    const hasUrlParams = urlSearchParams.get('location') !== null;
+
+    if (hasUrlParams && !searchCriteria) {
+      console.log('Initializing search from URL params:', Object.fromEntries(urlSearchParams.entries()));
+      initializeFromUrl(urlSearchParams);
+    }
+
+    setUrlParamsProcessed(true);
+  }, [urlSearchParams, searchCriteria, initializeFromUrl, urlParamsProcessed]);
 
   const displayedInstructors = allInstructors.slice(0, displayedCount);
   const hasMore = displayedCount < allInstructors.length;
@@ -366,5 +397,14 @@ export default function SearchResultsPage() {
       {/* shouldNavigate=false means it stays on this page after search */}
       <GlobalSearchModal shouldNavigate={false} />
     </div>
+  );
+}
+
+// Default export wrapped with Suspense for useSearchParams
+export default function SearchResultsPage() {
+  return (
+    <Suspense fallback={<SearchLoading />}>
+      <SearchResultsContent />
+    </Suspense>
   );
 }
