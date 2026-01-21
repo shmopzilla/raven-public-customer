@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { motion } from 'motion/react'
-import { User, Image, Languages, FileText, ChevronDown } from 'lucide-react'
+import { User, Image, Languages, FileText, ChevronDown, CreditCard } from 'lucide-react'
 import type { ProfileCompletenessData } from '@/lib/analytics/types'
 
 interface ProfileCompletenessCardProps {
@@ -102,10 +102,19 @@ export function ProfileCompletenessCard({ data, isLoading }: ProfileCompleteness
             icon: <FileText className="w-3.5 h-3.5 text-amber-400" />,
             bgColor: 'bg-amber-500/20',
             barColor: 'bg-amber-500'
+          },
+          {
+            label: 'Stripe Connected',
+            value: summary.withStripeAccount ?? 0,
+            total: summary.totalInstructors,
+            percentage: percentages.stripeAccount ?? 0,
+            icon: <CreditCard className="w-3.5 h-3.5 text-emerald-400" />,
+            bgColor: 'bg-emerald-500/20',
+            barColor: 'bg-emerald-500'
           }
         ],
         overallPercentage: Math.round(
-          (percentages.avatar + percentages.gallery + percentages.languages + percentages.biography) / 4
+          (percentages.avatar + percentages.gallery + percentages.languages + percentages.biography + (percentages.stripeAccount ?? 0)) / 5
         ),
         displayCount: summary.totalInstructors,
         displayLabel: 'All Instructors'
@@ -122,11 +131,13 @@ export function ProfileCompletenessCard({ data, isLoading }: ProfileCompleteness
     const hasGallery = instructor.galleryCount > 0 ? 1 : 0
     const hasLanguages = instructor.languageCount > 0 ? 1 : 0
     const hasBio = instructor.hasBiography ? 1 : 0
+    const hasStripe = instructor.hasStripeAccount ? 1 : 0
 
     const avatarPct = hasAvatar * 100
     const galleryPct = hasGallery * 100
     const languagesPct = hasLanguages * 100
     const bioPct = hasBio * 100
+    const stripePct = hasStripe * 100
 
     return {
       metrics: [
@@ -165,9 +176,18 @@ export function ProfileCompletenessCard({ data, isLoading }: ProfileCompleteness
           icon: <FileText className="w-3.5 h-3.5 text-amber-400" />,
           bgColor: 'bg-amber-500/20',
           barColor: 'bg-amber-500'
+        },
+        {
+          label: 'Stripe Connected',
+          value: hasStripe,
+          total: 1,
+          percentage: stripePct,
+          icon: <CreditCard className="w-3.5 h-3.5 text-emerald-400" />,
+          bgColor: 'bg-emerald-500/20',
+          barColor: 'bg-emerald-500'
         }
       ],
-      overallPercentage: Math.round((avatarPct + galleryPct + languagesPct + bioPct) / 4),
+      overallPercentage: Math.round((avatarPct + galleryPct + languagesPct + bioPct + stripePct) / 5),
       displayCount: 1,
       displayLabel: instructor.name
     }
@@ -176,7 +196,7 @@ export function ProfileCompletenessCard({ data, isLoading }: ProfileCompleteness
   if (isLoading) {
     return (
       <div className="animate-pulse space-y-4">
-        {[1, 2, 3, 4].map(i => (
+        {[1, 2, 3, 4, 5].map(i => (
           <div key={i} className="space-y-2">
             <div className="h-4 bg-white/[0.05] rounded w-1/3" />
             <div className="h-2 bg-white/[0.05] rounded" />
@@ -219,7 +239,8 @@ export function ProfileCompletenessCard({ data, isLoading }: ProfileCompleteness
                 instructor.hasAvatar,
                 instructor.galleryCount > 0,
                 instructor.languageCount > 0,
-                instructor.hasBiography
+                instructor.hasBiography,
+                instructor.hasStripeAccount
               ].filter(Boolean).length
               return (
                 <option
@@ -227,7 +248,7 @@ export function ProfileCompletenessCard({ data, isLoading }: ProfileCompleteness
                   value={instructor.id}
                   className="bg-gray-900"
                 >
-                  {instructor.name} ({complete}/4 complete)
+                  {instructor.name} ({complete}/5 complete)
                 </option>
               )
             })}

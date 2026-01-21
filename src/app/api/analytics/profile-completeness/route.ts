@@ -7,7 +7,7 @@ export async function GET() {
     // Get all instructors with profile data
     const { data: instructors, error: instructorsError } = await supabaseServer
       .from('instructors')
-      .select('id, first_name, last_name, avatar_url, biography')
+      .select('id, first_name, last_name, avatar_url, biography, stripe_connected_account_id')
       .order('first_name')
 
     if (instructorsError) {
@@ -51,7 +51,8 @@ export async function GET() {
       hasAvatar: Boolean(instructor.avatar_url && instructor.avatar_url.trim() !== ''),
       galleryCount: imageCountMap.get(instructor.id) || 0,
       languageCount: languageCountMap.get(instructor.id) || 0,
-      hasBiography: Boolean(instructor.biography && instructor.biography.trim() !== '')
+      hasBiography: Boolean(instructor.biography && instructor.biography.trim() !== ''),
+      hasStripeAccount: Boolean(instructor.stripe_connected_account_id)
     }))
 
     // Calculate summary
@@ -60,6 +61,7 @@ export async function GET() {
     const withGallery = details.filter(d => d.galleryCount > 0).length
     const withLanguages = details.filter(d => d.languageCount > 0).length
     const withBiography = details.filter(d => d.hasBiography).length
+    const withStripeAccount = details.filter(d => d.hasStripeAccount).length
 
     const data: ProfileCompletenessData = {
       summary: {
@@ -67,13 +69,15 @@ export async function GET() {
         withAvatar,
         withGallery,
         withLanguages,
-        withBiography
+        withBiography,
+        withStripeAccount
       },
       percentages: {
         avatar: totalInstructors > 0 ? Math.round((withAvatar / totalInstructors) * 100) : 0,
         gallery: totalInstructors > 0 ? Math.round((withGallery / totalInstructors) * 100) : 0,
         languages: totalInstructors > 0 ? Math.round((withLanguages / totalInstructors) * 100) : 0,
-        biography: totalInstructors > 0 ? Math.round((withBiography / totalInstructors) * 100) : 0
+        biography: totalInstructors > 0 ? Math.round((withBiography / totalInstructors) * 100) : 0,
+        stripeAccount: totalInstructors > 0 ? Math.round((withStripeAccount / totalInstructors) * 100) : 0
       },
       details
     }

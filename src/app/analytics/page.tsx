@@ -336,10 +336,17 @@ export default function AnalyticsDashboard() {
               selectedId={selectedInstructorId}
               onSelect={handleInstructorSelect}
               isLoading={instructorsLoading}
+              totalWithSlotTypes={instructors?.summary.totalInstructorsWithSlotTypes}
             />
             <InstructorSlotStats
               data={instructorSlots}
               isLoading={instructorSlotsLoading}
+              showAggregate={!selectedInstructorId}
+              aggregateData={instructors?.aggregate ? {
+                slotTypes: instructors.aggregate.slotTypes,
+                dateRange: instructors.aggregate.dateRange,
+                totalInstructors: instructors.summary.totalInstructorsWithSlotTypes
+              } : null}
             />
           </div>
         </ChartContainer>

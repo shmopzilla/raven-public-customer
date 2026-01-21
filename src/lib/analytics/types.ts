@@ -42,11 +42,27 @@ export interface InstructorWithAvailability {
   } | null
 }
 
+export interface SlotTypeAggregate {
+  id: number
+  name: string
+  defaultStartTime: string
+  defaultEndTime: string
+  instructorCount: number
+  instructorNames: string[]
+}
+
 export interface InstructorsAnalyticsData {
   instructors: InstructorWithAvailability[]
   summary: {
     totalInstructorsWithSlotTypes: number
     totalInstructors: number
+  }
+  aggregate: {
+    slotTypes: SlotTypeAggregate[]
+    dateRange: {
+      earliest: string
+      latest: string
+    } | null
   }
 }
 
@@ -77,12 +93,14 @@ export interface ProfileCompletenessData {
     withGallery: number
     withLanguages: number
     withBiography: number
+    withStripeAccount: number
   }
   percentages: {
     avatar: number
     gallery: number
     languages: number
     biography: number
+    stripeAccount: number
   }
   details: {
     id: string
@@ -91,6 +109,7 @@ export interface ProfileCompletenessData {
     galleryCount: number
     languageCount: number
     hasBiography: boolean
+    hasStripeAccount: boolean
   }[]
 }
 

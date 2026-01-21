@@ -9,15 +9,17 @@ interface InstructorDropdownProps {
   selectedId: string | null
   onSelect: (id: string | null) => void
   isLoading?: boolean
+  totalWithSlotTypes?: number
 }
 
 export function InstructorDropdown({
   instructors,
   selectedId,
   onSelect,
-  isLoading
+  isLoading,
+  totalWithSlotTypes
 }: InstructorDropdownProps) {
-  const selectedInstructor = instructors.find(i => i.id === selectedId)
+  const selectedInstructor = selectedId ? instructors.find(i => i.id === selectedId) : null
 
   return (
     <motion.div
@@ -37,7 +39,7 @@ export function InstructorDropdown({
           className="w-full appearance-none bg-white/[0.05] border border-white/[0.1] rounded-lg px-4 py-3 pr-10 text-white focus:outline-none focus:border-white/[0.3] transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <option value="" className="bg-gray-900">
-            -- Select an instructor --
+            All Instructors (Aggregate)
           </option>
           {instructors.map(instructor => (
             <option
@@ -54,13 +56,13 @@ export function InstructorDropdown({
         <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
       </div>
 
-      {selectedInstructor && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mt-2 text-xs text-gray-500"
-        >
-          {selectedInstructor.slotTypeCount === 0 ? (
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mt-2 text-xs text-gray-500"
+      >
+        {selectedInstructor ? (
+          selectedInstructor.slotTypeCount === 0 ? (
             <span className="text-yellow-500/70">This instructor has no slot types configured</span>
           ) : (
             <div className="space-y-1">
@@ -75,9 +77,13 @@ export function InstructorDropdown({
                 </div>
               )}
             </div>
-          )}
-        </motion.div>
-      )}
+          )
+        ) : (
+          <span className="text-gray-400">
+            Showing slot types used across {totalWithSlotTypes || 0} instructor{totalWithSlotTypes !== 1 ? 's' : ''} with availability configured
+          </span>
+        )}
+      </motion.div>
     </motion.div>
   )
 }
