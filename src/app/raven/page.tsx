@@ -1,5 +1,5 @@
-import EnhancedRavenLanding from "@/components/raven/enhanced-raven-landing";
+import { redirect } from 'next/navigation'
 
 export default function RavenPage() {
-  return <EnhancedRavenLanding />;
+  redirect('/')
 }
