@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     let instructorQuery = supabaseServer
       .from('instructors')
       .select('created_at')
-      .eq('profile_status', 1)
+      .eq('profile_status', 2)
 
     if (startDate) {
       instructorQuery = instructorQuery.gte('created_at', startDate)

@@ -8,7 +8,7 @@ export async function GET() {
     const { count: instructorCount, error: instructorError } = await supabaseServer
       .from('instructors')
       .select('*', { count: 'exact', head: true })
-      .eq('profile_status', 1)
+      .eq('profile_status', 2)
 
     if (instructorError) {
       throw new Error(`Failed to fetch instructors: ${instructorError.message}`)

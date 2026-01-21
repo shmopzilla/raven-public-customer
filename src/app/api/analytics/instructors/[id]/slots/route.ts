@@ -25,7 +25,7 @@ export async function GET(
       .from('instructors')
       .select('id, first_name, last_name')
       .eq('id', id)
-      .eq('profile_status', 1)
+      .eq('profile_status', 2)
       .single()
 
     if (instructorError) {

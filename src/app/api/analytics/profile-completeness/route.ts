@@ -8,7 +8,7 @@ export async function GET() {
     const { data: instructors, error: instructorsError } = await supabaseServer
       .from('instructors')
       .select('id, first_name, last_name, avatar_url, biography, stripe_connected_account_id')
-      .eq('profile_status', 1)
+      .eq('profile_status', 2)
       .order('first_name')
 
     if (instructorsError) {
