@@ -45,7 +45,7 @@ export function StickySearchHeader({ onSearchClick }: StickySearchHeaderProps = 
         {/* Mobile: Logo + Burger Menu in Header Row */}
         <div className="flex items-center justify-between sm:justify-start w-full sm:w-auto">
           {/* Raven Logo */}
-          <Link href="/raven" className="flex items-center cursor-pointer group">
+          <Link href="/" className="flex items-center cursor-pointer group">
             <h1 className="font-['PP_Editorial_New'] text-2xl sm:text-3xl text-white font-normal transition-opacity duration-200 group-hover:opacity-80">
               Raven
             </h1>
