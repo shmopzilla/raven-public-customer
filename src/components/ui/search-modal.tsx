@@ -1,121 +1,8 @@
 "use client";
-import React from "react";
-import { motion } from "motion/react";
+import React, { useState, useMemo } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import { SearchLoadingSpinner } from "@/components/ui/loading-spinner";
 import { Calendar } from "@/components/calendar/Calendar";
-
-// Reusable Button Components
-interface ModalButtonProps {
-  onClick: () => void;
-  children: React.ReactNode;
-  variant?: 'primary' | 'secondary';
-}
-
-export const ModalButton = ({ onClick, children, variant = 'primary' }: ModalButtonProps) => {
-  const baseClasses = "px-4 py-2.5 rounded-2xl font-['Archivo'] font-medium w-[126px]";
-  const variantClasses = variant === 'primary' 
-    ? "bg-[#ffffff] text-[#0d0d0f]"
-    : "border border-[#ffffff] border-solid bg-transparent text-white";
-
-  return (
-    <motion.button
-      onClick={onClick}
-      className={`${baseClasses} ${variantClasses}`}
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-    >
-      {children}
-    </motion.button>
-  );
-};
-
-export const ModalNavigationButtons = ({ 
-  onBack, 
-  onNext, 
-  backLabel = "Back", 
-  nextLabel = "Next" 
-}: {
-  onBack: () => void;
-  onNext: () => void;
-  backLabel?: string;
-  nextLabel?: string;
-}) => {
-  return (
-    <div className="flex justify-between mt-8">
-      <ModalButton onClick={onBack} variant="secondary">
-        {backLabel}
-      </ModalButton>
-      <ModalButton onClick={onNext} variant="primary">
-        {nextLabel}
-      </ModalButton>
-    </div>
-  );
-};
-
-// Reusable Participant Counter Component
-interface ParticipantCounterProps {
-  title: string;
-  description: string;
-  count: number;
-  onIncrement: () => void;
-  onDecrement: () => void;
-  minimumValue?: number;
-  isLast?: boolean;
-}
-
-export const ParticipantCounter = ({ 
-  title, 
-  description, 
-  count, 
-  onIncrement, 
-  onDecrement, 
-  minimumValue = 0,
-  isLast = false 
-}: ParticipantCounterProps) => {
-  const isAtMinimum = count <= minimumValue;
-
-  return (
-    <div className={`flex items-center justify-between py-6 ${!isLast ? 'border-b border-[#3B3B40]' : ''}`}>
-      <div>
-        <div className="font-['Archivo'] font-medium text-white text-lg">
-          {title}
-        </div>
-        <div className="font-['Archivo'] font-light text-[#cbcbd2] text-sm">
-          {description}
-        </div>
-      </div>
-      <div className="flex items-center gap-4">
-        <motion.button
-          onClick={onDecrement}
-          className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
-            isAtMinimum 
-              ? 'bg-[rgba(255,255,255,0.05)] text-[#666] cursor-not-allowed' 
-              : 'bg-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.2)]'
-          }`}
-          whileHover={!isAtMinimum ? { scale: 1.1 } : {}}
-          whileTap={!isAtMinimum ? { scale: 0.9 } : {}}
-        >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M4 8H12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-          </svg>
-        </motion.button>
-        <div className="w-12 text-center font-['Archivo'] font-medium text-white text-xl">
-          {count}
-        </div>
-        <motion.button
-          onClick={onIncrement}
-          className="w-10 h-10 rounded-full bg-[rgba(255,255,255,0.1)] flex items-center justify-center text-white hover:bg-[rgba(255,255,255,0.2)] transition-colors"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-        >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M8 4V12M4 8H12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-          </svg>
-        </motion.button>
-      </div>
-    </div>
-  );
-};
 
 // TypeScript interfaces for Supabase integration
 export interface Location {
@@ -151,6 +38,9 @@ export interface ParticipantCounts {
   children: number;
 }
 
+// Section type for accordion
+type SectionId = 'location' | 'dates' | 'sport' | 'participants';
+
 interface SearchModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -161,11 +51,9 @@ interface SearchModalProps {
   searchValue?: string;
   onSearchChange?: (value: string) => void;
   isLoading?: boolean;
-  step?: ModalStep;
-  selectedLocation?: Location;
+  selectedLocation?: Location | null;
   selectedSports?: string[];
   onSportSelect?: (sportIds: string[]) => void;
-  onStepChange?: (step: ModalStep) => void;
   participantCounts?: ParticipantCounts;
   onParticipantCountsChange?: (counts: ParticipantCounts) => void;
   selectedDates?: { startDate: string | null; endDate: string | null };
@@ -174,36 +62,281 @@ interface SearchModalProps {
     location: Location;
     sports: string[];
     participants: ParticipantCounts;
+    dates: { startDate: string; endDate: string };
   }) => void;
 }
 
-// Sport options for the dropdown
-export const sportOptions: SportOption[] = [
-  {
-    id: "skiing",
-    name: "Skiing",
-    icon: "🎿"
-  },
-  {
-    id: "snowboarding",
-    name: "Snowboarding", 
-    icon: "🏂"
-  },
-  {
-    id: "ski-touring",
-    name: "Ski Touring",
-    icon: "⛷️"
-  },
-  {
-    id: "all-sports",
-    name: "All Sports",
-    icon: "🏔️"
-  }
-];
+// Icons for section headers
+const LocationIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M10 10.625C11.3807 10.625 12.5 9.50571 12.5 8.125C12.5 6.74429 11.3807 5.625 10 5.625C8.61929 5.625 7.5 6.74429 7.5 8.125C7.5 9.50571 8.61929 10.625 10 10.625Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M16.25 8.125C16.25 13.75 10 18.125 10 18.125C10 18.125 3.75 13.75 3.75 8.125C3.75 6.4674 4.40848 4.87769 5.58058 3.70558C6.75269 2.53348 8.3424 1.875 10 1.875C11.6576 1.875 13.2473 2.53348 14.4194 3.70558C15.5915 4.87769 16.25 6.4674 16.25 8.125Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
 
-// Comprehensive French ski resorts database - ready for Supabase integration
+const CalendarIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M15.8333 3.33334H4.16667C3.24619 3.33334 2.5 4.07953 2.5 5V16.6667C2.5 17.5872 3.24619 18.3333 4.16667 18.3333H15.8333C16.7538 18.3333 17.5 17.5872 17.5 16.6667V5C17.5 4.07953 16.7538 3.33334 15.8333 3.33334Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M13.3333 1.66666V5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M6.66667 1.66666V5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M2.5 8.33334H17.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const SportIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M10 18.3333C14.6024 18.3333 18.3333 14.6024 18.3333 10C18.3333 5.39763 14.6024 1.66666 10 1.66666C5.39763 1.66666 1.66667 5.39763 1.66667 10C1.66667 14.6024 5.39763 18.3333 10 18.3333Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M2.08333 7.5H17.9167" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M2.08333 12.5H17.9167" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M10 1.66666C12.0844 3.94862 13.269 6.91003 13.3333 10C13.269 13.09 12.0844 16.0514 10 18.3333C7.91562 16.0514 6.73106 13.09 6.66667 10C6.73106 6.91003 7.91562 3.94862 10 1.66666Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const ParticipantsIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M14.1667 17.5V15.8333C14.1667 14.9493 13.8155 14.1014 13.1903 13.4763C12.5652 12.8512 11.7174 12.5 10.8333 12.5H4.16667C3.28261 12.5 2.43476 12.8512 1.80964 13.4763C1.18452 14.1014 0.833333 14.9493 0.833333 15.8333V17.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M7.5 9.16667C9.34095 9.16667 10.8333 7.67428 10.8333 5.83333C10.8333 3.99238 9.34095 2.5 7.5 2.5C5.65905 2.5 4.16667 3.99238 4.16667 5.83333C4.16667 7.67428 5.65905 9.16667 7.5 9.16667Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M19.1667 17.5V15.8333C19.1661 15.0948 18.9203 14.3773 18.4678 13.7936C18.0153 13.2099 17.3818 12.793 16.6667 12.6083" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M13.3333 2.60834C14.0503 2.79192 14.6858 3.20892 15.1396 3.79359C15.5935 4.37827 15.8398 5.09736 15.8398 5.8375C15.8398 6.57765 15.5935 7.29674 15.1396 7.88141C14.6858 8.46609 14.0503 8.88309 13.3333 9.06667" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const CheckIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M13.3333 4L6 11.3333L2.66667 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const ChevronIcon = ({ isExpanded }: { isExpanded: boolean }) => (
+  <motion.svg
+    width="20"
+    height="20"
+    viewBox="0 0 20 20"
+    fill="none"
+    animate={{ rotate: isExpanded ? 180 : 0 }}
+    transition={{ duration: 0.2 }}
+  >
+    <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </motion.svg>
+);
+
+// Reusable SearchSection Component
+interface SearchSectionProps {
+  id: SectionId;
+  icon: React.ReactNode;
+  title: string;
+  summary: string | null;
+  isExpanded: boolean;
+  isComplete: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}
+
+const SearchSection = ({
+  icon,
+  title,
+  summary,
+  isExpanded,
+  isComplete,
+  onToggle,
+  children,
+}: SearchSectionProps) => {
+  return (
+    <div className="border border-[#3B3B40] rounded-2xl overflow-hidden bg-[rgba(255,255,255,0.05)] backdrop-blur-sm">
+      {/* Section Header */}
+      <motion.button
+        onClick={onToggle}
+        className="w-full px-5 py-4 flex items-center justify-between text-left transition-colors hover:bg-[rgba(255,255,255,0.05)]"
+        whileTap={{ scale: 0.995 }}
+      >
+        <div className="flex items-center gap-3">
+          <div className={`text-white ${isComplete ? 'opacity-100' : 'opacity-60'}`}>
+            {icon}
+          </div>
+          <div className="flex flex-col">
+            <span className={`font-['Archivo'] font-medium text-[15px] ${isComplete ? 'text-white' : 'text-[#cbcbd2]'}`}>
+              {title}
+            </span>
+            {!isExpanded && (
+              <span className={`font-['Archivo'] font-light text-[13px] ${isComplete ? 'text-white' : 'text-[#cbcbd2] opacity-60'}`}>
+                {summary || 'Not selected'}
+              </span>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {isComplete && !isExpanded && (
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="text-green-400"
+            >
+              <CheckIcon />
+            </motion.div>
+          )}
+          <div className="text-[#cbcbd2]">
+            <ChevronIcon isExpanded={isExpanded} />
+          </div>
+        </div>
+      </motion.button>
+
+      {/* Section Content */}
+      <AnimatePresence initial={false}>
+        {isExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] }}
+          >
+            <div className="px-5 pb-5 pt-2 border-t border-[#3B3B40]">
+              {children}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+// Participant Counter Component
+interface ParticipantCounterProps {
+  title: string;
+  description: string;
+  count: number;
+  onIncrement: () => void;
+  onDecrement: () => void;
+  minimumValue?: number;
+  isLast?: boolean;
+}
+
+const ParticipantCounter = ({
+  title,
+  description,
+  count,
+  onIncrement,
+  onDecrement,
+  minimumValue = 0,
+  isLast = false
+}: ParticipantCounterProps) => {
+  const isAtMinimum = count <= minimumValue;
+
+  return (
+    <div className={`flex items-center justify-between py-4 ${!isLast ? 'border-b border-[#3B3B40]' : ''}`}>
+      <div>
+        <div className="font-['Archivo'] font-medium text-white text-base">
+          {title}
+        </div>
+        <div className="font-['Archivo'] font-light text-[#cbcbd2] text-sm">
+          {description}
+        </div>
+      </div>
+      <div className="flex items-center gap-3">
+        <motion.button
+          onClick={onDecrement}
+          className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${
+            isAtMinimum
+              ? 'bg-[rgba(255,255,255,0.05)] text-[#666] cursor-not-allowed'
+              : 'bg-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.2)]'
+          }`}
+          whileHover={!isAtMinimum ? { scale: 1.1 } : {}}
+          whileTap={!isAtMinimum ? { scale: 0.9 } : {}}
+        >
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <path d="M4 8H12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
+        </motion.button>
+        <div className="w-10 text-center font-['Archivo'] font-medium text-white text-lg">
+          {count}
+        </div>
+        <motion.button
+          onClick={onIncrement}
+          className="w-9 h-9 rounded-full bg-[rgba(255,255,255,0.1)] flex items-center justify-center text-white hover:bg-[rgba(255,255,255,0.2)] transition-colors"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+        >
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <path d="M8 4V12M4 8H12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
+        </motion.button>
+      </div>
+    </div>
+  );
+};
+
+// Location Card Component
+const LocationCard = ({
+  location,
+  onClick,
+  isSelected
+}: {
+  location: Location;
+  onClick?: () => void;
+  isSelected?: boolean;
+}) => {
+  const [imageError, setImageError] = useState(false);
+
+  // Determine country flag emoji
+  const getFlagEmoji = (countryCode: string) => {
+    if (countryCode === 'FR') return '🇫🇷';
+    if (countryCode === 'CH') return '🇨🇭';
+    if (countryCode === 'AT') return '🇦🇹';
+    if (countryCode === 'IT') return '🇮🇹';
+    return '🏔️';
+  };
+
+  const hasValidImage = location.thumbnail_url && location.thumbnail_url.trim() !== '' && !imageError;
+
+  return (
+    <motion.div
+      className={`h-[57px] relative shrink-0 w-full cursor-pointer group rounded-xl transition-colors ${
+        isSelected ? 'bg-[rgba(255,255,255,0.15)]' : 'hover:bg-[rgba(255,255,255,0.05)]'
+      }`}
+      onClick={onClick}
+      whileHover={{ scale: 1.01 }}
+      whileTap={{ scale: 0.99 }}
+    >
+      {/* Location Details */}
+      <div className="absolute box-border content-stretch flex flex-col items-start justify-start left-[65px] p-0 translate-y-[-50%] right-4 top-1/2">
+        <div className="box-border content-stretch flex flex-row gap-2 items-center justify-start p-0 relative shrink-0 w-full">
+          <div className="relative shrink-0 size-[16px] flex items-center justify-center text-sm">
+            {getFlagEmoji(location.country_code)}
+          </div>
+          <div className="font-['Archivo'] font-medium h-full leading-[1.4] not-italic relative shrink-0 text-[#ffffff] text-[15px] text-left tracking-[0.08px] flex-1 min-w-0 truncate">
+            {location.name}
+          </div>
+          {isSelected && (
+            <div className="text-green-400 shrink-0">
+              <CheckIcon />
+            </div>
+          )}
+        </div>
+        <div className="font-['Archivo'] font-light leading-[1.4] not-italic relative shrink-0 text-[#cbcbd2] text-[13px] text-left text-nowrap">
+          from €{location.average_price}/ph
+        </div>
+      </div>
+
+      {/* Location Image */}
+      <div className="absolute left-1 top-1/2 -translate-y-1/2 rounded-lg size-[49px] overflow-hidden group-hover:scale-105 transition-transform duration-200">
+        {hasValidImage ? (
+          <img
+            src={location.thumbnail_url}
+            alt={`${location.name} ski resort`}
+            className="w-full h-full object-cover rounded-lg"
+            onError={() => setImageError(true)}
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-blue-500/80 to-purple-600/80 flex items-center justify-center rounded-lg">
+            <span className="text-lg">{getFlagEmoji(location.country_code)}</span>
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+};
+
+// Default locations fallback
 const defaultLocations: Location[] = [
-  // Les 3 Vallées (Three Valleys)
   {
     id: "1",
     name: "Courchevel 1850",
@@ -211,423 +344,54 @@ const defaultLocations: Location[] = [
     country_code: "FR",
     average_price: 380,
     currency: "EUR",
-    thumbnail_url: "/assets/images/ski-bg-1.png",
-    description: "Luxury resort in Les 3 Vallées, world's largest ski area"
+    thumbnail_url: "",
+    description: "Luxury resort in Les 3 Vallées"
   },
-  {
-    id: "2", 
-    name: "Méribel",
-    country: "France",
-    country_code: "FR",
-    average_price: 320,
-    currency: "EUR",
-    thumbnail_url: "/assets/images/ski-bg-2.png",
-    description: "Heart of Les 3 Vallées with traditional Alpine architecture"
-  },
-  {
-    id: "3",
-    name: "Val Thorens", 
-    country: "France",
-    country_code: "FR",
-    average_price: 340,
-    currency: "EUR",
-    thumbnail_url: "/assets/images/ski-bg-3.png",
-    description: "Highest ski resort in Europe at 2,300m altitude"
-  },
-  {
-    id: "4",
-    name: "Les Menuires",
-    country: "France", 
-    country_code: "FR",
-    average_price: 280,
-    currency: "EUR",
-    thumbnail_url: "https://images.unsplash.com/photo-1551524164-bb8b0c4dda5e?w=400&h=300&fit=crop&crop=center&q=80",
-    description: "Family-friendly resort in Les 3 Vallées"
-  },
-  {
-    id: "5",
-    name: "La Tania",
-    country: "France", 
-    country_code: "FR",
-    average_price: 260,
-    currency: "EUR",
-    thumbnail_url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop&crop=center&q=80",
-    description: "Charming village resort in Les 3 Vallées"
-  },
-
-  // Espace Killy (Tignes & Val d'Isère)
-  {
-    id: "6",
-    name: "Tignes",
-    country: "France",
-    country_code: "FR",
-    average_price: 310,
-    currency: "EUR",
-    thumbnail_url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop&crop=center&q=80",
-    description: "High-altitude resort with glacier skiing"
-  },
-  {
-    id: "7",
-    name: "Val d'Isère",
-    country: "France",
-    country_code: "FR",
-    average_price: 350,
-    currency: "EUR",
-    thumbnail_url: "https://images.unsplash.com/photo-1605540436563-5bca919ae766?w=400&h=300&fit=crop&crop=center&q=80",
-    description: "World-class resort in Espace Killy"
-  },
-
-  // Chamonix Valley
-  {
-    id: "8",
-    name: "Chamonix",
-    country: "France",
-    country_code: "FR",
-    average_price: 400,
-    currency: "EUR",
-    thumbnail_url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop&crop=center&q=80",
-    description: "Birthplace of extreme skiing, home of the first Winter Olympics"
-  },
-
-  // Portes du Soleil
-  {
-    id: "9",
-    name: "Avoriaz",
-    country: "France",
-    country_code: "FR",
-    average_price: 290,
-    currency: "EUR",
-    thumbnail_url: "https://images.unsplash.com/photo-1551524164-6cf2ac44c8e8?w=400&h=300&fit=crop&crop=center&q=80",
-    description: "Car-free resort in Portes du Soleil area"
-  },
-  {
-    id: "10",
-    name: "Morzine",
-    country: "France",
-    country_code: "FR",
-    average_price: 270,
-    currency: "EUR",
-    thumbnail_url: "https://images.unsplash.com/photo-1605540436563-5bca919ae766?w=400&h=300&fit=crop&crop=center&q=80",
-    description: "Traditional Alpine town in Portes du Soleil"
-  },
-  {
-    id: "11",
-    name: "Les Gets",
-    country: "France",
-    country_code: "FR",
-    average_price: 250,
-    currency: "EUR",
-    thumbnail_url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop&crop=center&q=80",
-    description: "Charming traditional village in Portes du Soleil"
-  },
-
-  // Paradiski
-  {
-    id: "12",
-    name: "La Plagne",
-    country: "France",
-    country_code: "FR",
-    average_price: 280,
-    currency: "EUR",
-    thumbnail_url: "https://images.unsplash.com/photo-1551524164-bb8b0c4dda5e?w=400&h=300&fit=crop&crop=center&q=80",
-    description: "Large ski area in Paradiski domain"
-  },
-  {
-    id: "13",
-    name: "Les Arcs",
-    country: "France",
-    country_code: "FR",
-    average_price: 290,
-    currency: "EUR",
-    thumbnail_url: "https://images.unsplash.com/photo-1605540436563-5bca919ae766?w=400&h=300&fit=crop&crop=center&q=80",
-    description: "Modern resort architecture in Paradiski"
-  },
-
-  // Southern French Alps
-  {
-    id: "14",
-    name: "Alpe d'Huez",
-    country: "France",
-    country_code: "FR",
-    average_price: 320,
-    currency: "EUR",
-    thumbnail_url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop&crop=center&q=80",
-    description: "Famous for 21 hairpin bends and glacier skiing"
-  },
-  {
-    id: "15",
-    name: "Les Deux Alpes",
-    country: "France",
-    country_code: "FR",
-    average_price: 300,
-    currency: "EUR",
-    thumbnail_url: "https://images.unsplash.com/photo-1551524164-6cf2ac44c8e8?w=400&h=300&fit=crop&crop=center&q=80",
-    description: "Europe's largest skiable glacier"
-  },
-  {
-    id: "16",
-    name: "Serre Chevalier",
-    country: "France",
-    country_code: "FR",
-    average_price: 270,
-    currency: "EUR",
-    thumbnail_url: "https://images.unsplash.com/photo-1605540436563-5bca919ae766?w=400&h=300&fit=crop&crop=center&q=80",
-    description: "Diverse terrain with authentic Alpine villages"
-  },
-  {
-    id: "17",
-    name: "Isola 2000",
-    country: "France",
-    country_code: "FR",
-    average_price: 240,
-    currency: "EUR",
-    thumbnail_url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop&crop=center&q=80",
-    description: "Purpose-built resort near Nice"
-  },
-
-  // Savoie Region
-  {
-    id: "18",
-    name: "La Clusaz",
-    country: "France",
-    country_code: "FR",
-    average_price: 260,
-    currency: "EUR",
-    thumbnail_url: "https://images.unsplash.com/photo-1551524164-bb8b0c4dda5e?w=400&h=300&fit=crop&crop=center&q=80",
-    description: "Traditional Savoyard village resort"
-  },
-  {
-    id: "19",
-    name: "Le Grand Bornand",
-    country: "France",
-    country_code: "FR",
-    average_price: 240,
-    currency: "EUR",
-    thumbnail_url: "https://images.unsplash.com/photo-1605540436563-5bca919ae766?w=400&h=300&fit=crop&crop=center&q=80",
-    description: "Authentic mountain village with Nordic skiing"
-  },
-  {
-    id: "20",
-    name: "Megève",
-    country: "France",
-    country_code: "FR",
-    average_price: 420,
-    currency: "EUR",
-    thumbnail_url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop&crop=center&q=80",
-    description: "Chic resort with luxury hotels and spas"
-  },
-
-  // French Pyrenees
-  {
-    id: "21",
-    name: "Saint-Lary-Soulan",
-    country: "France",
-    country_code: "FR",
-    average_price: 180,
-    currency: "EUR",
-    thumbnail_url: "https://images.unsplash.com/photo-1551524164-6cf2ac44c8e8?w=400&h=300&fit=crop&crop=center&q=80",
-    description: "Largest ski resort in French Pyrenees"
-  },
-  {
-    id: "22",
-    name: "Grand Tourmalet",
-    country: "France",
-    country_code: "FR",
-    average_price: 170,
-    currency: "EUR",
-    thumbnail_url: "https://images.unsplash.com/photo-1605540436563-5bca919ae766?w=400&h=300&fit=crop&crop=center&q=80",
-    description: "Largest ski area in Pyrenees including La Mongie and Barèges"
-  },
-  {
-    id: "23",
-    name: "Cauterets",
-    country: "France",
-    country_code: "FR",
-    average_price: 160,
-    currency: "EUR",
-    thumbnail_url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop&crop=center&q=80",
-    description: "Historic spa town with excellent snow record"
-  },
-  {
-    id: "24",
-    name: "Luz-Ardiden",
-    country: "France",
-    country_code: "FR",
-    average_price: 150,
-    currency: "EUR",
-    thumbnail_url: "https://images.unsplash.com/photo-1551524164-bb8b0c4dda5e?w=400&h=300&fit=crop&crop=center&q=80",
-    description: "High-altitude Pyrenees resort with panoramic views"
-  },
-  {
-    id: "25",
-    name: "Piau-Engaly",
-    country: "France",
-    country_code: "FR",
-    average_price: 140,
-    currency: "EUR",
-    thumbnail_url: "https://images.unsplash.com/photo-1605540436563-5bca919ae766?w=400&h=300&fit=crop&crop=center&q=80",
-    description: "Highest resort in French Pyrenees"
-  },
-  {
-    id: "26",
-    name: "Gourette",
-    country: "France",
-    country_code: "FR",
-    average_price: 135,
-    currency: "EUR",
-    thumbnail_url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop&crop=center&q=80",
-    description: "Family-friendly Pyrenees resort"
-  },
-  {
-    id: "27",
-    name: "Peyragudes",
-    country: "France",
-    country_code: "FR",
-    average_price: 130,
-    currency: "EUR",
-    thumbnail_url: "https://images.unsplash.com/photo-1551524164-6cf2ac44c8e8?w=400&h=300&fit=crop&crop=center&q=80",
-    description: "Modern Pyrenees resort with varied terrain"
-  },
-
-  // Additional Alpine Resorts
-  {
-    id: "28",
-    name: "Flaine",
-    country: "France",
-    country_code: "FR",
-    average_price: 280,
-    currency: "EUR",
-    thumbnail_url: "https://images.unsplash.com/photo-1551524164-bb8b0c4dda5e?w=400&h=300&fit=crop&crop=center&q=80",
-    description: "Purpose-built resort in Grand Massif"
-  },
-  {
-    id: "29",
-    name: "Samoëns",
-    country: "France",
-    country_code: "FR",
-    average_price: 250,
-    currency: "EUR",
-    thumbnail_url: "https://images.unsplash.com/photo-1605540436563-5bca919ae766?w=400&h=300&fit=crop&crop=center&q=80",
-    description: "Historic stone village in Grand Massif"
-  },
-  {
-    id: "30",
-    name: "Morillon",
-    country: "France",
-    country_code: "FR",
-    average_price: 230,
-    currency: "EUR",
-    thumbnail_url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop&crop=center&q=80",
-    description: "Family resort in Grand Massif area"
-  }
 ];
-
-const LocationCard = ({ 
-  location, 
-  onClick 
-}: { 
-  location: Location; 
-  onClick?: () => void;
-}) => {
-  return (
-    <motion.div
-      className="h-[57px] relative shrink-0 w-full cursor-pointer group"
-      onClick={onClick}
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-    >
-      {/* Location Details */}
-      <div className="absolute box-border content-stretch flex flex-col items-start justify-start left-[73px] p-0 translate-y-[-50%] right-4 top-1/2">
-        <div className="box-border content-stretch flex flex-row gap-[7px] items-center justify-start p-0 relative shrink-0 w-full">
-          {/* Country Flag - using emoji for now, replace with actual flag icons */}
-          <div className="relative shrink-0 size-[18px] flex items-center justify-center text-sm">
-            🇫🇷
-          </div>
-          <div className="font-['Archivo'] font-medium h-full leading-[1.4] not-italic relative shrink-0 text-[#ffffff] text-[16px] text-left tracking-[0.08px] flex-1 min-w-0">
-            {location.name}
-          </div>
-        </div>
-        <div className="font-['Archivo'] font-light leading-[1.4] not-italic relative shrink-0 text-[#cbcbd2] text-[14px] text-left text-nowrap">
-          Average price €{location.average_price}/ph
-        </div>
-      </div>
-      
-      {/* Location Image */}
-      <div className="absolute left-0 rounded-xl size-[57px] top-0 overflow-hidden group-hover:scale-105 transition-transform duration-200 bg-gray-600">
-        {location.thumbnail_url ? (
-          <img
-            src={location.thumbnail_url}
-            alt={`${location.name} ski resort`}
-            className="w-full h-full object-cover rounded-xl"
-            onError={(e) => {
-              // Fallback to gradient if image fails to load
-              const target = e.target as HTMLImageElement;
-              target.style.display = 'none';
-              const parent = target.parentElement;
-              if (parent) {
-                parent.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-              }
-            }}
-          />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600" />
-        )}
-      </div>
-    </motion.div>
-  );
-};
-
 
 export const SearchModal = ({
   isOpen,
   onClose,
   locations = defaultLocations,
-  sportOptions = [],
   sportDisciplines = [],
   onLocationSelect,
   searchValue = "",
   onSearchChange,
   isLoading = false,
-  step = 'location',
   selectedLocation,
   selectedDates,
   onDatesSelect,
   selectedSports = [],
   onSportSelect,
-  onStepChange,
-  participantCounts = { adults: 2, teenagers: 0, children: 0 },
+  participantCounts = { adults: 1, teenagers: 0, children: 0 },
   onParticipantCountsChange,
   onSearch,
 }: SearchModalProps) => {
-  const [internalSearchValue, setInternalSearchValue] = React.useState(searchValue);
-  const [isSearching, setIsSearching] = React.useState(false);
+  // Local state for expanded section
+  const [expandedSection, setExpandedSection] = useState<SectionId>('location');
+  const [internalSearchValue, setInternalSearchValue] = useState(searchValue);
+  const [isSearching, setIsSearching] = useState(false);
 
-  const handleSearchComplete = () => {
-    if (onSearch && selectedLocation) {
-      onSearch({
-        location: selectedLocation,
-        sports: selectedSports,
-        participants: participantCounts
-      });
-    }
-    onClose();
+  // Toggle section expansion (accordion behavior)
+  const toggleSection = (section: SectionId) => {
+    setExpandedSection(section);
   };
 
   // Debounced search function
-  const debouncedSearch = React.useMemo(() => {
+  const debouncedSearch = useMemo(() => {
     const timeoutRef: { current: NodeJS.Timeout | null } = { current: null };
-    
+
     return (value: string) => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
-      
+
       setIsSearching(true);
-      
+
       timeoutRef.current = setTimeout(() => {
         onSearchChange?.(value);
         setIsSearching(false);
-      }, 300); // 300ms debounce
+      }, 300);
     };
   }, [onSearchChange]);
 
@@ -637,24 +401,78 @@ export const SearchModal = ({
   };
 
   // Filter locations based on search value
-  const { filteredLocations, totalMatches } = React.useMemo(() => {
+  const { filteredLocations, totalMatches } = useMemo(() => {
     if (!internalSearchValue.trim()) {
       return {
-        filteredLocations: locations.slice(0, 4), // Show top 4 by default
-        totalMatches: 4
+        filteredLocations: locations.slice(0, 5),
+        totalMatches: 5
       };
     }
-    
+
     const allMatches = locations.filter(location =>
       location.name.toLowerCase().includes(internalSearchValue.toLowerCase()) ||
       location.description?.toLowerCase().includes(internalSearchValue.toLowerCase())
     );
-    
+
     return {
-      filteredLocations: allMatches.slice(0, 6), // Maximum 6 when searching
+      filteredLocations: allMatches.slice(0, 6),
       totalMatches: allMatches.length
     };
   }, [locations, internalSearchValue]);
+
+  // Calculate section summaries
+  const locationSummary = selectedLocation?.name || null;
+
+  const datesSummary = useMemo(() => {
+    if (!selectedDates?.startDate || !selectedDates?.endDate) return null;
+    const start = new Date(selectedDates.startDate);
+    const end = new Date(selectedDates.endDate);
+    const startFormatted = start.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+    const endFormatted = end.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+    return `${startFormatted} - ${endFormatted}`;
+  }, [selectedDates]);
+
+  const sportsSummary = useMemo(() => {
+    if (selectedSports.length === 0) return null;
+    const selectedNames = sportDisciplines
+      .filter(d => selectedSports.includes(d.id))
+      .map(d => d.name);
+    if (selectedNames.length === 0) return null;
+    if (selectedNames.length === 1) return selectedNames[0];
+    if (selectedNames.length === 2) return selectedNames.join(' & ');
+    return `${selectedNames.length} disciplines`;
+  }, [selectedSports, sportDisciplines]);
+
+  const participantsSummary = useMemo(() => {
+    const total = participantCounts.adults + participantCounts.teenagers + participantCounts.children;
+    if (total === 0) return null;
+    if (total === 1) return '1 participant';
+    return `${total} participants`;
+  }, [participantCounts]);
+
+  // Determine section completion
+  const isLocationComplete = !!selectedLocation;
+  const isDatesComplete = !!(selectedDates?.startDate && selectedDates?.endDate);
+  const isSportsComplete = selectedSports.length > 0;
+  const isParticipantsComplete = (participantCounts.adults + participantCounts.teenagers + participantCounts.children) > 0;
+
+  // Check if search can be submitted
+  const canSearch = isLocationComplete && isDatesComplete && isParticipantsComplete;
+
+  const handleSearchComplete = () => {
+    if (onSearch && selectedLocation && selectedDates?.startDate && selectedDates?.endDate) {
+      onSearch({
+        location: selectedLocation,
+        sports: selectedSports,
+        participants: participantCounts,
+        dates: {
+          startDate: selectedDates.startDate,
+          endDate: selectedDates.endDate
+        }
+      });
+    }
+    onClose();
+  };
 
   const showLoading = isLoading || isSearching;
 
@@ -665,7 +483,7 @@ export const SearchModal = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
       onClick={onClose}
     >
       {/* Backdrop with blur */}
@@ -673,293 +491,302 @@ export const SearchModal = ({
         initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
         animate={{ opacity: 1, backdropFilter: "blur(10px)" }}
         exit={{ opacity: 0, backdropFilter: "blur(0px)" }}
-        className="absolute inset-0 bg-black bg-opacity-50"
+        className="absolute inset-0 bg-black/60"
       />
 
       {/* Modal Content */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.8, y: 50 }}
+        initial={{ opacity: 0, scale: 0.9, y: 30 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.8, y: 50 }}
+        exit={{ opacity: 0, scale: 0.9, y: 30 }}
         transition={{
           type: "spring",
           stiffness: 300,
-          damping: 25,
+          damping: 30,
         }}
-        className="relative z-10 w-[90vw] min-w-[350px] max-w-[750px] mx-4"
+        className="relative z-10 w-full max-w-[600px] max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Search Modal Container - Exact Figma Specifications */}
-        <div className="bg-[rgba(255,255,255,0.1)] box-border content-stretch flex flex-col gap-[33px] items-start justify-start p-12 relative rounded-[60px] backdrop-blur-[25px] backdrop-filter">
-          
-          {/* Header Section */}
-          <div className="box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative shrink-0 w-full">
-            <div className="flex flex-col font-['Archivo'] font-medium justify-center leading-[28px] not-italic relative shrink-0 text-[#ffffff] text-[20px] sm:text-[24px] text-left text-nowrap tracking-[0.12px]">
-              {step === 'location' && 'Where to?'}
-              {step === 'dates' && 'When are you visiting?'}
-              {step === 'sport' && 'What are you into?'}
-              {step === 'participants' && 'How many participants?'}
-            </div>
-            
-            {/* Search Input - Only for location step */}
-            {step === 'location' && (
-              <div className="backdrop-blur-[25px] backdrop-filter bg-[rgba(255,255,255,0.1)] relative rounded-lg shrink-0 w-full">
-                <div className="box-border content-stretch flex flex-row gap-4 items-center justify-start overflow-clip pl-4 pr-3 py-0 relative w-full">
-                  <input
-                    type="text"
-                    value={internalSearchValue}
-                    onChange={(e) => handleSearchChange(e.target.value)}
-                    placeholder="Search destinations..."
-                    className="basis-0 font-['Archivo'] font-light grow leading-[24px] min-h-[52px] min-w-px not-italic relative shrink-0 text-[#cbcbd2] text-[16px] text-left tracking-[0.08px] bg-transparent border-none outline-none placeholder:text-[#cbcbd2]"
-                    autoFocus
-                  />
-                  <div className="h-[52px] relative shrink-0 w-6 flex items-center justify-center">
-                    <svg
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      className="text-[#cbcbd2]"
-                    >
-                      <path
-                        d="M21 21L16.5 16.5M19 11C19 15.4183 15.4183 19 11 19C6.58172 19 3 15.4183 3 11C3 6.58172 6.58172 3 11 3C15.4183 3 19 6.58172 19 11Z"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
+        {/* Search Modal Container */}
+        <div className="bg-[rgba(20,20,24,0.95)] box-border flex flex-col gap-4 p-6 sm:p-8 relative rounded-3xl backdrop-blur-[25px] border border-[#3B3B40]">
+
+          {/* Header */}
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="font-['Archivo'] font-semibold text-white text-xl sm:text-2xl">
+              Find your instructor
+            </h2>
+            <motion.button
+              onClick={onClose}
+              className="w-8 h-8 rounded-full bg-[rgba(255,255,255,0.1)] flex items-center justify-center text-[#cbcbd2] hover:text-white hover:bg-[rgba(255,255,255,0.2)] transition-colors"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </motion.button>
+          </div>
+
+          {/* Accordion Sections */}
+          <div className="flex flex-col gap-3">
+
+            {/* Location Section */}
+            <SearchSection
+              id="location"
+              icon={<LocationIcon />}
+              title="Location"
+              summary={locationSummary}
+              isExpanded={expandedSection === 'location'}
+              isComplete={isLocationComplete}
+              onToggle={() => toggleSection('location')}
+            >
+              {/* Search Input */}
+              <div className="mb-4">
+                <div className="bg-[rgba(255,255,255,0.08)] relative rounded-lg w-full">
+                  <div className="flex flex-row gap-3 items-center px-4 py-0 w-full">
+                    <input
+                      type="text"
+                      value={internalSearchValue}
+                      onChange={(e) => handleSearchChange(e.target.value)}
+                      placeholder="Search resorts..."
+                      className="font-['Archivo'] font-light min-h-[44px] flex-1 text-[#cbcbd2] text-[15px] bg-transparent border-none outline-none placeholder:text-[#666]"
+                      autoFocus
+                    />
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-[#666] shrink-0">
+                      <path d="M21 21L16.5 16.5M19 11C19 15.4183 15.4183 19 11 19C6.58172 19 3 15.4183 3 11C3 6.58172 6.58172 3 11 3C15.4183 3 19 6.58172 19 11Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </div>
                 </div>
               </div>
-            )}
+
+              {/* Location Results */}
+              <div className="flex flex-col gap-1">
+                <div className="font-['Archivo'] font-light text-[#cbcbd2] text-[12px] mb-2 uppercase tracking-wider">
+                  {internalSearchValue.trim() ? `Results` : "Popular resorts"}
+                </div>
+
+                {showLoading ? (
+                  <SearchLoadingSpinner />
+                ) : (
+                  <>
+                    {filteredLocations.map((location) => (
+                      <LocationCard
+                        key={location.id}
+                        location={location}
+                        isSelected={selectedLocation?.id === location.id}
+                        onClick={() => {
+                          onLocationSelect?.(location);
+                          // Auto-advance to dates section after selection
+                          setTimeout(() => setExpandedSection('dates'), 200);
+                        }}
+                      />
+                    ))}
+
+                    {filteredLocations.length === 0 && !showLoading && (
+                      <div className="text-[#cbcbd2] text-center py-6 font-['Archivo'] font-light">
+                        <p>No resorts found</p>
+                        <p className="text-xs mt-1 opacity-70">Try a different search term</p>
+                      </div>
+                    )}
+
+                    {internalSearchValue.trim() && filteredLocations.length > 0 && totalMatches > filteredLocations.length && (
+                      <div className="text-[#cbcbd2] text-center text-xs mt-2 opacity-70 font-['Archivo'] font-light">
+                        Showing {filteredLocations.length} of {totalMatches} resorts
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </SearchSection>
+
+            {/* Dates Section */}
+            <SearchSection
+              id="dates"
+              icon={<CalendarIcon />}
+              title="Dates"
+              summary={datesSummary}
+              isExpanded={expandedSection === 'dates'}
+              isComplete={isDatesComplete}
+              onToggle={() => toggleSection('dates')}
+            >
+              <Calendar
+                selectionMode="range"
+                showBookingIndicators={false}
+                onRangeSelect={(startDate, endDate) => {
+                  if (startDate && endDate) {
+                    onDatesSelect?.(startDate, endDate);
+                    // Auto-advance to sport section after selection
+                    setTimeout(() => setExpandedSection('sport'), 200);
+                  }
+                }}
+                className="w-full"
+              />
+            </SearchSection>
+
+            {/* Sport Section */}
+            <SearchSection
+              id="sport"
+              icon={<SportIcon />}
+              title="Discipline"
+              summary={sportsSummary}
+              isExpanded={expandedSection === 'sport'}
+              isComplete={isSportsComplete}
+              onToggle={() => toggleSection('sport')}
+            >
+              <div className="font-['Archivo'] font-light text-[#cbcbd2] text-[12px] mb-3 uppercase tracking-wider">
+                Select one or more disciplines
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {sportDisciplines.map((discipline) => {
+                  const isSelected = selectedSports.includes(discipline.id);
+                  return (
+                    <motion.button
+                      key={discipline.id}
+                      className={`relative h-9 rounded-full shrink-0 cursor-pointer transition-all duration-200 ${
+                        isSelected
+                          ? 'bg-white'
+                          : 'bg-[#25252b] hover:bg-[#2a2a31] border border-[#3B3B40]'
+                      }`}
+                      onClick={() => {
+                        const newSelectedSports = isSelected
+                          ? selectedSports.filter(id => id !== discipline.id)
+                          : [...selectedSports, discipline.id];
+                        onSportSelect?.(newSelectedSports);
+                      }}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <div className="flex flex-row gap-2 h-9 items-center justify-center overflow-clip pl-2 pr-3 py-1">
+                        {discipline.image_url && (
+                          <div className="relative shrink-0 size-5">
+                            <img
+                              alt=""
+                              className="block max-w-none size-full object-contain"
+                              src={discipline.image_url}
+                            />
+                          </div>
+                        )}
+                        <span
+                          className={`font-['Archivo'] font-normal text-[13px] text-nowrap ${
+                            isSelected ? 'text-[#0d0d0f]' : 'text-white'
+                          }`}
+                        >
+                          {discipline.name}
+                        </span>
+                      </div>
+                    </motion.button>
+                  );
+                })}
+              </div>
+              {sportDisciplines.length === 0 && (
+                <div className="text-[#cbcbd2] text-center py-4 font-['Archivo'] font-light text-sm">
+                  No disciplines available
+                </div>
+              )}
+            </SearchSection>
+
+            {/* Participants Section */}
+            <SearchSection
+              id="participants"
+              icon={<ParticipantsIcon />}
+              title="Participants"
+              summary={participantsSummary}
+              isExpanded={expandedSection === 'participants'}
+              isComplete={isParticipantsComplete}
+              onToggle={() => toggleSection('participants')}
+            >
+              <div className="space-y-0">
+                <ParticipantCounter
+                  title="Adults"
+                  description="16 years and older"
+                  count={participantCounts.adults}
+                  onIncrement={() => {
+                    onParticipantCountsChange?.({
+                      ...participantCounts,
+                      adults: participantCounts.adults + 1
+                    });
+                  }}
+                  onDecrement={() => {
+                    onParticipantCountsChange?.({
+                      ...participantCounts,
+                      adults: Math.max(0, participantCounts.adults - 1)
+                    });
+                  }}
+                  minimumValue={0}
+                />
+
+                <ParticipantCounter
+                  title="Teenagers"
+                  description="10 to 15 years"
+                  count={participantCounts.teenagers}
+                  onIncrement={() => {
+                    onParticipantCountsChange?.({
+                      ...participantCounts,
+                      teenagers: participantCounts.teenagers + 1
+                    });
+                  }}
+                  onDecrement={() => {
+                    onParticipantCountsChange?.({
+                      ...participantCounts,
+                      teenagers: Math.max(0, participantCounts.teenagers - 1)
+                    });
+                  }}
+                  minimumValue={0}
+                />
+
+                <ParticipantCounter
+                  title="Children"
+                  description="4 to 9 years"
+                  count={participantCounts.children}
+                  onIncrement={() => {
+                    onParticipantCountsChange?.({
+                      ...participantCounts,
+                      children: participantCounts.children + 1
+                    });
+                  }}
+                  onDecrement={() => {
+                    onParticipantCountsChange?.({
+                      ...participantCounts,
+                      children: Math.max(0, participantCounts.children - 1)
+                    });
+                  }}
+                  minimumValue={0}
+                  isLast={true}
+                />
+              </div>
+            </SearchSection>
           </div>
 
-          {/* Step Content */}
-          <div className="box-border content-stretch flex flex-col gap-3 items-start justify-start p-0 relative shrink-0 w-full">
-            {step === 'location' && (
-              <>
-                <div className="font-['Archivo'] font-light leading-[18px] not-italic relative shrink-0 text-[#cbcbd2] text-[14px] text-left tracking-[0.07px]">
-                  {internalSearchValue.trim() ? `Results for "${internalSearchValue}"` : "Suggested"}
-                </div>
-              </>
-            )}
-            
-            {step === 'sport' && (
-              <div className="font-['Archivo'] font-light leading-[18px] not-italic relative shrink-0 text-[#cbcbd2] text-[14px] text-left tracking-[0.07px]">
-                Sports and disciplines
-              </div>
-            )}
-            
-            {step === 'participants' && (
-              <div className="font-['Archivo'] font-light leading-[18px] not-italic relative shrink-0 text-[#cbcbd2] text-[14px] text-left tracking-[0.07px]">
-                Set the number of participants
-              </div>
-            )}
-            
-            {/* Step-specific Content */}
-            <div className="flex flex-col gap-3 w-full">
-              {step === 'location' && (
-                <>
-                  {showLoading ? (
-                    <SearchLoadingSpinner />
-                  ) : (
-                    <>
-                      {filteredLocations.map((location) => (
-                        <LocationCard
-                          key={location.id}
-                          location={location}
-                          onClick={() => onLocationSelect?.(location)}
-                        />
-                      ))}
-                      
-                      {filteredLocations.length === 0 && !showLoading && (
-                        <div className="text-[#cbcbd2] text-center py-8 font-['Archivo'] font-light">
-                          <p>No destinations found</p>
-                          <p className="text-xs mt-1 opacity-70">Try searching for different terms</p>
-                        </div>
-                      )}
-                      
-                      {internalSearchValue.trim() && filteredLocations.length > 0 && !showLoading && (
-                        <div className="text-[#cbcbd2] text-center text-xs mt-2 opacity-70 font-['Archivo'] font-light">
-                          {totalMatches === filteredLocations.length ? (
-                            `Found ${totalMatches} destination${totalMatches !== 1 ? 's' : ''}`
-                          ) : (
-                            `Showing ${filteredLocations.length} of ${totalMatches} destination${totalMatches !== 1 ? 's' : ''}`
-                          )}
-                        </div>
-                      )}
-                    </>
-                  )}
-                </>
-              )}
+          {/* Search Button */}
+          <motion.button
+            onClick={handleSearchComplete}
+            disabled={!canSearch}
+            className={`w-full mt-2 py-3.5 rounded-2xl font-['Archivo'] font-semibold text-[15px] transition-all ${
+              canSearch
+                ? 'bg-white text-[#0d0d0f] hover:bg-gray-100 cursor-pointer'
+                : 'bg-[rgba(255,255,255,0.1)] text-[#666] cursor-not-allowed'
+            }`}
+            whileHover={canSearch ? { scale: 1.01 } : {}}
+            whileTap={canSearch ? { scale: 0.99 } : {}}
+          >
+            {canSearch ? 'Search Instructors' : 'Complete all required fields'}
+          </motion.button>
 
-              {step === 'dates' && (
-                <div className="w-full">
-                  {/* Calendar for Date Range Selection */}
-                  <Calendar
-                    selectionMode="range"
-                    showBookingIndicators={false}
-                    onRangeSelect={(startDate, endDate) => {
-                      if (startDate && endDate) {
-                        onDatesSelect?.(startDate, endDate);
-                      }
-                    }}
-                    className="w-full"
-                  />
-
-                  {/* Navigation Buttons */}
-                  <ModalNavigationButtons
-                    onBack={() => onStepChange?.('location')}
-                    onNext={() => onStepChange?.('sport')}
-                    backLabel="Back"
-                    nextLabel="Next"
-                    nextDisabled={!selectedDates?.startDate || !selectedDates?.endDate}
-                  />
-                </div>
-              )}
-
-              {step === 'sport' && (
-                <div className="w-full">
-                  {/* Sport Disciplines Pills */}
-                  <div className="flex flex-wrap gap-3 w-full">
-                    {sportDisciplines.map((discipline) => {
-                      const isSelected = selectedSports.includes(discipline.id);
-                      return (
-                        <motion.div
-                          key={discipline.id}
-                          className={`relative h-9 rounded-[500px] shrink-0 cursor-pointer transition-all duration-200 ${
-                            isSelected 
-                              ? 'bg-[#ffffff]' 
-                              : 'bg-[#25252b] hover:bg-[#2a2a31]'
-                          }`}
-                          onClick={() => {
-                            const newSelectedSports = isSelected
-                              ? selectedSports.filter(id => id !== discipline.id)
-                              : [...selectedSports, discipline.id];
-                            onSportSelect?.(newSelectedSports);
-                          }}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                        >
-                          <div className="box-border content-stretch flex flex-row gap-2 h-9 items-center justify-center overflow-clip pl-1.5 pr-3 py-1 relative">
-                            <div className="relative shrink-0 size-6">
-                              <img 
-                                alt="" 
-                                className="block max-w-none size-full" 
-                                height="24" 
-                                src={discipline.image_url} 
-                                width="24" 
-                              />
-                            </div>
-                            <div
-                              className={`font-['Archivo'] font-light leading-[18px] not-italic relative shrink-0 text-[14px] text-left text-nowrap tracking-[0.07px] ${
-                                isSelected ? 'text-[#0d0d0f]' : 'text-[#ffffff]'
-                              }`}
-                            >
-                              {discipline.name}
-                            </div>
-                          </div>
-                          <div
-                            aria-hidden="true"
-                            className={`absolute border border-solid inset-0 pointer-events-none rounded-[500px] ${
-                              isSelected ? 'border-[rgba(255,255,255,0.01)]' : 'border-[#3B3B40]'
-                            }`}
-                          />
-                        </motion.div>
-                      );
-                    })}
-                  </div>
-                  
-                  {/* Navigation Buttons */}
-                  <ModalNavigationButtons
-                    onBack={() => onStepChange?.('dates')}
-                    onNext={() => onStepChange?.('participants')}
-                    backLabel="Back"
-                    nextLabel="Next"
-                  />
-                </div>
-              )}
-              
-              {step === 'participants' && (
-                <div className="w-full">
-                  {/* Participant Counters */}
-                  <div className="space-y-0">
-                    <ParticipantCounter
-                      title="Adults"
-                      description="Older than 16"
-                      count={participantCounts.adults}
-                      onIncrement={() => {
-                        const newCounts = {
-                          ...participantCounts,
-                          adults: participantCounts.adults + 1
-                        };
-                        onParticipantCountsChange?.(newCounts);
-                      }}
-                      onDecrement={() => {
-                        const newCounts = {
-                          ...participantCounts,
-                          adults: Math.max(0, participantCounts.adults - 1)
-                        };
-                        onParticipantCountsChange?.(newCounts);
-                      }}
-                      minimumValue={0}
-                    />
-                    
-                    <ParticipantCounter
-                      title="Teenagers"
-                      description="From 10 to 15"
-                      count={participantCounts.teenagers}
-                      onIncrement={() => {
-                        const newCounts = {
-                          ...participantCounts,
-                          teenagers: participantCounts.teenagers + 1
-                        };
-                        onParticipantCountsChange?.(newCounts);
-                      }}
-                      onDecrement={() => {
-                        const newCounts = {
-                          ...participantCounts,
-                          teenagers: Math.max(0, participantCounts.teenagers - 1)
-                        };
-                        onParticipantCountsChange?.(newCounts);
-                      }}
-                      minimumValue={0}
-                    />
-                    
-                    <ParticipantCounter
-                      title="Children"
-                      description="From 4 to 9"
-                      count={participantCounts.children}
-                      onIncrement={() => {
-                        const newCounts = {
-                          ...participantCounts,
-                          children: participantCounts.children + 1
-                        };
-                        onParticipantCountsChange?.(newCounts);
-                      }}
-                      onDecrement={() => {
-                        const newCounts = {
-                          ...participantCounts,
-                          children: Math.max(0, participantCounts.children - 1)
-                        };
-                        onParticipantCountsChange?.(newCounts);
-                      }}
-                      minimumValue={0}
-                      isLast={true}
-                    />
-                  </div>
-                  
-                  {/* Navigation Buttons */}
-                  <ModalNavigationButtons
-                    onBack={() => onStepChange?.('sport')}
-                    onNext={handleSearchComplete}
-                    backLabel="Back"
-                    nextLabel="Search"
-                  />
-                </div>
-              )}
-            </div>
+          {/* Progress Indicator */}
+          <div className="flex justify-center gap-2 mt-1">
+            {[
+              { complete: isLocationComplete, label: 'Location' },
+              { complete: isDatesComplete, label: 'Dates' },
+              { complete: isParticipantsComplete, label: 'Participants' },
+            ].map((item, index) => (
+              <div
+                key={index}
+                className={`w-2 h-2 rounded-full transition-colors ${
+                  item.complete ? 'bg-green-400' : 'bg-[#3B3B40]'
+                }`}
+                title={item.label}
+              />
+            ))}
           </div>
         </div>
       </motion.div>

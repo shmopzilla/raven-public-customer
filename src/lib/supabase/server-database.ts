@@ -418,20 +418,95 @@ export async function getInstructorDisciplinesServer(instructorId: string): Prom
 
 export async function getResortsServer(): Promise<SupabaseResponse<any[]>> {
   try {
-    console.log('Server: Fetching all resorts from resorts table')
+    console.log('Server: Fetching all resorts with country and pricing data')
 
-    const { data, error } = await supabaseServer
+    // Fetch resorts
+    const { data: resorts, error: resortsError } = await supabaseServer
       .from('resorts')
-      .select('*')
+      .select('id, name, thumbnail_url, country_id, parent_id')
       .order('name')
 
-    if (error) {
-      console.error('Server: Failed to fetch resorts:', error)
-      return { data: null, error }
+    if (resortsError) {
+      console.error('Server: Failed to fetch resorts:', resortsError)
+      return { data: null, error: resortsError }
     }
 
-    console.log(`Server: Found ${data?.length || 0} resorts`)
-    return { data: data || [], error: null }
+    if (!resorts || resorts.length === 0) {
+      return { data: [], error: null }
+    }
+
+    // Fetch countries
+    const { data: countries, error: countriesError } = await supabaseServer
+      .from('countries')
+      .select('id, name, code')
+
+    if (countriesError) {
+      console.error('Server: Failed to fetch countries:', countriesError)
+    }
+
+    // Create country lookup map
+    const countryMap = new Map<number, { name: string; code: string }>()
+    countries?.forEach((c: any) => {
+      countryMap.set(c.id, { name: c.name, code: c.code })
+    })
+
+    // Fetch pricing data - get all offer-resort mappings with their prices
+    const { data: offerResorts, error: offerResortsError } = await supabaseServer
+      .from('instructor_offer_resorts')
+      .select('resort_id, offer_id')
+
+    if (offerResortsError) {
+      console.error('Server: Failed to fetch offer resorts:', offerResortsError)
+    }
+
+    // Fetch active offers with prices
+    const { data: offers, error: offersError } = await supabaseServer
+      .from('instructor_offers')
+      .select('id, hourly_rate_weekday')
+      .eq('status', 'active')
+      .gt('hourly_rate_weekday', 0)
+
+    if (offersError) {
+      console.error('Server: Failed to fetch offers:', offersError)
+    }
+
+    // Create offer price lookup
+    const offerPriceMap = new Map<string, number>()
+    offers?.forEach((o: any) => {
+      offerPriceMap.set(o.id, o.hourly_rate_weekday)
+    })
+
+    // Calculate min price per resort
+    const resortPriceMap = new Map<number, number>()
+    offerResorts?.forEach((or: any) => {
+      const price = offerPriceMap.get(or.offer_id)
+      if (price) {
+        const currentMin = resortPriceMap.get(or.resort_id)
+        if (!currentMin || price < currentMin) {
+          resortPriceMap.set(or.resort_id, price)
+        }
+      }
+    })
+
+    // Transform resorts to match expected interface
+    const transformedResorts = resorts.map((resort: any) => {
+      const country = countryMap.get(resort.country_id)
+      const minPrice = resortPriceMap.get(resort.id)
+
+      return {
+        id: String(resort.id),
+        name: resort.name,
+        country: country?.name || 'France',
+        country_code: (country?.code || 'fr').toUpperCase(),
+        average_price: minPrice || 0,
+        currency: 'EUR',
+        thumbnail_url: resort.thumbnail_url || '',
+        description: `Ski resort in ${country?.name || 'France'}`,
+      }
+    })
+
+    console.log(`Server: Found ${transformedResorts.length} resorts with pricing`)
+    return { data: transformedResorts, error: null }
   } catch (error) {
     console.error('Server: Error fetching resorts:', error)
     return { data: null, error: error as Error }

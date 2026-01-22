@@ -29,11 +29,10 @@ export interface SportOption {
 
 export interface SportDiscipline {
   id: string;
-  sportId: string;
+  sportId?: string;
   name: string;
+  image_url?: string;
 }
-
-export type ModalStep = 'location' | 'dates' | 'sport' | 'participants';
 
 export interface ParticipantCounts {
   adults: number;
@@ -64,10 +63,8 @@ interface SearchContextType {
 
   // Modal state
   isModalOpen: boolean;
-  currentStep: ModalStep;
   openSearchModal: () => void;
   closeSearchModal: () => void;
-  setModalStep: (step: ModalStep) => void;
 
   // In-progress selections
   selectedLocation: Location | null;
@@ -104,9 +101,8 @@ export function SearchProvider({ children }: SearchProviderProps) {
   // Final search criteria
   const [searchCriteria, setSearchCriteria] = useState<SearchCriteria | null>(null);
 
-  // Modal state
+  // Modal state (only open/close, step navigation is handled by the modal itself)
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentStep, setCurrentStep] = useState<ModalStep>('location');
 
   // In-progress selections (persisted when modal closes)
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
@@ -117,7 +113,7 @@ export function SearchProvider({ children }: SearchProviderProps) {
   const [selectedSports, setSelectedSports] = useState<string[]>([]);
   const [selectedDisciplines, setSelectedDisciplines] = useState<string[]>([]);
   const [participantCounts, setParticipantCounts] = useState<ParticipantCounts>({
-    adults: 0,
+    adults: 1,
     teenagers: 0,
     children: 0,
   });
@@ -163,17 +159,11 @@ export function SearchProvider({ children }: SearchProviderProps) {
   // Modal control functions
   const openSearchModal = () => {
     setIsModalOpen(true);
-    // Always start at location step when opening the modal
-    setCurrentStep('location');
   };
 
   const closeSearchModal = () => {
     setIsModalOpen(false);
     // Don't reset selections - they persist
-  };
-
-  const setModalStep = (step: ModalStep) => {
-    setCurrentStep(step);
   };
 
   // Update functions for in-progress selections
@@ -225,8 +215,7 @@ export function SearchProvider({ children }: SearchProviderProps) {
     setSelectedDates({ startDate: null, endDate: null });
     setSelectedSports([]);
     setSelectedDisciplines([]);
-    setParticipantCounts({ adults: 0, teenagers: 0, children: 0 });
-    setCurrentStep('location');
+    setParticipantCounts({ adults: 1, teenagers: 0, children: 0 });
   };
 
   const clearSearch = () => {
@@ -317,10 +306,8 @@ export function SearchProvider({ children }: SearchProviderProps) {
 
     // Modal state
     isModalOpen,
-    currentStep,
     openSearchModal,
     closeSearchModal,
-    setModalStep,
 
     // In-progress selections
     selectedLocation,

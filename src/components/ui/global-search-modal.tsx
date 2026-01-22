@@ -15,7 +15,6 @@ interface GlobalSearchModalProps {
  *
  * This component eliminates the need for pages to manage:
  * - Modal open/close state
- * - Step tracking
  * - Selection state (location, dates, sports, participants)
  * - Data fetching (locations, sports, disciplines)
  *
@@ -30,27 +29,22 @@ export function GlobalSearchModal({ className, shouldNavigate = false }: GlobalS
   const {
     // Modal state
     isModalOpen,
-    currentStep,
     closeSearchModal,
-    setModalStep,
 
     // In-progress selections
     selectedLocation,
     selectedDates,
     selectedSports,
-    selectedDisciplines,
     participantCounts,
 
     // Update functions
     updateLocation,
     updateDates,
     updateSports,
-    updateDisciplines,
     updateParticipants,
 
     // Data
     locations,
-    sportOptions,
     sportDisciplines,
     isLoadingData,
 
@@ -64,7 +58,6 @@ export function GlobalSearchModal({ className, shouldNavigate = false }: GlobalS
   // Handle location select
   const handleLocationSelect = (location: any) => {
     updateLocation(location);
-    setModalStep('dates');
   };
 
   // Handle dates select
@@ -80,11 +73,6 @@ export function GlobalSearchModal({ className, shouldNavigate = false }: GlobalS
   // Handle participant counts change
   const handleParticipantCountsChange = (counts: any) => {
     updateParticipants(counts);
-  };
-
-  // Handle step change
-  const handleStepChange = (step: any) => {
-    setModalStep(step);
   };
 
   // Handle search submit
@@ -103,23 +91,19 @@ export function GlobalSearchModal({ className, shouldNavigate = false }: GlobalS
       isOpen={isModalOpen}
       onClose={closeSearchModal}
       locations={locations}
-      sportOptions={sportOptions}
       sportDisciplines={sportDisciplines}
       onLocationSelect={handleLocationSelect}
       searchValue={searchValue}
       onSearchChange={setSearchValue}
       isLoading={isLoadingData}
-      step={currentStep}
       selectedLocation={selectedLocation}
       selectedDates={selectedDates}
       onDatesSelect={handleDatesSelect}
       selectedSports={selectedSports}
       onSportSelect={handleSportSelect}
-      onStepChange={handleStepChange}
       participantCounts={participantCounts}
       onParticipantCountsChange={handleParticipantCountsChange}
       onSearch={handleSearch}
-      className={className}
     />
   );
 }
