@@ -213,9 +213,6 @@ export function InstructorCarousel({ images, className = '' }: InstructorCarouse
           >
             Photos
           </h3>
-          <div style={{ color: '#999', fontSize: '12px', marginTop: '4px' }}>
-            {dimensions.maxVisible} images at {dimensions.imageWidth}px (gap: {dimensions.gap}px)
-          </div>
         </div>
 
         {images.length > maxVisibleImages && (

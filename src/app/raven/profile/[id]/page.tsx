@@ -318,12 +318,6 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
               </svg>
               <span className="font-['Archivo'] font-medium">Back to Search</span>
             </Link>
-
-            {/* Instructor Name */}
-            <h1 className="text-white text-xl font-bold">{instructor?.first_name} {instructor?.last_name}</h1>
-
-            {/* Spacer to balance layout */}
-            <div className="w-32"></div>
           </div>
         </div>
       </div>
