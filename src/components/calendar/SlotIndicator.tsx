@@ -40,12 +40,21 @@ export function SlotIndicator({ slotState, className }: SlotIndicatorProps) {
       />
       
       {/* Evening Slot */}
-      <div 
+      <div
         className={cn(
           "basis-0 grow h-2 min-h-px min-w-px shrink-0 transition-colors duration-200",
           slotState.evening ? "bg-[#8CDBFB]" : "bg-[#050506]"
         )}
         data-name="evening-slot"
+      />
+
+      {/* Night Slot */}
+      <div
+        className={cn(
+          "basis-0 grow h-2 min-h-px min-w-px shrink-0 transition-colors duration-200",
+          slotState.night ? "bg-[#8CDBFB]" : "bg-[#050506]"
+        )}
+        data-name="night-slot"
       />
     </div>
   )

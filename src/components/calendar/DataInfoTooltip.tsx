@@ -97,7 +97,7 @@ export function DataInfoTooltip({
                       <span className="text-gray-400">Selected Instructor:</span>
                       <span className="text-white">
                         {selectedInstructor
-                          ? `${selectedInstructor.first_name} ${selectedInstructor.last_name}`
+                          ? selectedInstructor.first_name
                           : 'None'
                         }
                       </span>

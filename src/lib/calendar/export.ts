@@ -34,7 +34,8 @@ export function exportToCSV(bookingItems: BookingItem[], startDate?: string, end
     2: 'Morning',
     3: 'Lunch',
     4: 'Afternoon',
-    5: 'Evening'
+    5: 'Evening',
+    6: 'Night'
   }
 
   const rows = filteredItems.map(item => [
@@ -92,7 +93,8 @@ export function exportToICS(bookingItems: BookingItem[], instructorName?: string
       2: 'Morning Session',
       3: 'Lunch Session',
       4: 'Afternoon Session',
-      5: 'Evening Session'
+      5: 'Evening Session',
+      6: 'Night Session'
     }
 
     return [

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/lib/utils";
 import {
@@ -14,7 +14,6 @@ import {
 } from "@/components/icons";
 import {
   Instructor,
-  calculateAge,
   formatLanguages,
   getNationalityText,
 } from "@/lib/mock-data/instructors";
@@ -49,23 +48,24 @@ export function InstructorProfileCard({
 }: InstructorProfileCardProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
-  
-  const age = calculateAge(instructor.dateOfBirth);
+
   const languageSentence = formatLanguages(instructor.languages);
   const nationalityText = getNationalityText(instructor.nationality);
   const FlagComponent = getFlagComponent(instructor.nationality);
 
+  // Extract first name only
+  const firstName = instructor.fullName.split(" ")[0];
 
   const handlePrevImage = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setCurrentImageIndex((prev) => 
+    setCurrentImageIndex((prev) =>
       prev === 0 ? instructor.actionShotUrls.length - 1 : prev - 1
     );
   };
 
   const handleNextImage = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setCurrentImageIndex((prev) => 
+    setCurrentImageIndex((prev) =>
       (prev + 1) % instructor.actionShotUrls.length
     );
   };
@@ -167,15 +167,19 @@ export function InstructorProfileCard({
 
       {/* Content Section */}
       <div className="flex flex-col gap-2 w-full">
-        {/* Name Row */}
+        {/* Name Row with inline avatar */}
         <div className="flex items-center justify-between w-full">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
+            <div className="w-[36px] h-[36px] rounded-full overflow-hidden border-2 border-white/10 flex-shrink-0">
+              <img
+                src={instructor.profileThumbUrl}
+                alt={firstName}
+                className="w-full h-full object-cover"
+              />
+            </div>
             <h3 className="font-['PP_Editorial_New'] font-normal text-[24px] text-white leading-[1.4] tracking-[0.12px]">
-              {instructor.fullName}
+              {firstName}
             </h3>
-            <span className="font-['Archivo'] font-light text-[16px] text-[#bbbbbd] leading-[1.4]">
-              {age}
-            </span>
           </div>
           <div className="flex items-center gap-[7px]">
             <FlagComponent className="w-3 h-3" />
@@ -186,13 +190,8 @@ export function InstructorProfileCard({
         </div>
 
         {/* Tagline Pill */}
-        <div className="backdrop-blur-[2.5px] backdrop-filter bg-[rgba(255,255,255,0.1)] rounded-[500px] h-9 flex items-center justify-between pl-1.5 pr-3 py-1 w-full">
+        <div className="backdrop-blur-[2.5px] backdrop-filter bg-[rgba(255,255,255,0.1)] rounded-[500px] h-9 flex items-center justify-between pl-3 pr-3 py-1 w-full">
           <div className="flex items-center gap-2 flex-1">
-            <img
-              src={instructor.profileThumbUrl}
-              alt={instructor.fullName}
-              className="w-6 h-6 rounded-full object-cover"
-            />
             <p className="font-['Archivo'] font-medium text-[14px] text-white leading-[18px] tracking-[0.07px] flex-1">
               {instructor.tagline}
             </p>

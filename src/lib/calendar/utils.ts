@@ -7,20 +7,22 @@ import type { BookingItem, SlotState } from './types'
  */
 export function getSlotStates(bookingItems: BookingItem[]): SlotState {
   const slotState: SlotState = {
+    fullDay: false,
     morning: false,
     lunch: false,
     afternoon: false,
-    evening: false
+    evening: false,
+    night: false
   }
 
   // Process each booking item
   bookingItems.forEach(item => {
     switch (item.day_slot_id) {
-      case 1: // Full day - mark all slots as booked
+      case 1: // Full day - mark morning/lunch/afternoon as booked
+        slotState.fullDay = true
         slotState.morning = true
         slotState.lunch = true
         slotState.afternoon = true
-        slotState.evening = true
         break
       case 2: // Morning
         slotState.morning = true
@@ -33,6 +35,9 @@ export function getSlotStates(bookingItems: BookingItem[]): SlotState {
         break
       case 5: // Evening
         slotState.evening = true
+        break
+      case 6: // Night
+        slotState.night = true
         break
     }
   })

@@ -35,10 +35,12 @@ export interface CalendarDayProps {
 }
 
 export interface SlotState {
+  fullDay: boolean    // day_slot_id = 1
   morning: boolean    // day_slot_id = 2
   lunch: boolean      // day_slot_id = 3
   afternoon: boolean  // day_slot_id = 4
   evening: boolean    // day_slot_id = 5
+  night: boolean      // day_slot_id = 6
 }
 
 export interface SlotIndicatorProps {
@@ -48,11 +50,12 @@ export interface SlotIndicatorProps {
 
 // Map day_slot_id to position in the 4-segment indicator
 export const DAY_SLOT_MAPPING = {
-  1: 'fullDay',    // Full day - all segments
+  1: 'fullDay',    // Full day - covers morning through afternoon
   2: 'morning',    // Morning - segment 1
   3: 'lunch',      // Lunch - segment 2
   4: 'afternoon',  // Afternoon - segment 3
-  5: 'evening'     // Evening - segment 4
+  5: 'evening',    // Evening - segment 4
+  6: 'night'       // Night - segment 5
 } as const
 
 export type DaySlotType = keyof typeof DAY_SLOT_MAPPING

@@ -56,7 +56,7 @@ export function InstructorSwitcher({
       >
         <span className="text-left">
           {selectedInstructor ?
-            `${selectedInstructor.first_name} ${selectedInstructor.last_name}` :
+            selectedInstructor.first_name :
             'Select an instructor'
           }
         </span>
@@ -99,7 +99,7 @@ export function InstructorSwitcher({
                 whileHover={{ backgroundColor: "rgba(55, 65, 81, 0.7)" }}
               >
                 <span className="text-white">
-                  {instructor.first_name} {instructor.last_name}
+                  {instructor.first_name}
                 </span>
 
                 {instructor.id === selectedInstructorId && (

@@ -331,7 +331,7 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
             {/* Profile Area */}
             <div className="flex items-center gap-3">
               <InstructorAvatar instructor={instructor ?? undefined} />
-              {/* Instructor Name and Age */}
+              {/* Instructor Name */}
               {instructor && (
               <div className="flex flex-col gap-1">
                 <div className="flex items-baseline gap-2">
@@ -348,33 +348,6 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
                   >
                     {instructor.first_name}
                   </div>
-                  {instructor.date_of_birth && (
-                    <div
-                      style={{
-                        color: '#919191',
-                        fontFamily: 'Archivo',
-                        fontSize: '30px',
-                        fontStyle: 'normal',
-                        fontWeight: 300,
-                        lineHeight: '140%',
-                        letterSpacing: '0.15px'
-                      }}
-                    >
-                      {(() => {
-                        if (instructor.date_of_birth) {
-                          const birthDate = new Date(instructor.date_of_birth);
-                          const today = new Date();
-                          let age = today.getFullYear() - birthDate.getFullYear();
-                          const monthDiff = today.getMonth() - birthDate.getMonth();
-                          if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-                            age--;
-                          }
-                          return age;
-                        }
-                        return '';
-                      })()}
-                    </div>
-                  )}
                 </div>
 
                 {/* Instructor Location */}
@@ -602,7 +575,7 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
           isOpen={isSlotModalOpen}
           onClose={() => setIsSlotModalOpen(false)}
           instructorId={instructorId}
-          instructorName={`${instructor.first_name} ${instructor.last_name}`}
+          instructorName={instructor.first_name}
           startDate={selectedStartDate}
           endDate={selectedEndDate}
           bookingItems={bookingItems}
@@ -612,7 +585,7 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
 
             addToCart({
               instructorId,
-              instructorName: `${instructor.first_name} ${instructor.last_name}`,
+              instructorName: instructor.first_name,
               instructorAvatar: instructor.avatar_url || '',
               location: instructorResorts[0]?.resorts?.name || 'Unknown Location',
               discipline: 'Ski Instruction', // Generic for now - can be enhanced later

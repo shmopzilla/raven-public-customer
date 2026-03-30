@@ -97,8 +97,8 @@ const actionShotSets = [
 function createHybridInstructor(dbInstructor: any, index: number): Instructor {
   return {
     id: dbInstructor.id,
-    // REAL DATA: name from database
-    fullName: `${dbInstructor.first_name} ${dbInstructor.last_name}`.trim(),
+    // REAL DATA: first name only from database
+    fullName: (dbInstructor.first_name || '').trim(),
     // REAL DATA: date of birth from database
     dateOfBirth: dbInstructor.date_of_birth || dbInstructor.birth_date || "1990-01-01",
     // REAL DATA: avatar URL from database (with fallback to mock)

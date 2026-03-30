@@ -33,9 +33,10 @@ export function AvailabilitySummary({
     // Calculate availability for each slot type
     const slotTypes = [
       { name: 'Morning', key: 'morning' as const, hours: 3 },
-      { name: 'Lunch', key: 'lunch' as const, hours: 1.5 },
+      { name: 'Lunch', key: 'lunch' as const, hours: 2 },
       { name: 'Afternoon', key: 'afternoon' as const, hours: 3 },
-      { name: 'Evening', key: 'evening' as const, hours: 2 }
+      { name: 'Evening', key: 'evening' as const, hours: 3 },
+      { name: 'Night', key: 'night' as const, hours: 3 }
     ]
     
     const slots: AvailabilitySlot[] = slotTypes.map(slot => {
@@ -170,8 +171,8 @@ export function AvailabilitySummary({
 
       {/* Legend */}
       <div className="mt-4 text-xs text-gray-400 space-y-1">
-        <div>• Morning: 9:00-12:00 (3h) • Lunch: 12:00-13:30 (1.5h)</div>
-        <div>• Afternoon: 14:00-17:00 (3h) • Evening: 17:00-19:00 (2h)</div>
+        <div>• Morning: 9:00-12:00 (3h) • Lunch: 12:00-14:00 (2h) • Afternoon: 14:00-17:00 (3h)</div>
+        <div>• Evening: 17:00-20:00 (3h) • Night: 20:00-23:00 (3h)</div>
       </div>
     </div>
   )
