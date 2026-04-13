@@ -1,6 +1,6 @@
 "use client"
 
-import { use, useState, useEffect } from 'react'
+import { use, useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Calendar } from '@/components/calendar/Calendar'
@@ -19,8 +19,13 @@ interface Instructor {
   first_name: string
   last_name: string
   avatar_url?: string
-  date_of_birth?: string
+  banner_url?: string
   biography?: string
+  years_of_experience?: number
+  instant_booking?: boolean
+  id_verified?: boolean
+  primary_language?: string
+  other_languages?: string[]
 }
 
 export default function InstructorProfilePage({ params }: { params: Promise<{ id: string }> }) {
@@ -47,35 +52,41 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
   const [loadingImages, setLoadingImages] = useState(false)
   const [showToast, setShowToast] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
+  const [scrolled, setScrolled] = useState(false)
+  const [bioExpanded, setBioExpanded] = useState(false)
+  const [mobileSheetOpen, setMobileSheetOpen] = useState(false)
+  const [configuredSlotIds, setConfiguredSlotIds] = useState<number[]>([])
+  const bannerRef = useRef<HTMLDivElement>(null)
+
+  // Scroll-aware header
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 200)
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   // Fetch instructor data on page load
   useEffect(() => {
     async function fetchInstructor() {
-      console.log('Fetching instructor via API:', instructorId)
       try {
         const response = await fetch('/api/calendar/instructors')
         const result = await response.json()
-        console.log('API Instructors result:', result)
 
         if (!response.ok) {
-          console.error('API Failed to fetch instructors:', result.error)
           setError('Failed to fetch instructor: ' + (result.details || result.error))
         } else if (result.data && result.data.length > 0) {
-          // Find the specific instructor by ID
           const foundInstructor = result.data.find((i: Instructor) => i.id === instructorId)
           if (foundInstructor) {
-            console.log('Found instructor via API:', foundInstructor)
             setInstructor(foundInstructor)
           } else {
-            console.log('Instructor not found with ID:', instructorId)
             setError('Instructor not found')
           }
         } else {
-          console.log('No instructors found via API')
           setError('Instructor not found')
         }
       } catch (err: any) {
-        console.error('Error fetching instructor via API:', err)
         setError('Error fetching instructor: ' + err.message)
       } finally {
         setLoading(false)
@@ -88,38 +99,27 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
   // Fetch booking items via API when instructor is loaded
   useEffect(() => {
     async function fetchBookingData() {
-      if (!instructorId) {
-        console.log('No instructor ID, skipping booking fetch')
-        return
-      }
+      if (!instructorId) return
 
-      console.log('Fetching booking items via API for instructor:', instructorId)
       setLoadingBookings(true)
       setError(null)
 
       try {
-        // Get current month date range
         const now = new Date()
         const startDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
         const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0]
 
-        console.log('Date range:', { startDate, endDate })
-
         const url = `/api/calendar/bookings?instructorId=${instructorId}&startDate=${startDate}&endDate=${endDate}`
         const response = await fetch(url)
         const result = await response.json()
-        console.log('API Booking items result:', result)
 
         if (!response.ok) {
-          console.error('API Failed to fetch booking items:', result.error)
           setError('Failed to fetch booking items: ' + (result.details || result.error))
           setBookingItems([])
         } else {
-          console.log('Found booking items via API:', result.count)
           setBookingItems(result.data || [])
         }
       } catch (err: any) {
-        console.error('Error fetching booking items via API:', err)
         setError('Error fetching booking items: ' + err.message)
         setBookingItems([])
       } finally {
@@ -133,29 +133,21 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
   // Fetch instructor pricing via API
   useEffect(() => {
     async function fetchInstructorPricing() {
-      if (!instructorId) {
-        console.log('No instructor ID, skipping pricing fetch')
-        return
-      }
+      if (!instructorId) return
 
-      console.log('Fetching instructor pricing via API for instructor:', instructorId)
       setLoadingPricing(true)
 
       try {
         const url = `/api/calendar/offers?instructorId=${instructorId}`
         const response = await fetch(url)
         const result = await response.json()
-        console.log('API Instructor pricing result:', result)
 
         if (!response.ok) {
-          console.error('API Failed to fetch instructor pricing:', JSON.stringify(result))
           setInstructorPricing(null)
         } else {
-          console.log('Found instructor pricing via API:', result.data)
           setInstructorPricing(result.data)
         }
       } catch (err: any) {
-        console.error('Error fetching instructor pricing via API:', err)
         setInstructorPricing(null)
       } finally {
         setLoadingPricing(false)
@@ -168,29 +160,21 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
   // Fetch instructor resorts
   useEffect(() => {
     async function fetchInstructorResorts() {
-      if (!instructorId) {
-        console.log('No instructor ID, skipping resorts fetch')
-        return
-      }
+      if (!instructorId) return
 
-      console.log('Fetching instructor resorts via API for instructor:', instructorId)
       setLoadingResorts(true)
 
       try {
         const url = `/api/calendar/instructor-resorts?instructorId=${instructorId}`
         const response = await fetch(url)
         const result = await response.json()
-        console.log('API Instructor resorts result:', result)
 
         if (!response.ok) {
-          console.error('API Failed to fetch instructor resorts:', JSON.stringify(result))
           setInstructorResorts([])
         } else {
-          console.log('Found instructor resorts via API:', result.data)
           setInstructorResorts(result.data || [])
         }
       } catch (err: any) {
-        console.error('Error fetching instructor resorts via API:', err)
         setInstructorResorts([])
       } finally {
         setLoadingResorts(false)
@@ -200,32 +184,47 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
     fetchInstructorResorts()
   }, [instructorId])
 
+  // Fetch instructor's configured slot types
+  useEffect(() => {
+    async function fetchConfiguredSlots() {
+      if (!instructorId) return
+
+      try {
+        const url = `/api/calendar/configured-slots?instructorId=${instructorId}`
+        const response = await fetch(url)
+        const result = await response.json()
+
+        if (response.ok && result.data) {
+          setConfiguredSlotIds(result.data)
+        } else {
+          setConfiguredSlotIds([])
+        }
+      } catch {
+        setConfiguredSlotIds([])
+      }
+    }
+
+    fetchConfiguredSlots()
+  }, [instructorId])
+
   // Fetch instructor images
   useEffect(() => {
     async function fetchInstructorImages() {
-      if (!instructorId) {
-        console.log('No instructor ID, skipping images fetch')
-        return
-      }
+      if (!instructorId) return
 
-      console.log('Fetching instructor images via API for instructor:', instructorId)
       setLoadingImages(true)
 
       try {
         const url = `/api/calendar/instructor-images?instructorId=${instructorId}`
         const response = await fetch(url)
         const result = await response.json()
-        console.log('API Instructor images result:', result)
 
         if (!response.ok) {
-          console.error('API Failed to fetch instructor images:', JSON.stringify(result))
           setInstructorImages([])
         } else {
-          console.log('Found instructor images via API:', result.data?.length || 0)
           setInstructorImages(result.data || [])
         }
       } catch (err: any) {
-        console.error('Error fetching instructor images via API:', err)
         setInstructorImages([])
       } finally {
         setLoadingImages(false)
@@ -242,41 +241,50 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
     setSelectedDaysCount(0)
   }, [selectionMode])
 
-  // Calculate number of days between two dates
   const calculateDays = (start: string, end: string) => {
     const startDate = new Date(start)
     const endDate = new Date(end)
     const diffTime = Math.abs(endDate.getTime() - startDate.getTime())
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
-    return diffDays
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
   }
 
   const handleDayClick = (date: string) => {
-    console.log('Day clicked:', date)
     setSelectedStartDate(date)
     setSelectedEndDate(date)
     setSelectedDaysCount(1)
   }
 
   const handleRangeSelect = (startDate: string, endDate: string | null) => {
-    console.log('Range selected:', startDate, 'to', endDate)
     setSelectedStartDate(startDate)
     setSelectedEndDate(endDate)
 
-    // If endDate is null, we're starting a new selection - hide the button
     if (endDate === null) {
       setSelectedDaysCount(0)
       return
     }
 
-    // Check if it's a single day selection
     if (startDate === endDate) {
       setSelectedDaysCount(1)
     } else {
-      const days = calculateDays(startDate, endDate)
-      setSelectedDaysCount(days)
+      setSelectedDaysCount(calculateDays(startDate, endDate))
     }
   }
+
+  // Count languages
+  const languageCount = (() => {
+    let count = 0
+    if (instructor?.primary_language) count++
+    if (instructor?.other_languages?.length) count += instructor.other_languages.length
+    return count
+  })()
+
+  // All languages list
+  const allLanguages = (() => {
+    const langs: string[] = []
+    if (instructor?.primary_language) langs.push(instructor.primary_language)
+    if (instructor?.other_languages?.length) langs.push(...instructor.other_languages)
+    return langs
+  })()
 
   if (loading) {
     return (
@@ -304,11 +312,14 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
 
   return (
     <div className="min-h-screen bg-black">
-      {/* Sticky Header Bar */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-black/95 backdrop-blur-sm border-b border-gray-800/50">
+      {/* Scroll-aware Header */}
+      <div className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        scrolled
+          ? 'bg-black/95 backdrop-blur-sm border-b border-gray-800/50'
+          : 'bg-gradient-to-b from-black/60 to-transparent'
+      }`}>
         <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            {/* Back Button */}
             <Link
               href="/raven/search"
               className="flex items-center gap-2 text-white hover:text-white/80 transition-colors"
@@ -318,133 +329,242 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
               </svg>
               <span className="font-['Archivo'] font-medium">Back to Search</span>
             </Link>
+            {scrolled && instructor && (
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-8 h-8 rounded-full bg-cover bg-center bg-gray-600"
+                  style={{ backgroundImage: `url(${instructor.avatar_url || '/assets/images/instructor-1.png'})` }}
+                />
+                <span className="text-white font-['Archivo'] font-medium text-sm">{instructor.first_name}</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Main Content - with top padding to account for fixed header */}
-      <div className="pt-20 min-h-screen flex items-center justify-center">
-        {/* Main Content Container */}
-        <div className="flex flex-col lg:flex-row items-start gap-6 lg:gap-8 w-full max-w-[1920px] px-4 sm:px-6 lg:px-8">
-          {/* Instructor Avatar and Info */}
-          <div className="w-full lg:max-w-[calc(100%-485px-2rem)] lg:min-w-[400px] flex flex-col gap-8 lg:gap-10">
-            {/* Profile Area */}
-            <div className="flex items-center gap-3">
-              <InstructorAvatar instructor={instructor ?? undefined} />
-              {/* Instructor Name */}
-              {instructor && (
-              <div className="flex flex-col gap-1">
-                <div className="flex items-baseline gap-2">
-                  <div
-                    style={{
-                      color: 'var(--Colors-Text-Main, #FFF)',
-                      fontFamily: '"PP Editorial New"',
-                      fontSize: '36px',
-                      fontStyle: 'normal',
-                      fontWeight: 400,
-                      lineHeight: '140%',
-                      letterSpacing: '0.18px'
-                    }}
-                  >
-                    {instructor.first_name}
-                  </div>
-                </div>
+      {/* Hero Banner */}
+      <div
+        ref={bannerRef}
+        className="relative w-full h-[260px] lg:h-[320px]"
+      >
+        {instructor?.banner_url ? (
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: `url(${instructor.banner_url})` }}
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-900/80 via-slate-900 to-black" />
+        )}
+        {/* Gradient overlay for text readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+      </div>
 
-                {/* Instructor Location */}
-                {instructorResorts.length > 0 && (
-                  <div className="flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
-                      <path d="M21 10C21 18 12 23 12 23C12 23 3 18 3 10C3 7.61305 3.94821 5.32387 5.63604 3.63604C7.32387 1.94821 9.61305 1 12 1C14.3869 1 16.6761 1.94821 18.364 3.63604C20.0518 5.32387 21 7.61305 21 10Z" fill="url(#paint0_linear_207_2104)"/>
-                      <path d="M12 14C14.2091 14 16 12.2091 16 10C16 7.79086 14.2091 6 12 6C9.79086 6 8 7.79086 8 10C8 12.2091 9.79086 14 12 14Z" fill="url(#paint1_linear_207_2104)"/>
-                      <defs>
-                        <linearGradient id="paint0_linear_207_2104" x1="12" y1="1.085" x2="12" y2="22.874" gradientUnits="userSpaceOnUse">
-                          <stop stopColor="#FF4867"/>
-                          <stop offset="1" stopColor="#E50031"/>
-                        </linearGradient>
-                        <linearGradient id="paint1_linear_207_2104" x1="12" y1="6.021" x2="12" y2="13.979" gradientUnits="userSpaceOnUse">
-                          <stop stopColor="#F2F2F2"/>
-                          <stop offset="1" stopColor="#DBDBDB"/>
-                        </linearGradient>
-                      </defs>
-                    </svg>
-                    <div
-                      style={{
-                        color: '#FFF',
-                        fontFamily: 'Archivo',
-                        fontSize: '20px',
-                        fontStyle: 'normal',
-                        fontWeight: 400,
-                        lineHeight: '140%',
-                        letterSpacing: '0.1px'
-                      }}
-                    >
-                      {instructorResorts[0].name}
+      {/* Profile Section - overlaps banner */}
+      <div className="relative max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-8 -mt-20">
+        {/* Two Column from the start on Desktop */}
+        <div className="flex flex-col lg:flex-row gap-8 pb-32 lg:pb-8">
+          {/* Left Column - Identity + Profile Info */}
+          <div className="w-full lg:flex-1 lg:min-w-0 flex flex-col gap-6">
+            {/* Mobile: centered vertical stack */}
+            <div className="flex flex-col items-center lg:hidden">
+              <InstructorAvatar
+                instructor={instructor ?? undefined}
+                size="lg"
+                className="ring-4 ring-black rounded-full"
+              />
+              {instructor && (
+                <div className="mt-4 flex flex-col items-center gap-2">
+                  <h1 style={{ color: '#FFF', fontFamily: '"PP Editorial New"', fontSize: '32px', fontWeight: 400, lineHeight: '1.2', letterSpacing: '0.16px' }}>
+                    {instructor.first_name}
+                  </h1>
+                  {instructorResorts.length > 0 && (
+                    <div className="flex items-center gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none">
+                        <path d="M21 10C21 18 12 23 12 23C12 23 3 18 3 10C3 7.61305 3.94821 5.32387 5.63604 3.63604C7.32387 1.94821 9.61305 1 12 1C14.3869 1 16.6761 1.94821 18.364 3.63604C20.0518 5.32387 21 7.61305 21 10Z" fill="url(#paint0_loc_m)"/>
+                        <path d="M12 14C14.2091 14 16 12.2091 16 10C16 7.79086 14.2091 6 12 6C9.79086 6 8 7.79086 8 10C8 12.2091 9.79086 14 12 14Z" fill="url(#paint1_loc_m)"/>
+                        <defs>
+                          <linearGradient id="paint0_loc_m" x1="12" y1="1" x2="12" y2="23" gradientUnits="userSpaceOnUse"><stop stopColor="#FF4867"/><stop offset="1" stopColor="#E50031"/></linearGradient>
+                          <linearGradient id="paint1_loc_m" x1="12" y1="6" x2="12" y2="14" gradientUnits="userSpaceOnUse"><stop stopColor="#F2F2F2"/><stop offset="1" stopColor="#DBDBDB"/></linearGradient>
+                        </defs>
+                      </svg>
+                      <span className="text-white/80 font-['Archivo'] text-[15px]">{instructorResorts[0].name}</span>
+                      {instructorResorts.length > 1 && (
+                        <span className="px-2 py-0.5 bg-white/10 rounded-full text-xs text-white/70 font-['Archivo'] font-medium">
+                          +{instructorResorts.length - 1} more
+                        </span>
+                      )}
                     </div>
-                    {instructorResorts.length > 1 && (
-                      <div className="relative group">
-                        <div
-                          className="px-2 py-1 bg-white rounded-full text-xs text-black font-medium cursor-help"
-                          style={{
-                            fontFamily: 'Archivo',
-                            fontSize: '12px',
-                            fontWeight: 500
-                          }}
-                        >
-                          +{instructorResorts.length - 1}
-                        </div>
-                        {/* Tooltip */}
-                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-2 bg-white text-black text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 whitespace-nowrap">
-                          <div className="flex flex-col gap-1">
-                            {instructorResorts.slice(1).map((resort, index) => (
-                              <div key={resort.id || index} className="whitespace-nowrap">{resort.name}</div>
-                            ))}
-                          </div>
-                          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-white"></div>
-                        </div>
-                      </div>
+                  )}
+                  {/* Mobile Trust Badges */}
+                  <div className="mt-2 flex flex-wrap items-center gap-2 justify-center">
+                    {instructor.id_verified && (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-['Archivo'] font-medium">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        Verified
+                      </span>
+                    )}
+                    {instructor.instant_booking && (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-['Archivo'] font-medium">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                        Instant Booking
+                      </span>
                     )}
                   </div>
-                )}
+                  {/* Mobile Stats */}
+                  <div className="mt-2 flex items-center rounded-xl bg-white/5 border border-white/10 overflow-hidden w-fit">
+                    {instructor.years_of_experience && instructor.years_of_experience > 0 && (
+                      <div className="flex flex-col items-center px-6 py-3">
+                        <span className="text-white font-['Archivo'] font-semibold text-lg">{instructor.years_of_experience}</span>
+                        <span className="text-white/50 font-['Archivo'] text-xs uppercase tracking-wider">Years exp.</span>
+                      </div>
+                    )}
+                    {languageCount > 0 && (<><div className="w-px h-10 bg-white/10" /><div className="flex flex-col items-center px-6 py-3"><span className="text-white font-['Archivo'] font-semibold text-lg">{languageCount}</span><span className="text-white/50 font-['Archivo'] text-xs uppercase tracking-wider">{languageCount === 1 ? 'Language' : 'Languages'}</span></div></>)}
+                    {instructorResorts.length > 0 && (<><div className="w-px h-10 bg-white/10" /><div className="flex flex-col items-center px-6 py-3"><span className="text-white font-['Archivo'] font-semibold text-lg">{instructorResorts.length}</span><span className="text-white/50 font-['Archivo'] text-xs uppercase tracking-wider">{instructorResorts.length === 1 ? 'Resort' : 'Resorts'}</span></div></>)}
+                  </div>
                 </div>
               )}
             </div>
 
+            {/* Desktop: horizontal avatar + info layout */}
+            <div className="hidden lg:flex items-start gap-5">
+              <div className="flex-shrink-0">
+                <InstructorAvatar
+                  instructor={instructor ?? undefined}
+                  size="lg"
+                  className="ring-4 ring-black rounded-full"
+                />
+              </div>
+              {instructor && (
+                <div className="flex flex-col gap-2 pt-2">
+                  <h1 style={{ color: '#FFF', fontFamily: '"PP Editorial New"', fontSize: '32px', fontWeight: 400, lineHeight: '1.2', letterSpacing: '0.16px' }}>
+                    {instructor.first_name}
+                  </h1>
+                  {instructorResorts.length > 0 && (
+                    <div className="flex items-center gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none">
+                        <path d="M21 10C21 18 12 23 12 23C12 23 3 18 3 10C3 7.61305 3.94821 5.32387 5.63604 3.63604C7.32387 1.94821 9.61305 1 12 1C14.3869 1 16.6761 1.94821 18.364 3.63604C20.0518 5.32387 21 7.61305 21 10Z" fill="url(#paint0_loc_d)"/>
+                        <path d="M12 14C14.2091 14 16 12.2091 16 10C16 7.79086 14.2091 6 12 6C9.79086 6 8 7.79086 8 10C8 12.2091 9.79086 14 12 14Z" fill="url(#paint1_loc_d)"/>
+                        <defs>
+                          <linearGradient id="paint0_loc_d" x1="12" y1="1" x2="12" y2="23" gradientUnits="userSpaceOnUse"><stop stopColor="#FF4867"/><stop offset="1" stopColor="#E50031"/></linearGradient>
+                          <linearGradient id="paint1_loc_d" x1="12" y1="6" x2="12" y2="14" gradientUnits="userSpaceOnUse"><stop stopColor="#F2F2F2"/><stop offset="1" stopColor="#DBDBDB"/></linearGradient>
+                        </defs>
+                      </svg>
+                      <span className="text-white/80 font-['Archivo'] text-[15px]">{instructorResorts[0].name}</span>
+                      {instructorResorts.length > 1 && (
+                        <div className="relative group">
+                          <span className="px-2 py-0.5 bg-white/10 rounded-full text-xs text-white/70 font-['Archivo'] font-medium cursor-help">
+                            +{instructorResorts.length - 1} more
+                          </span>
+                          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-2 bg-white text-black text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 whitespace-nowrap">
+                            {instructorResorts.slice(1).map((resort: any, i: number) => (
+                              <div key={resort.id || i}>{resort.name}</div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {/* Desktop Trust Badges + Stats inline */}
+                  <div className="flex flex-wrap items-center gap-2 mt-1">
+                    {instructor.id_verified && (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-['Archivo'] font-medium">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        Verified
+                      </span>
+                    )}
+                    {instructor.instant_booking && (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-['Archivo'] font-medium">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                        Instant Booking
+                      </span>
+                    )}
+                    {instructor.years_of_experience && instructor.years_of_experience > 0 && (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-white/70 text-xs font-['Archivo'] font-medium">
+                        {instructor.years_of_experience} yrs experience
+                      </span>
+                    )}
+                    {instructorResorts.length > 0 && (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-white/70 text-xs font-['Archivo'] font-medium">
+                        {instructorResorts.length} {instructorResorts.length === 1 ? 'resort' : 'resorts'}
+                      </span>
+                    )}
+                    {languageCount > 0 && (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-white/70 text-xs font-['Archivo'] font-medium">
+                        {languageCount} {languageCount === 1 ? 'language' : 'languages'}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Pricing Section */}
+            <div className="flex flex-col gap-3">
+              <div className="text-white font-['Archivo'] font-medium text-xl">
+                {loadingPricing ? (
+                  'Loading pricing...'
+                ) : instructorPricing?.minHourlyRate ? (
+                  <>
+                    Starting from €{instructorPricing.minHourlyRate}
+                    <span className="text-[#7B7B7B] text-base ml-1">/hour</span>
+                  </>
+                ) : (
+                  'Pricing unavailable'
+                )}
+              </div>
+              <DisciplinesList instructorId={instructorId || ''} />
+            </div>
+
             {/* About Section */}
-            {instructor && (
-              <div className="flex flex-col gap-4 w-full">
-                <h3
-                  style={{
-                    color: '#FFF',
-                    fontFamily: 'var(--type-font-family-headers, Archivo)',
-                    fontSize: 'var(--font-size-display-h5, 20px)',
-                    fontStyle: 'normal',
-                    fontWeight: 500,
-                    lineHeight: 'var(--line-height-display-h5, 24px)',
-                    letterSpacing: '0.1px'
-                  }}
-                >
+            {instructor?.biography && (
+              <div className="flex flex-col gap-3">
+                <h3 className="text-white font-['Archivo'] font-medium text-xl">
                   About {instructor.first_name}
                 </h3>
-                {/* Instructor Biography */}
-                {instructor.biography && (
+                <div className="relative">
                   <p
-                    style={{
-                      color: 'var(--Colors-Text-Subtle, #D5D5D6)',
-                      fontFamily: 'Archivo',
-                      fontSize: 'var(--Font-Size-md, 16px)',
-                      fontStyle: 'normal',
-                      fontWeight: 300,
-                      lineHeight: '140%',
-                      letterSpacing: '0.08px'
-                    }}
+                    className={`text-white/70 font-['Archivo'] font-light text-[15px] leading-relaxed ${
+                      !bioExpanded && instructor.biography.length > 300 ? 'line-clamp-4' : ''
+                    }`}
                   >
                     {instructor.biography}
                   </p>
-                )}
+                  {instructor.biography.length > 300 && (
+                    <button
+                      onClick={() => setBioExpanded(!bioExpanded)}
+                      className="mt-2 text-blue-400 font-['Archivo'] text-sm font-medium hover:text-blue-300 transition-colors"
+                    >
+                      {bioExpanded ? 'Read less' : 'Read more'}
+                    </button>
+                  )}
+                </div>
               </div>
             )}
 
-            {/* Instructor Images Carousel */}
+            {/* Languages Section */}
+            {allLanguages.length > 0 && (
+              <div className="flex flex-col gap-3">
+                <h3 className="text-white font-['Archivo'] font-medium text-xl">
+                  Languages
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {allLanguages.map((lang, i) => (
+                    <span
+                      key={i}
+                      className={`px-3 py-1.5 rounded-full font-['Archivo'] text-sm ${
+                        i === 0
+                          ? 'bg-white/10 text-white border border-white/20'
+                          : 'bg-white/5 text-white/70 border border-white/10'
+                      }`}
+                    >
+                      {lang}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Photos Carousel */}
             {instructorId && (
               <InstructorCarousel
                 images={instructorImages}
@@ -453,121 +573,151 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
             )}
           </div>
 
-          {/* Calendar Container - Responsive width */}
-          <div className="w-full lg:w-[485px] lg:flex-shrink-0">
-          <div
-            className="w-full relative overflow-hidden"
-            style={{
-              display: 'flex',
-              maxWidth: '485px',
-              maxHeight: 'calc(100vh - 120px)',
-              flexDirection: 'column',
-              borderRadius: '12px',
-              border: '1px solid rgba(255, 255, 255, 0.10)',
-              background: 'rgba(255, 255, 255, 0.05)',
-              boxShadow: '0 4px 34px 0 #000',
-              backdropFilter: 'blur(32px)'
-            }}
-          >
-            {/* Scrollable Content Area */}
-            <div
-              className="overflow-y-auto"
-              style={{
-                padding: 'clamp(16px, 4vw, 32px)',
-                paddingBottom: selectedDaysCount > 0 ? '32px' : 'clamp(16px, 4vw, 32px)',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'flex-start',
-                gap: '28px',
-                flex: 1
-              }}
-            >
-            {/* Pricing Title */}
-            <div
-              style={{
-                color: '#FFF',
-                fontFamily: 'var(--type-font-family-headers, Archivo)',
-                fontSize: '24px',
-                fontStyle: 'normal',
-                fontWeight: 500,
-                lineHeight: 'var(--line-height-display-h5, 24px)',
-                letterSpacing: '0.12px'
-              }}
-            >
-              {loadingPricing ? (
-                'Loading pricing...'
-              ) : instructorPricing?.minHourlyRate ? (
-                <>
-                  Starting from €{instructorPricing.minHourlyRate}
-                  <span
-                    style={{
-                      color: '#7B7B7B',
-                      fontFamily: 'var(--type-font-family-headers, Archivo)',
-                      fontSize: '16px',
-                      fontStyle: 'normal',
-                      fontWeight: 500,
-                      lineHeight: 'var(--line-height-display-h5, 24px)',
-                      letterSpacing: '0.08px'
-                    }}
-                  >
-                    /hour
-                  </span>
-                </>
-              ) : (
-                'Pricing unavailable'
-              )}
-            </div>
-
-            {/* Disciplines List */}
-            <div style={{ width: '100%' }}>
-              <DisciplinesList instructorId={instructorId || ''} />
-            </div>
-
-            {loadingBookings ? (
-              <div className="flex items-center justify-center h-96">
-                <div className="text-white">Loading calendar data...</div>
-              </div>
-            ) : (
-              <Calendar
-                bookingItems={bookingItems}
-                onDayClick={handleDayClick}
-                onRangeSelect={handleRangeSelect}
-                selectionMode={selectionMode}
-                className="w-full"
-              />
-            )}
-            </div>
-
-            {/* Sticky Action Button Container - Only show when days are selected */}
-            {selectedDaysCount > 0 && (
+          {/* Right Column - Calendar Panel (Desktop only) */}
+          <div className="hidden lg:block w-[485px] flex-shrink-0">
+            <div className="sticky top-4">
               <div
-                className="sticky bottom-0 left-0 right-0 z-10"
+                className="w-full relative flex flex-col"
                 style={{
+                  maxWidth: '485px',
+                  maxHeight: 'calc(100vh - 32px)',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(255, 255, 255, 0.10)',
                   background: 'rgba(255, 255, 255, 0.05)',
-                  backdropFilter: 'blur(32px)',
-                  borderTop: '1px solid rgba(255, 255, 255, 0.10)',
-                  padding: 'clamp(16px, 4vw, 32px)',
-                  paddingTop: '20px'
+                  boxShadow: '0 4px 34px 0 #000',
+                  backdropFilter: 'blur(32px)'
                 }}
               >
-                <ActionButton
-                  selectedDays={selectedDaysCount}
-                  onClick={() => setIsSlotModalOpen(true)}
-                />
+                {/* Scrollable content */}
+                <div
+                  className="overflow-y-auto flex-1 min-h-0"
+                  style={{
+                    padding: 'clamp(16px, 3vw, 24px)',
+                    paddingBottom: selectedDaysCount > 0 ? '12px' : 'clamp(16px, 3vw, 24px)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'flex-start',
+                    gap: '20px',
+                  }}
+                >
+                  {/* Calendar */}
+                  {loadingBookings ? (
+                    <div className="flex items-center justify-center h-96">
+                      <div className="text-white">Loading calendar data...</div>
+                    </div>
+                  ) : (
+                    <Calendar
+                      bookingItems={bookingItems}
+                      onDayClick={handleDayClick}
+                      onRangeSelect={handleRangeSelect}
+                      selectionMode={selectionMode}
+                      className="w-full"
+                    />
+                  )}
+                </div>
+
+                {/* Action Button - pinned at bottom, outside scroll */}
+                {selectedDaysCount > 0 && (
+                  <div
+                    className="flex-shrink-0"
+                    style={{
+                      borderTop: '1px solid rgba(255, 255, 255, 0.10)',
+                      padding: 'clamp(12px, 3vw, 20px)',
+                      paddingTop: '16px'
+                    }}
+                  >
+                    <ActionButton
+                      selectedDays={selectedDaysCount}
+                      onClick={() => setIsSlotModalOpen(true)}
+                    />
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          {/* Error Display (only shown if error) */}
-          {error && (
-            <div className="mt-4">
-              <div className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-                {error}
-              </div>
+
+              {error && (
+                <div className="mt-4">
+                  <div className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                    {error}
+                  </div>
+                </div>
+              )}
             </div>
-          )}
           </div>
         </div>
       </div>
+
+      {/* Mobile Sticky Bottom Bar */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-black/95 backdrop-blur-md border-t border-white/10">
+        <div className="px-4 py-3 flex items-center justify-between">
+          <div>
+            {loadingPricing ? (
+              <span className="text-white/50 font-['Archivo'] text-sm">Loading...</span>
+            ) : instructorPricing?.minHourlyRate ? (
+              <div className="flex flex-col">
+                <span className="text-white font-['Archivo'] font-semibold text-lg">
+                  From €{instructorPricing.minHourlyRate}<span className="text-white/50 text-sm font-normal">/hr</span>
+                </span>
+              </div>
+            ) : (
+              <span className="text-white/50 font-['Archivo'] text-sm">Pricing unavailable</span>
+            )}
+          </div>
+          <button
+            onClick={() => setMobileSheetOpen(true)}
+            className="px-6 py-3 bg-white text-black rounded-full font-['Archivo'] font-semibold text-sm hover:bg-white/90 transition-colors"
+          >
+            Check Availability
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Bottom Sheet */}
+      {mobileSheetOpen && (
+        <div className="lg:hidden fixed inset-0 z-50">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setMobileSheetOpen(false)}
+          />
+          {/* Sheet */}
+          <div className="absolute bottom-0 left-0 right-0 max-h-[90vh] bg-[#0A0A0A] rounded-t-2xl border-t border-white/10 overflow-hidden flex flex-col animate-slide-up">
+            {/* Handle */}
+            <div className="flex justify-center py-3">
+              <div className="w-10 h-1 rounded-full bg-white/20" />
+            </div>
+            {/* Sheet Content */}
+            <div className="overflow-y-auto flex-1 px-4 pb-8">
+              <div className="flex flex-col gap-6">
+                {/* Calendar */}
+                {loadingBookings ? (
+                  <div className="flex items-center justify-center h-48">
+                    <div className="text-white text-sm">Loading calendar...</div>
+                  </div>
+                ) : (
+                  <Calendar
+                    bookingItems={bookingItems}
+                    onDayClick={handleDayClick}
+                    onRangeSelect={handleRangeSelect}
+                    selectionMode={selectionMode}
+                    className="w-full"
+                  />
+                )}
+
+                {/* Action Button */}
+                {selectedDaysCount > 0 && (
+                  <ActionButton
+                    selectedDays={selectedDaysCount}
+                    onClick={() => {
+                      setMobileSheetOpen(false)
+                      setIsSlotModalOpen(true)
+                    }}
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Slot Selection Modal */}
       {selectedStartDate && selectedEndDate && instructor && instructorPricing?.minHourlyRate && (
@@ -580,6 +730,7 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
           endDate={selectedEndDate}
           bookingItems={bookingItems}
           hourlyRate={instructorPricing.minHourlyRate}
+          configuredSlotIds={configuredSlotIds}
           onAddToCart={(selectedSlots: SelectedSlot[]) => {
             if (!instructor || !instructorPricing?.minHourlyRate) return
 
@@ -588,23 +739,19 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
               instructorName: instructor.first_name,
               instructorAvatar: instructor.avatar_url || '',
               location: instructorResorts[0]?.resorts?.name || 'Unknown Location',
-              discipline: 'Ski Instruction', // Generic for now - can be enhanced later
+              discipline: 'Ski Instruction',
               selectedSlots,
               pricePerHour: instructorPricing.minHourlyRate
             })
 
-            // Show success toast
             setToastMessage(`Added ${selectedSlots.length} ${selectedSlots.length === 1 ? 'session' : 'sessions'} to cart`)
             setShowToast(true)
           }}
         />
       )}
 
-      {/* Global Search Modal - accessible from profile pages */}
-      {/* shouldNavigate=false means it stays on current page, doesn't navigate to search */}
       <GlobalSearchModal shouldNavigate={false} />
 
-      {/* Toast Notification */}
       <ToastNotification
         isVisible={showToast}
         message={toastMessage}

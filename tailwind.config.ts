@@ -154,6 +154,14 @@ const config: Config = {
             backgroundPosition: "350% 50%, 350% 50%",
           },
         },
+        "slide-up": {
+          from: {
+            transform: "translateY(100%)",
+          },
+          to: {
+            transform: "translateY(0)",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -166,6 +174,7 @@ const config: Config = {
         fourth: "moveHorizontal 40s ease infinite",
         fifth: "moveInCircle 20s ease infinite",
         aurora: "aurora 60s linear infinite",
+        "slide-up": "slide-up 0.3s ease-out",
       },
     },
   },

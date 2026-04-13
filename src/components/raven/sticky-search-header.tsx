@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
 import { useSearch } from '@/lib/contexts/search-context';
+import { useAuth } from '@/lib/contexts/auth-context';
 import { UserIcon } from '@/components/icons';
 
 interface StickySearchHeaderProps {
@@ -13,7 +14,21 @@ interface StickySearchHeaderProps {
 export function StickySearchHeader({ onSearchClick }: StickySearchHeaderProps = {}) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const { searchCriteria, formatSearchSummary, openSearchModal } = useSearch();
+  const { user, loading: authLoading, signOut } = useAuth();
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Use provided onSearchClick prop or fall back to context's openSearchModal
   const handleSearchClick = onSearchClick || openSearchModal;
@@ -108,17 +123,85 @@ export function StickySearchHeader({ onSearchClick }: StickySearchHeaderProps = 
           </p>
         </motion.div>
 
-        {/* Sign In Button - Desktop Only */}
-        <motion.button
-          className="hidden sm:flex bg-white rounded-2xl px-3 sm:px-4 py-2.5 items-center gap-1 sm:gap-2 h-[44px] sm:h-[52px] shrink-0"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <UserIcon className="w-5 h-5 text-[#0d0d0f]" />
-          <span className="font-['Archivo'] font-medium text-[14px] sm:text-[16px] text-[#0d0d0f] leading-[20px] tracking-[0.08px]">
-            Sign in
-          </span>
-        </motion.button>
+        {/* Auth Button - Desktop Only */}
+        {!authLoading && user ? (
+          <div className="hidden sm:block relative" ref={dropdownRef}>
+            <motion.button
+              className="flex bg-white rounded-2xl px-3 sm:px-4 py-2.5 items-center gap-2 h-[44px] sm:h-[52px] shrink-0"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            >
+              {user.user_metadata?.avatar_url ? (
+                <img
+                  src={user.user_metadata.avatar_url}
+                  alt=""
+                  className="w-7 h-7 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-7 h-7 rounded-full bg-blue-400 flex items-center justify-center">
+                  <span className="font-['Archivo'] text-xs font-bold text-white">
+                    {(user.user_metadata?.first_name?.[0] || user.email?.[0] || 'U').toUpperCase()}
+                  </span>
+                </div>
+              )}
+              <span className="font-['Archivo'] font-medium text-[14px] sm:text-[16px] text-[#0d0d0f] leading-[20px] tracking-[0.08px]">
+                {user.user_metadata?.first_name || 'Account'}
+              </span>
+            </motion.button>
+
+            <AnimatePresence>
+              {isDropdownOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute right-0 top-full mt-2 w-48 bg-[#1a1a1f] border border-white/15 rounded-xl shadow-2xl overflow-hidden z-50"
+                >
+                  <Link
+                    href="/raven/account"
+                    onClick={() => setIsDropdownOpen(false)}
+                    className="block px-4 py-3 font-['Archivo'] text-sm text-white hover:bg-white/10 transition-colors"
+                  >
+                    My Account
+                  </Link>
+                  <Link
+                    href="/raven/account/bookings"
+                    onClick={() => setIsDropdownOpen(false)}
+                    className="block px-4 py-3 font-['Archivo'] text-sm text-white hover:bg-white/10 transition-colors"
+                  >
+                    My Bookings
+                  </Link>
+                  <div className="border-t border-white/10" />
+                  <button
+                    onClick={async () => {
+                      setIsDropdownOpen(false);
+                      await signOut();
+                      window.location.href = '/raven';
+                    }}
+                    className="w-full text-left px-4 py-3 font-['Archivo'] text-sm text-red-400 hover:bg-white/10 transition-colors"
+                  >
+                    Sign out
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        ) : (
+          <Link href="/raven/login" className="hidden sm:block">
+            <motion.div
+              className="flex bg-white rounded-2xl px-3 sm:px-4 py-2.5 items-center gap-1 sm:gap-2 h-[44px] sm:h-[52px] shrink-0"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <UserIcon className="w-5 h-5 text-[#0d0d0f]" />
+              <span className="font-['Archivo'] font-medium text-[14px] sm:text-[16px] text-[#0d0d0f] leading-[20px] tracking-[0.08px]">
+                Sign in
+              </span>
+            </motion.div>
+          </Link>
+        )}
       </div>
 
       {/* Mobile Menu Dropdown */}
@@ -131,17 +214,48 @@ export function StickySearchHeader({ onSearchClick }: StickySearchHeaderProps = 
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2 }}
           >
-            <div className="px-4 py-4">
-              <motion.button
-                className="w-full bg-white rounded-2xl px-4 py-3 flex items-center justify-center gap-2 h-[48px]"
-                onClick={() => setIsMobileMenuOpen(false)}
-                whileTap={{ scale: 0.98 }}
-              >
-                <UserIcon className="w-5 h-5 text-[#0d0d0f]" />
-                <span className="font-['Archivo'] font-medium text-[16px] text-[#0d0d0f] leading-[20px] tracking-[0.08px]">
-                  Sign in
-                </span>
-              </motion.button>
+            <div className="px-4 py-4 space-y-2">
+              {user ? (
+                <>
+                  <Link
+                    href="/raven/account"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block w-full bg-white rounded-2xl px-4 py-3 text-center"
+                  >
+                    <span className="font-['Archivo'] font-medium text-[16px] text-[#0d0d0f]">
+                      My Account
+                    </span>
+                  </Link>
+                  <button
+                    onClick={async () => {
+                      setIsMobileMenuOpen(false);
+                      await signOut();
+                      window.location.href = '/raven';
+                    }}
+                    className="block w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-3 text-center"
+                  >
+                    <span className="font-['Archivo'] font-medium text-[16px] text-red-400">
+                      Sign out
+                    </span>
+                  </button>
+                </>
+              ) : (
+                <Link
+                  href="/raven/login"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block w-full"
+                >
+                  <motion.div
+                    className="w-full bg-white rounded-2xl px-4 py-3 flex items-center justify-center gap-2 h-[48px]"
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <UserIcon className="w-5 h-5 text-[#0d0d0f]" />
+                    <span className="font-['Archivo'] font-medium text-[16px] text-[#0d0d0f] leading-[20px] tracking-[0.08px]">
+                      Sign in
+                    </span>
+                  </motion.div>
+                </Link>
+              )}
             </div>
           </motion.div>
         )}

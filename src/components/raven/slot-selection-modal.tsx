@@ -15,6 +15,7 @@ interface SlotSelectionModalProps {
   endDate: string
   bookingItems: BookingItem[]
   hourlyRate: number
+  configuredSlotIds: number[]
   onAddToCart: (selectedSlots: SelectedSlot[]) => void
 }
 
@@ -40,6 +41,7 @@ export function SlotSelectionModal({
   endDate,
   bookingItems,
   hourlyRate,
+  configuredSlotIds,
   onAddToCart
 }: SlotSelectionModalProps) {
   const [selectedSlots, setSelectedSlots] = useState<Set<string>>(new Set())
@@ -57,7 +59,7 @@ export function SlotSelectionModal({
     return dates
   }, [startDate, endDate])
 
-  // Generate all available slots for all days (Full Day + individual slots)
+  // Generate available slots for all days, filtered to only instructor-configured slot types
   const availableSlots = useMemo(() => {
     const slots: DaySlot[] = []
 
@@ -67,33 +69,38 @@ export function SlotSelectionModal({
         .filter(item => item.date === date)
         .map(item => item.day_slot_id)
 
-      // Full Day slot (ID 1)
-      const fullDaySlotConfig = STANDARD_TIME_SLOTS[1]
-      const isFullDayBooked = bookedSlotsForDate.includes(1)
-      // Full Day is also unavailable if any of the individual slots it covers are booked
-      const coveredSlotsBooked = FULL_DAY_COVERS_SLOTS.some(id => bookedSlotsForDate.includes(id))
+      // Full Day slot (ID 1) — only if instructor has it configured
+      if (configuredSlotIds.includes(1)) {
+        const fullDaySlotConfig = STANDARD_TIME_SLOTS[1]
+        const isFullDayBooked = bookedSlotsForDate.includes(1)
+        const coveredSlotsBooked = FULL_DAY_COVERS_SLOTS.some(id => bookedSlotsForDate.includes(id))
 
-      slots.push({
-        date,
-        daySlotId: 1,
-        daySlotName: DAY_SLOT_NAMES[1],
-        isAvailable: !isFullDayBooked && !coveredSlotsBooked,
-        startTime: fullDaySlotConfig.start,
-        endTime: fullDaySlotConfig.end,
-        hours: fullDaySlotConfig.hours,
-        price: hourlyRate * fullDaySlotConfig.hours
-      })
+        slots.push({
+          date,
+          daySlotId: 1,
+          daySlotName: DAY_SLOT_NAMES[1],
+          isAvailable: !isFullDayBooked && !coveredSlotsBooked,
+          startTime: fullDaySlotConfig.start,
+          endTime: fullDaySlotConfig.end,
+          hours: fullDaySlotConfig.hours,
+          price: hourlyRate * fullDaySlotConfig.hours
+        })
+      }
 
-      // Individual slots (Morning, Lunch, Afternoon, Evening, Night)
+      // Individual slots — only those the instructor has configured
       INDIVIDUAL_SLOT_IDS.forEach(daySlotId => {
+        if (!configuredSlotIds.includes(daySlotId)) return
+
         const isBooked = bookedSlotsForDate.includes(daySlotId)
+        // Also unavailable if Full Day is booked and this slot is covered by it
+        const coveredByFullDay = (FULL_DAY_COVERS_SLOTS as readonly number[]).includes(daySlotId) && bookedSlotsForDate.includes(1)
         const slotConfig = STANDARD_TIME_SLOTS[daySlotId]
 
         slots.push({
           date,
           daySlotId,
           daySlotName: DAY_SLOT_NAMES[daySlotId],
-          isAvailable: !isBooked,
+          isAvailable: !isBooked && !coveredByFullDay,
           startTime: slotConfig.start,
           endTime: slotConfig.end,
           hours: slotConfig.hours,
@@ -103,7 +110,7 @@ export function SlotSelectionModal({
     })
 
     return slots
-  }, [dateRange, bookingItems, hourlyRate])
+  }, [dateRange, bookingItems, hourlyRate, configuredSlotIds])
 
   // Group ALL slots (including full day) by date in display order
   const slotsByDate = useMemo(() => {

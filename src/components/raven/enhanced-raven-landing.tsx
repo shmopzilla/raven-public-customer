@@ -14,9 +14,11 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { GlobalSearchModal } from "@/components/ui/global-search-modal";
 import { useSearch } from "@/lib/contexts/search-context";
+import { useAuth } from "@/lib/contexts/auth-context";
 import { AnimatedTooltip } from "@/components/ui/animated-tooltip";
 
 // ========================================
@@ -194,6 +196,7 @@ export default function EnhancedRavenLanding() {
   // ========================================
   const router = useRouter();
   const { setSearchCriteria } = useSearch();
+  const { user, loading: authLoading, signOut } = useAuth();
 
   // ========================================
   // INSTRUCTOR DATA FOR TOOLTIPS
@@ -324,15 +327,38 @@ export default function EnhancedRavenLanding() {
             rightLabel="For Instructors"
           />
           
-          {/* Sign In Button with User Icon */}
-          <motion.button 
-            className="bg-white text-black px-6 py-3 rounded-2xl font-medium font-archivo flex items-center gap-2"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <img src="/assets/icons/user.svg" alt="User" className="w-5 h-5" />
-            Sign in
-          </motion.button>
+          {/* Sign In / Account Button */}
+          {!authLoading && user ? (
+            <Link href="/raven/account">
+              <motion.div
+                className="bg-white text-black px-6 py-3 rounded-2xl font-medium font-archivo flex items-center gap-2"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {user.user_metadata?.avatar_url ? (
+                  <img src={user.user_metadata.avatar_url} alt="" className="w-5 h-5 rounded-full object-cover" />
+                ) : (
+                  <div className="w-5 h-5 rounded-full bg-blue-400 flex items-center justify-center">
+                    <span className="font-archivo text-[10px] font-bold text-white">
+                      {(user.user_metadata?.first_name?.[0] || user.email?.[0] || 'U').toUpperCase()}
+                    </span>
+                  </div>
+                )}
+                {user.user_metadata?.first_name || 'Account'}
+              </motion.div>
+            </Link>
+          ) : (
+            <Link href="/raven/login">
+              <motion.div
+                className="bg-white text-black px-6 py-3 rounded-2xl font-medium font-archivo flex items-center gap-2"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <img src="/assets/icons/user.svg" alt="User" className="w-5 h-5" />
+                Sign in
+              </motion.div>
+            </Link>
+          )}
         </div>
 
         {/* ======================================== */}

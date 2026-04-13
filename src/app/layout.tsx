@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Archivo, Inter, Playfair_Display } from "next/font/google";
 import { SearchProvider } from "@/lib/contexts/search-context";
+import { AuthProvider } from "@/lib/contexts/auth-context";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -47,7 +48,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${archivo.variable} ${inter.variable} ${playfairDisplay.variable} antialiased`}
       >
         <SearchProvider>
-          {children}
+          <AuthProvider>
+            {children}
+          </AuthProvider>
         </SearchProvider>
       </body>
     </html>
