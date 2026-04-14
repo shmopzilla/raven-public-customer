@@ -1,386 +1,257 @@
-# Client Account Area — Full Implementation Plan
+# Client Account Area — Implementation Status & Handover
 
-## Context
-The Raven ski instructor booking app needs a full client (customer) account area with authentication, registration, and a dashboard to manage bookings, payments, profile, and notifications. Currently NO auth exists in the Next.js app — Supabase Auth IS active on the backend (83 users: 55 untyped, 17 instructors, 11 customers) but there are zero login/signup pages, no session handling, no middleware protection, and the "Sign in" button in the header is non-functional.
+## Status: IMPLEMENTED ✅ (Branch: `user-profile`)
 
----
-
-## Current State Summary
-
-### Supabase Auth
-- **Provider**: Supabase Auth with email + phone providers
-- **Users exist** in `auth.users` with `raw_user_meta_data` storing `type` ("customer"/"instructor"), `first_name`, `last_name`, `email`, `is_registration_completed`
-- **NO auth packages** in Next.js — only `@supabase/supabase-js` v2.57.3 is installed
-- **Need to install**: `@supabase/ssr` for proper Next.js 15 App Router cookie-based auth
-
-### Supabase Client Setup (existing files)
-- `src/lib/supabase/client.ts` — Browser client (lazy-init, anon key, NO auth cookie handling)
-- `src/lib/supabase/server-client.ts` — Server client with **service role key** (bypasses RLS, server-only)
-- `src/lib/supabase/server-database.ts` — Server-side DB query functions using service role
-- `src/lib/supabase/database.ts` — Client-side DB queries (limited)
-
-### Existing Middleware (`src/middleware.ts`)
-- Only handles CORS for `/api/` routes
-- No auth session refresh, no route protection
-- Matcher: `/api/:path*` only
-
-### Key Database Tables
-
-**`customers`** (12 rows):
-| Column | Type | Nullable |
-|--------|------|----------|
-| id | uuid (PK, matches auth.users.id) | NO |
-| first_name | text | NO |
-| last_name | text | NO |
-| email | text | YES |
-| date_of_birth | date | NO |
-| avatar_url | text | YES |
-| stripe_customer_id | text | YES |
-| created_at | timestamp | NO |
-| ⚠️ bio | MISSING — needs migration | — |
-
-**`bookings`** (10 rows):
-| Column | Type | Notes |
-|--------|------|-------|
-| id | bigint (PK) | |
-| instructor_id | uuid (FK → instructors) | |
-| customer_id | uuid (FK → customers) | |
-| resort_id | bigint (FK → resorts) | |
-| discipline_id | bigint (FK → disciplines) | |
-| start_date, end_date | date | |
-| price | bigint | |
-| status | integer (FK → booking_status) | Default: 1 |
-| payment_status | bigint (FK → payment_status) | Default: 1 |
-| reference | text | Auto-generated |
-| primary_name, primary_email | text | |
-| platform_cut | real | |
-| is_disputed | boolean | Default: false |
-| dispute_* | various | Dispute tracking fields |
-| payout_* | various | Payout tracking fields |
-
-**`booking_status`** (reference table):
-| ID | Name |
-|----|------|
-| 1 | requested_by_customer |
-| 2 | requested_by_instructor |
-| 3 | confirmed |
-| 4 | declined |
-| 5 | expired |
-| 6 | cancelled_by_instructor |
-| 7 | cancelled_by_client |
-| 8 | completed |
-| 9 | active |
-| 10 | pending_payment |
-| 11 | deposit_paid |
-
-**`payment_status`** (reference table):
-| ID | Name |
-|----|------|
-| 1 | none |
-| 2 | pending |
-| 3 | paid |
-| 4 | void |
-| 5 | deposit_paid |
-| 6 | refunded |
-
-**`booking_payments`** (10 rows):
-| Column | Type | Notes |
-|--------|------|-------|
-| id | bigint (PK) | |
-| booking_id | bigint (FK → bookings) | |
-| price | bigint | |
-| status | bigint (FK → payment_status) | |
-| payment_type | enum ('full', etc) | Default: 'full' |
-| is_deposit | boolean | Default: false |
-| deposit_amount, balance_amount | bigint | |
-| balance_due_date | timestamp | |
-| stripe_refund_id | text | |
-| metadata | jsonb | Default: {} |
-
-**`booking_items`** (38 rows):
-| Column | Type |
-|--------|------|
-| id | bigint (PK) |
-| booking_id | bigint (FK → bookings) |
-| booking_slot_id | bigint |
-| day_slot_id | bigint (1-6) |
-| date | date |
-| start_time, end_time | time |
-| total_minutes | integer |
-| hourly_rate | numeric |
-| offer_id | bigint |
-
-**`notification_type`**:
-| Column | Type |
-|--------|------|
-| id | bigint (PK) |
-| title | text |
-| description | text |
-| access_type | bigint |
-| display_order | bigint |
-
-**`notification_unsubscribed`**:
-| Column | Type |
-|--------|------|
-| id | bigint (PK) |
-| user_id | uuid |
-| notification_type_id | bigint |
-| created_at | timestamp |
-
-### UI Design System
-- **Theme**: Dark — `#000000` bg, white text, glass morphism
-- **Glass panels**: `bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md`
-- **Inputs**: `bg-white/5 border border-white/10 rounded-lg text-white px-4 py-3 focus:ring-2 focus:ring-blue-400`
-- **Labels**: `font-['Archivo'] text-sm text-[#d5d5d6] mb-2`
-- **Primary button**: `bg-blue-400 text-white hover:bg-blue-500 rounded-xl py-4 font-['Archivo'] font-semibold`
-- **Secondary button**: `bg-white/10 text-white hover:bg-white/20 border border-white/20`
-- **Headings font**: `font-['PP_Editorial_New']` (serif)
-- **Body font**: `font-['Archivo']` (sans-serif)
-- **Muted text**: `text-[#d5d5d6]` or `text-[#9696a5]`
-- **Toast notifications**: `src/components/raven/toast-notification.tsx` (success/info/error variants)
-- **Modals**: `bg-black/80 backdrop-blur-sm` overlay, `bg-[#1a1a1f] border border-white/20 rounded-2xl` card
-- **Animations**: `motion/react` (Framer Motion successor) — spring physics, fade/scale/slide transitions
-
-### Existing Routes
-- `/raven/` — Landing page
-- `/raven/search` — Search results
-- `/raven/profile/[id]` — Instructor profile
-- `/raven/cart` — Cart page
-- `/raven/checkout` — Checkout form (has good input pattern reference)
-
-### Existing Stores/Contexts
-- `src/lib/contexts/search-context.tsx` — Search state (React context)
-- `src/lib/stores/cart-store.ts` — Cart state (Zustand with localStorage)
-
-### API Pattern
-ALL data fetching uses API routes with `supabaseServer` (service role, bypasses RLS):
-```
-Client component → fetch('/api/...') → API route uses supabaseServer → Supabase DB
-```
+All code is written, builds cleanly, and has been tested on desktop + mobile (375px). One DB migration pending.
 
 ---
 
-## Implementation Plan
+## What Was Built
 
-### Phase 0: Auth Foundation
+Complete customer authentication and account management system for the Raven ski instructor booking app (Next.js 15, React 19, TypeScript, Supabase).
 
-**Install `@supabase/ssr`:**
-```bash
-npm install @supabase/ssr
-```
+### Auth Foundation
+- **`@supabase/ssr`** installed for proper Next.js 15 App Router cookie-based auth
+- **Three-tier Supabase client architecture:**
+  - `src/lib/supabase/middleware-client.ts` — Middleware client (anon key, cookie handlers on NextRequest/NextResponse)
+  - `src/lib/supabase/server-auth.ts` — Server Component/Route Handler client (anon key, `cookies()` from `next/headers`) — for auth verification only
+  - `src/lib/supabase/browser-auth.ts` — Singleton browser client (`createBrowserClient` from `@supabase/ssr`)
+- **Existing `supabaseServer`** (`src/lib/supabase/server-client.ts`, service role key) stays untouched for data queries bypassing RLS
+- **Auth verification pattern in all API routes:** server-auth client → `getUser()` → get user ID → `supabaseServer` for data query
 
-**New file: `src/lib/supabase/middleware-client.ts`**
-- Creates Supabase client for middleware using `createServerClient` from `@supabase/ssr`
-- Cookie get/set handlers reading from `NextRequest` and writing to `NextResponse`
-- Uses ANON key (not service role)
+### Middleware (`src/middleware.ts`)
+- Refreshes auth session on every `/raven/` request (REQUIRED by `@supabase/ssr`)
+- Keeps existing CORS handling for `/api/` routes (with POST/PATCH/DELETE methods)
+- Route protection: `/raven/account/*` → redirects to `/raven/login` if no session
+- `/raven/login` and `/raven/signup` → redirect to `/raven/account` if session exists
+- Matcher: `['/api/:path*', '/raven/:path*']`
+- Wrapped in try/catch to prevent auth errors from breaking the app
 
-**New file: `src/lib/supabase/server-auth.ts`**
-- Creates Supabase client for Server Components/Route Handlers
-- Uses `createServerClient` from `@supabase/ssr` with `cookies()` from `next/headers`
-- Uses ANON key — this is for auth verification, NOT data queries
-- Separate from existing `server-client.ts` (which is service role for data)
-
-**New file: `src/lib/supabase/browser-auth.ts`**
-- Creates singleton browser Supabase client using `createBrowserClient` from `@supabase/ssr`
-- Proper cookie-based session handling for client components
-
-**Modify: `src/middleware.ts`**
-- Call Supabase middleware client to refresh auth session on every request (REQUIRED by @supabase/ssr)
-- Keep existing CORS handling for `/api/` routes
-- Add route protection: `/raven/account/*` → redirect to `/raven/login` if no session
-- Login/signup pages → redirect to `/raven/account` if session exists
-- Update matcher to include both `/api/:path*` and `/raven/:path*`
-- MUST use `supabase.auth.getUser()` (not `getSession()`) for security
-
-**New file: `src/lib/contexts/auth-context.tsx`**
-- Client-side React context exposing `{ user, loading, signOut }`
-- On mount: calls browser client `auth.getUser()`
-- Listens to `onAuthStateChange` for login/logout events
+### AuthContext (`src/lib/contexts/auth-context.tsx`)
+- React context providing `{ user, loading, signOut, refreshUser }`
+- Uses `onAuthStateChange` listener for login/logout events
 - Pattern matches existing `search-context.tsx`
+- Wrapped in root `src/app/layout.tsx` inside `<SearchProvider>`
 
-**Modify: `src/app/layout.tsx`**
-- Wrap children with `<AuthProvider>` inside existing `<SearchProvider>`
+### Login (`src/app/raven/login/page.tsx`)
+- Email + password form
+- Uses `createBrowserAuthClient()` for `signInWithPassword()`
+- Supports `?redirect=` query param
+- Wrapped in `<Suspense>` boundary (required by Next.js for `useSearchParams()` during static generation)
+- Error states shown inline, link to signup
 
-### Phase 1: Login & Sign Up
+### Signup (`src/app/raven/signup/page.tsx`)
+- Two-step form:
+  - Step 1: first_name, last_name, email, password (min 8 chars), date_of_birth
+  - Step 2: bio textarea (optional, 500 char max)
+- Calls `POST /api/auth/signup`, then auto-signs in via `signInWithPassword()`
+- Name fields stack vertically on mobile (`grid-cols-1 sm:grid-cols-2`)
 
-**New: `src/app/raven/login/page.tsx`**
-- Email + password form using existing input styling
-- Calls `supabase.auth.signInWithPassword()` via browser auth client
-- On success: `router.push('/raven/account')`
-- Error states shown inline
-- Link to signup page
+### Signup API (`src/app/api/auth/signup/route.ts`)
+- Uses `supabaseServer` (service role)
+- Validates required fields, email format, password length
+- `auth.admin.createUser()` with hardcoded `type: 'customer'` (security: never trusts client)
+- Inserts `customers` row with matching ID
+- On customer insert failure, cleans up by deleting the auth user
 
-**New: `src/app/raven/signup/page.tsx`**
-- Fields: first_name, last_name, email, password, date_of_birth
-- Optional: profile picture upload, "about yourself" textarea
-- Submit calls `POST /api/auth/signup`
+### Auth Callback (`src/app/raven/auth/callback/route.ts`)
+- Exchanges auth code for session
+- Redirects to `/raven/account` or custom redirect param
 
-**New: `src/app/api/auth/signup/route.ts`**
-- Uses `supabaseServer` (service role) to:
-  1. `supabase.auth.admin.createUser()` with `user_metadata: { type: "customer", first_name, last_name, email, is_registration_completed: true }`
-  2. Insert row into `customers` table (id = auth user id, first_name, last_name, email, date_of_birth, avatar_url)
-  3. Handle avatar upload to Supabase Storage if provided
+### Auth-Aware Headers
+- **Sticky search header** (`src/components/raven/sticky-search-header.tsx`):
+  - Logged in: avatar/initials + name with dropdown (My Account, My Bookings, Sign out)
+  - Not logged in: "Sign in" wrapped in `<Link href="/raven/login">`
+  - Dropdown with click-outside close
+- **Hero header** (`src/components/raven/enhanced-raven-landing.tsx`):
+  - Same auth-aware pattern — shows name/avatar linking to `/raven/account` when logged in
 
-**New: `src/app/raven/auth/callback/route.ts`**
-- Exchanges auth code for session (needed for email confirmation, password reset)
-- Redirects to `/raven/account`
+### Account Dashboard
+- **Layout** (`src/app/raven/account/layout.tsx`):
+  - Sticky header with "Raven" logo + "Back to Raven" link
+  - Desktop: sidebar nav (`w-[240px]`, glass morphism, 6 sections)
+  - Mobile: horizontal scrollable tabs with responsive text sizing
+  - Active state: `bg-blue-400/10 text-blue-400`
+- **Index** (`src/app/raven/account/page.tsx`): Server component redirecting to `/raven/account/bookings`
 
-**Modify: `src/components/raven/sticky-search-header.tsx`**
-- Import `useAuth` from auth context
-- If logged in: show avatar/initials + dropdown (Account, Sign out)
-- If not logged in: wrap "Sign in" button with `<Link href="/raven/login">`
+### Account Sections (6 pages + 6 API routes)
 
-### Phase 2: Account Dashboard Layout
+**Booking Requests** (`bookings/page.tsx` + `api/account/bookings/route.ts`):
+- Fetches bookings where `customer_id = user.id` with joins to `instructors` and `booking_items`
+- Booking cards: instructor avatar, name, date range, reference, status badge (color-coded), price
+- Expandable booking_items showing individual session dates/times
+- Status colors: green (confirmed/active/completed), yellow (requested/pending), red (declined/cancelled), blue (deposit_paid)
 
-**New: `src/app/raven/account/layout.tsx`**
-- Reuses sticky header (now auth-aware)
-- Sidebar navigation (desktop) / top tabs (mobile)
-- Sections: Booking Requests, Invoices & Payments, Personal Details, Email & Password, Profile & Photo, Notifications
-- Dark glass morphism sidebar: `bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md`
+**Invoices & Payments** (`payments/page.tsx` + `api/account/payments/route.ts`):
+- Fetches `booking_payments` by customer's booking IDs, merged with booking info + instructor name
+- Payment cards: instructor name, dates, reference, payment type, status badge, price
+- Deposit/balance breakdown shown when applicable
 
-**New: `src/app/raven/account/page.tsx`**
-- Redirects to `/raven/account/bookings`
+**Personal Details** (`details/page.tsx` + `api/account/details/route.ts`):
+- GET: Fetch `customers` row
+- PATCH: Update `customers` table + sync name to `auth.users` metadata via `admin.updateUserById()`
+- Editable: first_name, last_name, date_of_birth
+- Email shown read-only with note to change in Security section
+- Name fields stack vertically on mobile
 
-### Phase 3: Account Sections
+**Email & Password** (`security/page.tsx` + `api/account/security/route.ts`):
+- Two sections: Change Email + Change Password
+- Change email: `admin.updateUserById()` with new email + syncs to customers table
+- Change password: verifies current password via `signInWithPassword`, then updates
+- Current email shown with `break-all` for long addresses on mobile
 
-Each section = page + API route. API routes authenticate by:
-1. Create server auth client (anon key) → `getUser()` → get user ID
-2. Use `supabaseServer` (service role) for data query filtered by user ID
+**Profile & Photo** (`profile/page.tsx` + `api/account/profile/route.ts`):
+- Avatar upload via Supabase Storage (`avatars/{user_id}/avatar.{ext}`, upsert)
+- Uses `createBrowserAuthClient()` for storage upload, API route for URL persistence
+- Bio textarea (500 char max)
+- Avatar + upload button stacks vertically on mobile, side-by-side on desktop
+- Calls `refreshUser()` after avatar update to sync header
 
-**3.1 Booking Requests**
-- Page: `src/app/raven/account/bookings/page.tsx`
-- API: `src/app/api/account/bookings/route.ts`
-- GET: Query `bookings` where `customer_id = user.id`, join `instructors`, `resorts`, `disciplines`, `booking_items`
-- Display: List of booking cards with instructor name/avatar, resort, dates, status badge (color-coded), price
-- Status badge colors: green (confirmed/active/completed), yellow (requested/pending), red (declined/cancelled), blue (deposit_paid)
-
-**3.2 Invoices & Payments**
-- Page: `src/app/raven/account/payments/page.tsx`
-- API: `src/app/api/account/payments/route.ts`
-- GET: Query `booking_payments` joined with `bookings` (filtered by customer_id), `payment_status`
-- Display: Payment cards with booking reference, date, amount, status badge, deposit/balance info
-
-**3.3 Personal Details**
-- Page: `src/app/raven/account/details/page.tsx`
-- API: `src/app/api/account/details/route.ts`
-- GET: Fetch `customers` row for user
-- PATCH: Update first_name, last_name, date_of_birth in `customers` + sync to `auth.users` metadata via `admin.updateUserById()`
-
-**3.4 Email & Password**
-- Page: `src/app/raven/account/security/page.tsx`
-- API: `src/app/api/account/security/route.ts`
-- Change email: `admin.updateUserById()` with new email
-- Change password: Verify current password first via `signInWithPassword`, then `admin.updateUserById()`
-
-**3.5 Profile Picture & About**
-- Page: `src/app/raven/account/profile/page.tsx`
-- API: `src/app/api/account/profile/route.ts`
-- Avatar upload: client-side to Supabase Storage `avatars/{user_id}`, save URL via PATCH
-- Bio: textarea field
-- **⚠️ REQUIRES MIGRATION**: `ALTER TABLE customers ADD COLUMN bio text;`
-
-**3.6 Email Notifications**
-- Page: `src/app/raven/account/notifications/page.tsx`
-- API: `src/app/api/account/notifications/route.ts`
-- GET: Fetch all `notification_type` rows + user's `notification_unsubscribed` rows → derive toggle state
+**Notifications** (`notifications/page.tsx` + `api/account/notifications/route.ts`):
+- GET: Fetches all `notification_type` rows + user's `notification_unsubscribed` → derives toggle state
 - POST: Insert/delete from `notification_unsubscribed` to toggle
+- Toggle switches with `flex-shrink-0` to prevent squishing on mobile
 
-### Phase 4: Database Migration
+### Other Fixes Applied (from earlier in the session, also on this branch)
+- **Slot selection**: Only shows instructor-configured slots (not all 6 hardcoded), Full Day booking blocks Morning/Afternoon
+- **Calendar panel**: Fits viewport so CTA button visible without scrolling (`sticky top-4`, `maxHeight: calc(100vh - 32px)`)
+- **Configured slots API**: `src/app/api/calendar/configured-slots/route.ts` — queries `booking_slots` for instructor
+
+---
+
+## Pending Items
+
+### ⚠️ DB Migration Required
+The `bio` column does not exist on the `customers` table yet. Run this in the Supabase SQL editor:
 
 ```sql
 ALTER TABLE public.customers ADD COLUMN IF NOT EXISTS bio text;
 ```
 
-### Phase 5: Sign Out
+Without this, the Profile page will render but bio saves will fail.
 
-- Client-side: `supabase.auth.signOut()` → auth context picks up `SIGNED_OUT` event → redirect to `/raven/login`
-- Exposed via auth context's `signOut()` function
+### Not Implemented
+- Password reset flow (forgot password page)
+- Email verification after email change
+- Profile picture deletion (only upload/replace)
+- Booking cancellation from the account area
+- Invoice PDF download
 
 ---
 
-## New File Tree
+## Key Database Tables
+
+**`customers`** (linked to `auth.users` by `id`):
+| Column | Type | Notes |
+|--------|------|-------|
+| id | uuid (PK, matches auth.users.id) | |
+| first_name | text | NOT NULL |
+| last_name | text | NOT NULL |
+| email | text | |
+| date_of_birth | date | NOT NULL |
+| avatar_url | text | |
+| stripe_customer_id | text | |
+| created_at | timestamp | |
+| bio | text | ⚠️ NEEDS MIGRATION |
+
+**`bookings`**: customer_id (FK → customers), instructor_id (FK → instructors), start/end dates, price, status (FK → booking_status), payment_status, reference
+
+**`booking_status`**: 1=requested_by_customer, 2=requested_by_instructor, 3=confirmed, 4=declined, 5=expired, 6=cancelled_by_instructor, 7=cancelled_by_client, 8=completed, 9=active, 10=pending_payment, 11=deposit_paid
+
+**`payment_status`**: 1=none, 2=pending, 3=paid, 4=void, 5=deposit_paid, 6=refunded
+
+**`booking_payments`**: booking_id, price, status, payment_type ('full'), is_deposit, deposit_amount, balance_amount
+
+**`booking_items`**: booking_id, day_slot_id (1-6), date, start_time, end_time, hourly_rate, total_minutes
+
+**`notification_type`**: id, title, description, display_order
+
+**`notification_unsubscribed`**: user_id, notification_type_id (presence = unsubscribed)
+
+---
+
+## UI Design System
+
+- **Theme**: Dark — `#000000` bg, white text, glass morphism
+- **Glass panels**: `bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md`
+- **Inputs**: `bg-white/5 border border-white/10 rounded-lg text-white px-4 py-3 focus:ring-2 focus:ring-blue-400`
+- **Labels**: `font-['Archivo'] text-sm text-[#d5d5d6] mb-2`
+- **Primary button**: `bg-blue-400 text-white hover:bg-blue-500 rounded-xl py-3 font-['Archivo'] font-semibold`
+- **Secondary button**: `bg-white/10 text-white hover:bg-white/20 border border-white/20`
+- **Headings font**: `font-['PP_Editorial_New']` (serif)
+- **Body font**: `font-['Archivo']` (sans-serif)
+- **Muted text**: `text-[#d5d5d6]` or `text-[#9696a5]`
+- **Animations**: `motion/react` (Framer Motion successor) — spring physics, fade/scale/slide transitions
+- **Status badges**: `inline-flex px-3 py-1 rounded-full text-xs font-semibold border` with color variants
+
+### Mobile Responsiveness Patterns Used
+- Grids: `grid-cols-1 sm:grid-cols-2` (name fields stack on mobile)
+- Flex: `flex-col sm:flex-row` (avatar + controls stack on mobile)
+- Text: `text-2xl sm:text-3xl` headings, `text-xs sm:text-sm` body
+- Padding: `p-4 sm:p-6` or `p-5 sm:p-8` cards
+- Gaps: `gap-3 sm:gap-4` or `gap-4 sm:gap-6`
+- Overflow: `min-w-0 flex-1` on text, `flex-shrink-0` on fixed elements
+- Tabs: horizontal scroll with `overflow-x-auto`, smaller pills on mobile
+
+---
+
+## File Tree (all new/modified files)
 
 ```
-src/
-  lib/
-    supabase/
-      middleware-client.ts          # NEW - Supabase client for middleware
-      server-auth.ts                # NEW - Supabase client for server (anon key, auth-aware)
-      browser-auth.ts               # NEW - Supabase client for browser (cookie-based auth)
-    contexts/
-      auth-context.tsx              # NEW - Auth state provider
-  app/
-    raven/
-      login/
-        page.tsx                    # NEW - Login page
-      signup/
-        page.tsx                    # NEW - Sign up page
-      auth/
-        callback/
-          route.ts                  # NEW - Auth callback handler
-      account/
-        layout.tsx                  # NEW - Account layout + sidebar
-        page.tsx                    # NEW - Redirect to /bookings
-        bookings/
-          page.tsx                  # NEW - Booking requests
-        payments/
-          page.tsx                  # NEW - Invoices & payments
-        details/
-          page.tsx                  # NEW - Personal details form
-        security/
-          page.tsx                  # NEW - Email & password
-        profile/
-          page.tsx                  # NEW - Avatar & bio
-        notifications/
-          page.tsx                  # NEW - Notification toggles
-    api/
-      auth/
-        signup/
-          route.ts                  # NEW - Sign up handler
-      account/
-        bookings/
-          route.ts                  # NEW - Customer bookings API
-        payments/
-          route.ts                  # NEW - Customer payments API
-        details/
-          route.ts                  # NEW - Customer details CRUD
-        security/
-          route.ts                  # NEW - Email/password change
-        profile/
-          route.ts                  # NEW - Avatar/bio CRUD
-        notifications/
-          route.ts                  # NEW - Notification prefs CRUD
+NEW FILES:
+  src/lib/supabase/middleware-client.ts
+  src/lib/supabase/server-auth.ts
+  src/lib/supabase/browser-auth.ts
+  src/lib/contexts/auth-context.tsx
+  src/app/raven/login/page.tsx
+  src/app/raven/signup/page.tsx
+  src/app/raven/auth/callback/route.ts
+  src/app/raven/account/layout.tsx
+  src/app/raven/account/page.tsx
+  src/app/raven/account/bookings/page.tsx
+  src/app/raven/account/payments/page.tsx
+  src/app/raven/account/details/page.tsx
+  src/app/raven/account/security/page.tsx
+  src/app/raven/account/profile/page.tsx
+  src/app/raven/account/notifications/page.tsx
+  src/app/api/auth/signup/route.ts
+  src/app/api/account/bookings/route.ts
+  src/app/api/account/payments/route.ts
+  src/app/api/account/details/route.ts
+  src/app/api/account/security/route.ts
+  src/app/api/account/profile/route.ts
+  src/app/api/account/notifications/route.ts
+  src/app/api/calendar/configured-slots/route.ts
 
-Modified files:
-  src/middleware.ts                  # Add auth refresh + route protection
-  src/components/raven/sticky-search-header.tsx  # Auth-aware sign in button
-  src/app/layout.tsx                # Wrap with AuthProvider
+MODIFIED FILES:
+  package.json (added @supabase/ssr)
+  src/middleware.ts (auth refresh + route protection)
+  src/app/layout.tsx (wrapped with AuthProvider)
+  src/components/raven/sticky-search-header.tsx (auth-aware header)
+  src/components/raven/enhanced-raven-landing.tsx (auth-aware hero header)
+  src/components/raven/slot-selection-modal.tsx (configured slots + Full Day blocking)
+  src/app/raven/profile/[id]/page.tsx (configured slots + calendar viewport fix)
+  src/components/calendar/InstructorAvatar.tsx
+  tailwind.config.ts
 ```
 
-## Implementation Order
+## Environment Variables Required
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://ryuslexclvyohxagztys.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon_key>
+SUPABASE_SERVICE_ROLE_KEY=<service_role_key>
+```
 
-1. Phase 0 — Auth foundation (install, utility files, middleware, context)
-2. Phase 1.3 — Login page (test with existing Supabase users)
-3. Phase 1.5 — Connect Sign in button
-4. Phase 1.1 + 1.2 — Sign up page + API
-5. Phase 1.4 — Auth callback route
-6. Phase 2 — Account layout with sidebar
-7. Phase 3.3 — Personal details (simplest, good end-to-end test)
-8. Phase 3.1 — Booking requests (core feature)
-9. Phase 3.2 — Invoices/payments
-10. Phase 4 — Bio column migration
-11. Phase 3.5 — Profile picture & about
-12. Phase 3.4 — Email & password
-13. Phase 3.6 — Notifications
+## API Pattern (all account routes follow this)
+```typescript
+// 1. Verify auth
+const supabase = await createServerAuthClient()
+const { data: { user }, error } = await supabase.auth.getUser()
+if (error || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-## Verification
-- Sign up creates both auth.users entry AND customers row
-- Login sets session cookies, header shows avatar/name
-- `/raven/account/*` redirects to login when not authenticated
-- `/raven/login` redirects to account when already authenticated
-- Booking requests show correct data filtered by customer_id
-- Payments show correct data joined from booking_payments
-- Personal details update persists to DB
-- Email/password change works via Supabase Auth
-- Avatar upload saves to Supabase Storage
-- Notification toggles persist to notification_unsubscribed table
+// 2. Query data with service role (bypasses RLS)
+const { data, error: dbError } = await supabaseServer
+  .from('table')
+  .select('*')
+  .eq('customer_id', user.id)
+```
