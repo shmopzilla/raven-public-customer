@@ -169,7 +169,7 @@ const SearchSection = ({
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              className="text-green-400"
+              className="text-white"
             >
               <CheckIcon />
             </motion.div>
@@ -306,7 +306,7 @@ const LocationCard = ({
             {location.name}
           </div>
           {isSelected && (
-            <div className="text-green-400 shrink-0">
+            <div className="text-white shrink-0">
               <CheckIcon />
             </div>
           )}
@@ -400,12 +400,24 @@ export const SearchModal = ({
     debouncedSearch(value);
   };
 
-  // Filter locations based on search value
+  // Filter locations based on search value.
+  // Initial (no query) state shows a curated Popular Resorts shortlist —
+  // Courchevel, Val Thorens, Méribel — the flagship 3 Vallées trio.
+  // Matches by case+diacritic-insensitive substring so variants like
+  // "Courchevel 1850" and "Méribel" still resolve. Falls back to the
+  // first location if a priority entry isn't present in the data.
   const { filteredLocations, totalMatches } = useMemo(() => {
     if (!internalSearchValue.trim()) {
+      const normalize = (s: string) =>
+        s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const priority = ['courchevel', 'val thorens', 'meribel'];
+      const shortlist = priority
+        .map((key) => locations.find((l) => normalize(l.name).includes(key)))
+        .filter((l): l is (typeof locations)[number] => Boolean(l));
+
       return {
-        filteredLocations: locations.slice(0, 5),
-        totalMatches: 5
+        filteredLocations: shortlist.length > 0 ? shortlist : locations.slice(0, 3),
+        totalMatches: locations.length,
       };
     }
 
@@ -642,10 +654,10 @@ export const SearchModal = ({
                   return (
                     <motion.button
                       key={discipline.id}
-                      className={`relative h-9 rounded-full shrink-0 cursor-pointer transition-all duration-200 ${
+                      className={`relative inline-flex shrink-0 cursor-pointer items-center gap-2 rounded-full p-1 pr-4 transition-all duration-200 ${
                         isSelected
                           ? 'bg-white'
-                          : 'bg-[#25252b] hover:bg-[#2a2a31] border border-[#3B3B40]'
+                          : 'border border-[#3B3B40] bg-[#25252b] hover:bg-[#2a2a31]'
                       }`}
                       onClick={() => {
                         const newSelectedSports = isSelected
@@ -656,24 +668,20 @@ export const SearchModal = ({
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
-                      <div className="flex flex-row gap-2 h-9 items-center justify-center overflow-clip pl-2 pr-3 py-1">
-                        {discipline.image_url && (
-                          <div className="relative shrink-0 size-5">
-                            <img
-                              alt=""
-                              className="block max-w-none size-full object-contain"
-                              src={discipline.image_url}
-                            />
-                          </div>
-                        )}
-                        <span
-                          className={`font-['Archivo'] font-normal text-[13px] text-nowrap ${
-                            isSelected ? 'text-[#0d0d0f]' : 'text-white'
-                          }`}
-                        >
-                          {discipline.name}
-                        </span>
-                      </div>
+                      {discipline.image_url && (
+                        <img
+                          alt=""
+                          src={discipline.image_url}
+                          className="block h-7 w-7 shrink-0 rounded-full object-cover"
+                        />
+                      )}
+                      <span
+                        className={`whitespace-nowrap font-['Archivo'] text-[13px] ${
+                          isSelected ? 'text-black' : 'text-white'
+                        }`}
+                      >
+                        {discipline.name}
+                      </span>
                     </motion.button>
                   );
                 })}
@@ -782,7 +790,7 @@ export const SearchModal = ({
               <div
                 key={index}
                 className={`w-2 h-2 rounded-full transition-colors ${
-                  item.complete ? 'bg-green-400' : 'bg-[#3B3B40]'
+                  item.complete ? 'bg-white' : 'bg-white/20'
                 }`}
                 title={item.label}
               />

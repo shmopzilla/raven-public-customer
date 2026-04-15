@@ -9,7 +9,18 @@ import { ActionButton } from '@/components/calendar/ActionButton'
 import { InstructorAvatar } from '@/components/calendar/InstructorAvatar'
 import { InstructorCarousel } from '@/components/calendar/InstructorCarousel'
 import { GlobalSearchModal } from '@/components/ui/global-search-modal'
+import { SiteHeader } from '@/components/raven/site-header'
 import { SiteFooter } from '@/components/raven/site-footer'
+import { Panel } from '@/components/raven/ui'
+import { useSearch } from '@/lib/contexts/search-context'
+import {
+  Star,
+  ArrowLeft,
+  Search,
+  MapPin as MapPinIcon,
+  Calendar as CalendarIcon,
+  Users,
+} from 'lucide-react'
 import { SlotSelectionModal } from '@/components/raven/slot-selection-modal'
 import { ToastNotification } from '@/components/raven/toast-notification'
 import type { SelectedSlot } from '@/lib/types/cart'
@@ -280,7 +291,12 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
   })()
 
   // All languages list
+  // Prefers the new `languages: string[]` shape from /api/calendar/instructors,
+  // falls back to legacy `primary_language` + `other_languages` fields.
   const allLanguages = (() => {
+    const fromArray = (instructor as unknown as { languages?: string[] })?.languages
+    if (fromArray && fromArray.length) return fromArray
+
     const langs: string[] = []
     if (instructor?.primary_language) langs.push(instructor.primary_language)
     if (instructor?.other_languages?.length) langs.push(...instructor.other_languages)
@@ -313,40 +329,12 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
 
   return (
     <div className="min-h-screen bg-black">
-      {/* Scroll-aware Header */}
-      <div className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? 'bg-black/95 backdrop-blur-sm border-b border-gray-800/50'
-          : 'bg-gradient-to-b from-black/60 to-transparent'
-      }`}>
-        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <Link
-              href="/raven/search"
-              className="flex items-center gap-2 text-white hover:text-white/80 transition-colors"
-            >
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              <span className="font-['Archivo'] font-medium">Back to Search</span>
-            </Link>
-            {scrolled && instructor && (
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-8 h-8 rounded-full bg-cover bg-center bg-gray-600"
-                  style={{ backgroundImage: `url(${instructor.avatar_url || '/assets/images/instructor-1.png'})` }}
-                />
-                <span className="text-white font-['Archivo'] font-medium text-sm">{instructor.first_name}</span>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+      <SiteHeader transparent />
 
-      {/* Hero Banner */}
+      {/* Hero Banner with identity overlay */}
       <div
         ref={bannerRef}
-        className="relative w-full h-[260px] lg:h-[320px]"
+        className="relative w-full h-[360px] lg:h-[440px]"
       >
         {instructor?.banner_url ? (
           <div
@@ -354,109 +342,44 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
             style={{ backgroundImage: `url(${instructor.banner_url})` }}
           />
         ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-900/80 via-slate-900 to-black" />
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-800 via-slate-900 to-black" />
         )}
-        {/* Gradient overlay for text readability */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-      </div>
+        {/* Gradient for identity legibility */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/55 to-black/10" />
 
-      {/* Profile Section - overlaps banner */}
-      <div className="relative max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-8 -mt-20">
-        {/* Two Column from the start on Desktop */}
-        <div className="flex flex-col lg:flex-row gap-8 pb-32 lg:pb-8">
-          {/* Left Column - Identity + Profile Info */}
-          <div className="w-full lg:flex-1 lg:min-w-0 flex flex-col gap-6">
-            {/* Mobile: centered vertical stack */}
-            <div className="flex flex-col items-center lg:hidden">
-              <InstructorAvatar
-                instructor={instructor ?? undefined}
-                size="lg"
-                className="ring-4 ring-black rounded-full"
-              />
-              {instructor && (
-                <div className="mt-4 flex flex-col items-center gap-2">
-                  <h1 style={{ color: '#FFF', fontFamily: '"PP Editorial New"', fontSize: '32px', fontWeight: 400, lineHeight: '1.2', letterSpacing: '0.16px' }}>
-                    {instructor.first_name}
-                  </h1>
-                  {instructorResorts.length > 0 && (
-                    <div className="flex items-center gap-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none">
-                        <path d="M21 10C21 18 12 23 12 23C12 23 3 18 3 10C3 7.61305 3.94821 5.32387 5.63604 3.63604C7.32387 1.94821 9.61305 1 12 1C14.3869 1 16.6761 1.94821 18.364 3.63604C20.0518 5.32387 21 7.61305 21 10Z" fill="url(#paint0_loc_m)"/>
-                        <path d="M12 14C14.2091 14 16 12.2091 16 10C16 7.79086 14.2091 6 12 6C9.79086 6 8 7.79086 8 10C8 12.2091 9.79086 14 12 14Z" fill="url(#paint1_loc_m)"/>
-                        <defs>
-                          <linearGradient id="paint0_loc_m" x1="12" y1="1" x2="12" y2="23" gradientUnits="userSpaceOnUse"><stop stopColor="#FF4867"/><stop offset="1" stopColor="#E50031"/></linearGradient>
-                          <linearGradient id="paint1_loc_m" x1="12" y1="6" x2="12" y2="14" gradientUnits="userSpaceOnUse"><stop stopColor="#F2F2F2"/><stop offset="1" stopColor="#DBDBDB"/></linearGradient>
-                        </defs>
-                      </svg>
-                      <span className="text-white/80 font-['Archivo'] text-[15px]">{instructorResorts[0].name}</span>
-                      {instructorResorts.length > 1 && (
-                        <span className="px-2 py-0.5 bg-white/10 rounded-full text-xs text-white/70 font-['Archivo'] font-medium">
-                          +{instructorResorts.length - 1} more
-                        </span>
-                      )}
-                    </div>
-                  )}
-                  {/* Mobile Trust Badges */}
-                  <div className="mt-2 flex flex-wrap items-center gap-2 justify-center">
-                    {instructor.id_verified && (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-['Archivo'] font-medium">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                        Verified
-                      </span>
-                    )}
-                    {instructor.instant_booking && (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-['Archivo'] font-medium">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                        Instant Booking
-                      </span>
-                    )}
-                  </div>
-                  {/* Mobile Stats */}
-                  <div className="mt-2 flex items-center rounded-xl bg-white/5 border border-white/10 overflow-hidden w-fit">
-                    {instructor.years_of_experience && instructor.years_of_experience > 0 && (
-                      <div className="flex flex-col items-center px-6 py-3">
-                        <span className="text-white font-['Archivo'] font-semibold text-lg">{instructor.years_of_experience}</span>
-                        <span className="text-white/50 font-['Archivo'] text-xs uppercase tracking-wider">Years exp.</span>
-                      </div>
-                    )}
-                    {languageCount > 0 && (<><div className="w-px h-10 bg-white/10" /><div className="flex flex-col items-center px-6 py-3"><span className="text-white font-['Archivo'] font-semibold text-lg">{languageCount}</span><span className="text-white/50 font-['Archivo'] text-xs uppercase tracking-wider">{languageCount === 1 ? 'Language' : 'Languages'}</span></div></>)}
-                    {instructorResorts.length > 0 && (<><div className="w-px h-10 bg-white/10" /><div className="flex flex-col items-center px-6 py-3"><span className="text-white font-['Archivo'] font-semibold text-lg">{instructorResorts.length}</span><span className="text-white/50 font-['Archivo'] text-xs uppercase tracking-wider">{instructorResorts.length === 1 ? 'Resort' : 'Resorts'}</span></div></>)}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Desktop: horizontal avatar + info layout */}
-            <div className="hidden lg:flex items-start gap-5">
-              <div className="flex-shrink-0">
+        {/* Identity block — bottom-aligned over the photo */}
+        {instructor && (
+          <div className="absolute inset-x-0 bottom-0">
+            <div className="mx-auto max-w-[1100px] px-4 pb-8 sm:px-6 sm:pb-10 lg:px-8 lg:pb-12">
+              <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:gap-6">
+                {/* Avatar */}
                 <InstructorAvatar
                   instructor={instructor ?? undefined}
                   size="lg"
-                  className="ring-4 ring-black rounded-full"
+                  className="flex-shrink-0 rounded-full ring-4 ring-black"
                 />
-              </div>
-              {instructor && (
-                <div className="flex flex-col gap-2 pt-2">
-                  <h1 style={{ color: '#FFF', fontFamily: '"PP Editorial New"', fontSize: '32px', fontWeight: 400, lineHeight: '1.2', letterSpacing: '0.16px' }}>
+
+                {/* Name + location + chips */}
+                <div className="min-w-0 flex-1 space-y-3">
+                  <h1 className="font-['PP_Editorial_New'] text-4xl leading-[1.05] tracking-[-0.01em] text-white sm:text-5xl lg:text-[56px]">
                     {instructor.first_name}
                   </h1>
+
                   {instructorResorts.length > 0 && (
                     <div className="flex items-center gap-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none">
-                        <path d="M21 10C21 18 12 23 12 23C12 23 3 18 3 10C3 7.61305 3.94821 5.32387 5.63604 3.63604C7.32387 1.94821 9.61305 1 12 1C14.3869 1 16.6761 1.94821 18.364 3.63604C20.0518 5.32387 21 7.61305 21 10Z" fill="url(#paint0_loc_d)"/>
-                        <path d="M12 14C14.2091 14 16 12.2091 16 10C16 7.79086 14.2091 6 12 6C9.79086 6 8 7.79086 8 10C8 12.2091 9.79086 14 12 14Z" fill="url(#paint1_loc_d)"/>
-                        <defs>
-                          <linearGradient id="paint0_loc_d" x1="12" y1="1" x2="12" y2="23" gradientUnits="userSpaceOnUse"><stop stopColor="#FF4867"/><stop offset="1" stopColor="#E50031"/></linearGradient>
-                          <linearGradient id="paint1_loc_d" x1="12" y1="6" x2="12" y2="14" gradientUnits="userSpaceOnUse"><stop stopColor="#F2F2F2"/><stop offset="1" stopColor="#DBDBDB"/></linearGradient>
-                        </defs>
-                      </svg>
-                      <span className="text-white/80 font-['Archivo'] text-[15px]">{instructorResorts[0].name}</span>
+                      <MapPinIcon
+                        className="h-4 w-4 text-white/70"
+                        strokeWidth={2}
+                      />
+                      <span className="font-['Archivo'] text-sm text-white/85 sm:text-base">
+                        {instructorResorts[0].name}
+                      </span>
                       {instructorResorts.length > 1 && (
                         <div className="relative group">
-                          <span className="px-2 py-0.5 bg-white/10 rounded-full text-xs text-white/70 font-['Archivo'] font-medium cursor-help">
+                          <span className="cursor-help rounded-full border border-white/15 bg-white/10 px-2 py-0.5 font-['Archivo'] text-[11px] text-white/80">
                             +{instructorResorts.length - 1} more
                           </span>
-                          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-2 bg-white text-black text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 whitespace-nowrap">
+                          <div className="pointer-events-none absolute left-1/2 top-full z-10 mt-2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-white px-3 py-2 text-sm text-black opacity-0 transition-opacity group-hover:opacity-100">
                             {instructorResorts.slice(1).map((resort: any, i: number) => (
                               <div key={resort.id || i}>{resort.name}</div>
                             ))}
@@ -465,67 +388,133 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
                       )}
                     </div>
                   )}
-                  {/* Desktop Trust Badges + Stats inline */}
-                  <div className="flex flex-wrap items-center gap-2 mt-1">
+
+                  {/* Trust badges + stat chips */}
+                  <div className="flex flex-wrap items-center gap-2">
                     {instructor.id_verified && (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-['Archivo'] font-medium">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                      <HeroChip
+                        icon={
+                          <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                            <polyline points="22 4 12 14.01 9 11.01" />
+                          </svg>
+                        }
+                        tone="success"
+                      >
                         Verified
-                      </span>
+                      </HeroChip>
                     )}
                     {instructor.instant_booking && (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-['Archivo'] font-medium">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                        Instant Booking
-                      </span>
-                    )}
-                    {instructor.years_of_experience && instructor.years_of_experience > 0 && (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-white/70 text-xs font-['Archivo'] font-medium">
-                        {instructor.years_of_experience} yrs experience
-                      </span>
+                      <HeroChip
+                        icon={
+                          <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                          </svg>
+                        }
+                        tone="warning"
+                      >
+                        Instant booking
+                      </HeroChip>
                     )}
                     {instructorResorts.length > 0 && (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-white/70 text-xs font-['Archivo'] font-medium">
-                        {instructorResorts.length} {instructorResorts.length === 1 ? 'resort' : 'resorts'}
-                      </span>
+                      <HeroChip>
+                        {instructorResorts.length}{' '}
+                        {instructorResorts.length === 1 ? 'resort' : 'resorts'}
+                      </HeroChip>
                     )}
                     {languageCount > 0 && (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-white/70 text-xs font-['Archivo'] font-medium">
-                        {languageCount} {languageCount === 1 ? 'language' : 'languages'}
-                      </span>
+                      <HeroChip>
+                        {languageCount}{' '}
+                        {languageCount === 1 ? 'language' : 'languages'}
+                      </HeroChip>
                     )}
                   </div>
                 </div>
-              )}
+              </div>
             </div>
+          </div>
+        )}
+      </div>
 
+      {/* Sub-nav: back-to-results + search summary + edit search */}
+      <ProfileSubNav />
+
+      {/* Profile Section */}
+      <div className="relative max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-8 pt-8 lg:pt-10">
+        {/* Two Column from the start on Desktop */}
+        <div className="flex flex-col lg:flex-row gap-8 pb-32 lg:pb-8">
+          {/* Left Column - Profile content (identity lives in hero above) */}
+          <div className="w-full lg:flex-1 lg:min-w-0 flex flex-col gap-6">
             {/* Pricing Section */}
-            <div className="flex flex-col gap-3">
-              <div className="text-white font-['Archivo'] font-medium text-xl">
+            <Panel className="p-5 sm:p-6">
+              <p className="font-['Archivo'] text-[11px] uppercase tracking-[0.22em] text-white/45">
+                Pricing
+              </p>
+              <div className="mt-2 font-['PP_Editorial_New'] text-3xl leading-tight text-white sm:text-4xl">
                 {loadingPricing ? (
-                  'Loading pricing...'
+                  <span className="text-white/55">Loading…</span>
                 ) : instructorPricing?.minHourlyRate ? (
                   <>
-                    Starting from €{instructorPricing.minHourlyRate}
-                    <span className="text-[#7B7B7B] text-base ml-1">/hour</span>
+                    €{instructorPricing.minHourlyRate}
+                    <span className="ml-1 font-['Archivo'] text-base font-normal text-white/50">
+                      / hour
+                    </span>
                   </>
                 ) : (
-                  'Pricing unavailable'
+                  <span className="text-white/55">Pricing unavailable</span>
                 )}
               </div>
-              <DisciplinesList instructorId={instructorId || ''} />
-            </div>
+              <div className="mt-4">
+                <DisciplinesList instructorId={instructorId || ''} />
+              </div>
+            </Panel>
 
             {/* About Section */}
             {instructor?.biography && (
-              <div className="flex flex-col gap-3">
-                <h3 className="text-white font-['Archivo'] font-medium text-xl">
-                  About {instructor.first_name}
-                </h3>
-                <div className="relative">
+              <Panel className="p-5 sm:p-6">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-['Archivo'] text-[11px] uppercase tracking-[0.22em] text-white/45">
+                      About
+                    </p>
+                    <h3 className="mt-2 font-['PP_Editorial_New'] text-2xl leading-tight text-white sm:text-3xl">
+                      Meet{' '}
+                      <span className="italic text-white/85">
+                        {instructor.first_name}
+                      </span>
+                    </h3>
+                  </div>
+                  {instructor.years_of_experience &&
+                    instructor.years_of_experience > 0 && (
+                      <span className="inline-flex flex-shrink-0 items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.06] px-3 py-1.5 font-['Archivo'] text-xs text-white/80">
+                        {instructor.years_of_experience} yrs experience
+                      </span>
+                    )}
+                </div>
+                <div className="relative mt-4">
                   <p
-                    className={`text-white/70 font-['Archivo'] font-light text-[15px] leading-relaxed ${
-                      !bioExpanded && instructor.biography.length > 300 ? 'line-clamp-4' : ''
+                    className={`font-['Archivo'] text-[15px] leading-relaxed text-white/70 ${
+                      !bioExpanded && instructor.biography.length > 300
+                        ? 'line-clamp-4'
+                        : ''
                     }`}
                   >
                     {instructor.biography}
@@ -533,55 +522,62 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
                   {instructor.biography.length > 300 && (
                     <button
                       onClick={() => setBioExpanded(!bioExpanded)}
-                      className="mt-2 text-white font-['Archivo'] text-sm font-medium underline-offset-4 hover:underline transition-colors"
+                      className="mt-3 font-['Archivo'] text-sm font-medium text-white underline-offset-4 transition-colors hover:underline"
                     >
                       {bioExpanded ? 'Read less' : 'Read more'}
                     </button>
                   )}
                 </div>
-              </div>
+              </Panel>
             )}
 
             {/* Languages Section */}
             {allLanguages.length > 0 && (
-              <div className="flex flex-col gap-3">
-                <h3 className="text-white font-['Archivo'] font-medium text-xl">
+              <Panel className="p-5 sm:p-6">
+                <p className="font-['Archivo'] text-[11px] uppercase tracking-[0.22em] text-white/45">
                   Languages
-                </h3>
-                <div className="flex flex-wrap gap-2">
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2">
                   {allLanguages.map((lang, i) => (
                     <span
                       key={i}
-                      className={`px-3 py-1.5 rounded-full font-['Archivo'] text-sm ${
+                      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 font-['Archivo'] text-sm ${
                         i === 0
-                          ? 'bg-white/10 text-white border border-white/20'
-                          : 'bg-white/5 text-white/70 border border-white/10'
+                          ? 'border-white/25 bg-white/10 text-white'
+                          : 'border-white/10 bg-white/[0.04] text-white/70'
                       }`}
                     >
+                      <span className="text-base leading-none" aria-hidden>
+                        {languageFlag(lang)}
+                      </span>
                       {lang}
                     </span>
                   ))}
                 </div>
-              </div>
+              </Panel>
             )}
 
-            {/* Photos Carousel */}
+            {/* Photos Carousel — heading baked into carousel */}
             {instructorId && (
-              <InstructorCarousel
-                images={instructorImages}
-                className="w-full"
-              />
+              <Panel className="p-5 sm:p-6">
+                <InstructorCarousel
+                  images={instructorImages}
+                  className="w-full"
+                />
+              </Panel>
             )}
           </div>
 
           {/* Right Column - Calendar Panel (Desktop only) */}
           <div className="hidden lg:block w-[485px] flex-shrink-0">
-            <div className="sticky top-4">
+            {/* top-20/24 leaves room for the fixed SiteHeader (h-16 mobile, h-20 desktop) plus a little breathing space */}
+            <div className="sticky top-24">
               <div
                 className="w-full relative flex flex-col"
                 style={{
                   maxWidth: '485px',
-                  maxHeight: 'calc(100vh - 32px)',
+                  /* 96px sticky-offset + 16px breathing space below = 112px */
+                  maxHeight: 'calc(100vh - 112px)',
                   borderRadius: '12px',
                   border: '1px solid rgba(255, 255, 255, 0.10)',
                   background: 'rgba(255, 255, 255, 0.05)',
@@ -751,7 +747,14 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
         />
       )}
 
-      <GlobalSearchModal shouldNavigate={false} />
+      {/* Reviews — placeholder data until reviews schema lands */}
+      {instructor && (
+        <ReviewsSection instructorName={instructor.first_name} />
+      )}
+
+      {/* Submitting the search from a profile page should always send the
+          user to /raven/search so they actually see results. */}
+      <GlobalSearchModal shouldNavigate={true} />
 
       <ToastNotification
         isVisible={showToast}
@@ -762,5 +765,319 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
 
       <SiteFooter />
     </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// LANGUAGE -> FLAG EMOJI
+// ---------------------------------------------------------------------------
+// Maps a language name (case-insensitive) to a Unicode flag emoji. Covers
+// the languages most commonly spoken by European ski/watersport instructors
+// plus a few extras. Falls back to a globe glyph for anything unknown.
+
+function languageFlag(language: string): string {
+  const key = language.trim().toLowerCase()
+  const map: Record<string, string> = {
+    english: '🇬🇧',
+    british: '🇬🇧',
+    american: '🇺🇸',
+    french: '🇫🇷',
+    italian: '🇮🇹',
+    spanish: '🇪🇸',
+    castilian: '🇪🇸',
+    catalan: '🇪🇸',
+    portuguese: '🇵🇹',
+    brazilian: '🇧🇷',
+    german: '🇩🇪',
+    dutch: '🇳🇱',
+    flemish: '🇧🇪',
+    greek: '🇬🇷',
+    russian: '🇷🇺',
+    ukrainian: '🇺🇦',
+    polish: '🇵🇱',
+    swedish: '🇸🇪',
+    norwegian: '🇳🇴',
+    danish: '🇩🇰',
+    finnish: '🇫🇮',
+    icelandic: '🇮🇸',
+    czech: '🇨🇿',
+    slovak: '🇸🇰',
+    hungarian: '🇭🇺',
+    romanian: '🇷🇴',
+    bulgarian: '🇧🇬',
+    croatian: '🇭🇷',
+    slovenian: '🇸🇮',
+    serbian: '🇷🇸',
+    turkish: '🇹🇷',
+    arabic: '🇸🇦',
+    hebrew: '🇮🇱',
+    chinese: '🇨🇳',
+    mandarin: '🇨🇳',
+    cantonese: '🇭🇰',
+    japanese: '🇯🇵',
+    korean: '🇰🇷',
+    thai: '🇹🇭',
+    vietnamese: '🇻🇳',
+    hindi: '🇮🇳',
+    afrikaans: '🇿🇦',
+    zulu: '🇿🇦',
+    swahili: '🇰🇪',
+  }
+  return map[key] ?? '🌐'
+}
+
+// ---------------------------------------------------------------------------
+// HERO CHIP
+// ---------------------------------------------------------------------------
+// Small pill used on the hero-image identity overlay. Neutral by default;
+// success (verified) and warning (instant booking) tones match the existing
+// semantic colours. All live over photography so slightly richer fills than
+// the in-panel chips elsewhere.
+
+function HeroChip({
+  icon,
+  children,
+  tone = 'neutral',
+}: {
+  icon?: React.ReactNode
+  children: React.ReactNode
+  tone?: 'neutral' | 'success' | 'warning'
+}) {
+  const toneClasses = {
+    neutral:
+      'border-white/20 bg-black/40 text-white/90 backdrop-blur-sm',
+    success:
+      'border-emerald-400/30 bg-emerald-500/15 text-emerald-200 backdrop-blur-sm',
+    warning:
+      'border-amber-400/30 bg-amber-500/15 text-amber-200 backdrop-blur-sm',
+  }[tone]
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 font-['Archivo'] text-xs font-medium ${toneClasses}`}
+    >
+      {icon}
+      {children}
+    </span>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// PROFILE SUB-NAV
+// ---------------------------------------------------------------------------
+// Sits between the hero banner and the profile content. Gives the user
+// an explicit "back to results" link AND exposes the current search
+// criteria + an "Edit search" affordance that opens GlobalSearchModal.
+// Matches the bar used on /raven/search so navigation feels cohesive.
+
+function ProfileSubNav() {
+  const { searchCriteria, openSearchModal } = useSearch()
+
+  const formatDateRange = () => {
+    if (!searchCriteria?.startDate || !searchCriteria?.endDate) return null
+    const opts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' }
+    const a = new Date(searchCriteria.startDate).toLocaleDateString('en-GB', opts)
+    const b = new Date(searchCriteria.endDate).toLocaleDateString('en-GB', opts)
+    return `${a} – ${b}`
+  }
+
+  const dateRange = formatDateRange()
+  const adults = searchCriteria?.participants?.adults ?? 0
+  const children = searchCriteria?.participants?.children ?? 0
+  const totalParticipants = adults + children
+
+  return (
+    <div className="border-b border-white/10 bg-black/85 backdrop-blur-sm">
+      <div className="mx-auto flex max-w-[1100px] flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+        {/* Back link + context pills */}
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+          <Link
+            href="/raven/search"
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.04] px-3 py-1.5 font-['Archivo'] text-xs text-white/80 transition-colors hover:border-white/30 hover:bg-white/[0.1] hover:text-white sm:text-sm"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" strokeWidth={2.2} />
+            Back to results
+          </Link>
+
+          {searchCriteria?.location && (
+            <SubNavPill icon={<MapPinIcon className="h-3.5 w-3.5" strokeWidth={2} />}>
+              {searchCriteria.location}
+            </SubNavPill>
+          )}
+          {dateRange && (
+            <SubNavPill icon={<CalendarIcon className="h-3.5 w-3.5" strokeWidth={2} />}>
+              {dateRange}
+            </SubNavPill>
+          )}
+          {totalParticipants > 0 && (
+            <SubNavPill icon={<Users className="h-3.5 w-3.5" strokeWidth={2} />}>
+              {totalParticipants} {totalParticipants === 1 ? 'person' : 'people'}
+            </SubNavPill>
+          )}
+        </div>
+
+        {/* Edit search — opens GlobalSearchModal */}
+        <button
+          type="button"
+          onClick={() => openSearchModal()}
+          className="inline-flex shrink-0 items-center gap-2 rounded-full bg-white px-4 py-2 font-['Archivo'] text-sm font-semibold text-black transition-transform hover:scale-[1.02]"
+        >
+          <Search className="h-3.5 w-3.5" strokeWidth={2.4} />
+          {searchCriteria ? 'Edit search' : 'New search'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function SubNavPill({
+  icon,
+  children,
+}: {
+  icon?: React.ReactNode
+  children: React.ReactNode
+}) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 font-['Archivo'] text-xs text-white/80 sm:text-sm">
+      {icon}
+      {children}
+    </span>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// REVIEWS SECTION
+// ---------------------------------------------------------------------------
+// Placeholder data until the reviews table is wired up to the API.
+// Render-only — designed to slot in cleanly once real reviews exist.
+
+const PLACEHOLDER_REVIEWS = [
+  {
+    name: 'Alexandra K.',
+    location: 'Mallorca · Padel',
+    date: 'Booked Mar 2026',
+    rating: 5,
+    body: 'A genuinely brilliant coach. Patient, technical, and pushed me to a level I didn’t think I could reach in a week. Already booked again for the autumn.',
+  },
+  {
+    name: 'James R.',
+    location: 'Cotswolds · Family booking',
+    date: 'Booked Feb 2026',
+    rating: 5,
+    body: 'My kids went from shy beginners to confidently riding by day three. The trainer was incredible — calm with the kids and clear with feedback for me too.',
+  },
+  {
+    name: 'Lucas M.',
+    location: 'Tarifa · Kitesurf',
+    date: 'Booked Jan 2026',
+    rating: 4,
+    body: 'Rapid progression and zero faff. The lessons were structured perfectly — body drag, water start, riding upwind in three sessions.',
+  },
+  {
+    name: 'Sofia D.',
+    location: 'Chamonix · Off-piste',
+    date: 'Booked Jan 2026',
+    rating: 5,
+    body: 'I’d been hesitant to leave the groomers — left feeling like I could ski anywhere. Outstanding awareness of conditions and great rapport.',
+  },
+]
+
+function ReviewsSection({ instructorName }: { instructorName: string }) {
+  const totalReviews = PLACEHOLDER_REVIEWS.length
+  const avgRating =
+    PLACEHOLDER_REVIEWS.reduce((sum, r) => sum + r.rating, 0) / totalReviews
+
+  return (
+    <section className="bg-black border-t border-white/10">
+      <div className="mx-auto max-w-[1100px] px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
+        {/* Header row */}
+        <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">
+          <div>
+            <p className="font-['Archivo'] text-[11px] uppercase tracking-[0.22em] text-white/50">
+              Reviews
+            </p>
+            <h2 className="mt-3 font-['PP_Editorial_New'] text-3xl leading-[1.05] tracking-[-0.01em] text-white sm:text-4xl lg:text-5xl">
+              What people say about{' '}
+              <span className="italic text-white/85">{instructorName}.</span>
+            </h2>
+          </div>
+
+          {/* Rating summary */}
+          <div className="flex items-center gap-4 rounded-full border border-white/10 bg-white/[0.04] px-5 py-3">
+            <div className="flex items-center gap-1">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Star
+                  key={i}
+                  className={`h-4 w-4 ${
+                    i < Math.round(avgRating)
+                      ? 'fill-white text-white'
+                      : 'fill-transparent text-white/25'
+                  }`}
+                />
+              ))}
+            </div>
+            <span className="font-['PP_Editorial_New'] text-2xl text-white">
+              {avgRating.toFixed(1)}
+            </span>
+            <span className="font-['Archivo'] text-xs uppercase tracking-[0.18em] text-white/50">
+              {totalReviews} reviews
+            </span>
+          </div>
+        </div>
+
+        {/* Reviews grid */}
+        <div className="mt-10 grid gap-4 sm:gap-5 md:grid-cols-2 md:mt-12">
+          {PLACEHOLDER_REVIEWS.map((review, idx) => (
+            <Panel key={idx} hoverable className="flex flex-col gap-5 p-6 sm:p-7">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`h-3.5 w-3.5 ${
+                        i < review.rating
+                          ? 'fill-white text-white'
+                          : 'fill-transparent text-white/25'
+                      }`}
+                    />
+                  ))}
+                </div>
+                <span className="font-['Archivo'] text-[11px] uppercase tracking-[0.18em] text-white/40">
+                  {review.date}
+                </span>
+              </div>
+
+              <blockquote className="flex-1 font-['PP_Editorial_New'] text-lg leading-snug text-white sm:text-xl">
+                &ldquo;{review.body}&rdquo;
+              </blockquote>
+
+              <div className="flex items-center gap-3 border-t border-white/10 pt-4">
+                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/5 font-['PP_Editorial_New'] text-sm text-white">
+                  {review.name[0]}
+                </div>
+                <div className="min-w-0">
+                  <p className="font-['Archivo'] text-sm font-semibold text-white">
+                    {review.name}
+                  </p>
+                  <p className="truncate font-['Archivo'] text-xs text-white/50">
+                    {review.location}
+                  </p>
+                </div>
+              </div>
+            </Panel>
+          ))}
+        </div>
+
+        {/* Show all reviews — placeholder until pagination wired */}
+        <div className="mt-10 flex justify-center">
+          <button
+            type="button"
+            className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-5 py-2.5 font-['Archivo'] text-sm text-white/85 transition-colors hover:bg-white/[0.1]"
+          >
+            See all {totalReviews} reviews
+          </button>
+        </div>
+      </div>
+    </section>
   )
 }

@@ -525,13 +525,18 @@ function HowItWorks({ onSearchClick }: { onSearchClick: () => void }) {
 
 function InstructorsTeaser({ onSearchClick }: { onSearchClick: () => void }) {
   // Placeholder portraits — Unsplash. Replace with vetted instructor photos.
+  // Roster card imagery — unique action/sport portraits from Pexels (all
+  // CC0, verified 200). Each photo distinct from the hero/tile assets so
+  // the roster feels like real, separate instructors rather than stock
+  // reuse. Swap for licensed portraits when available.
   const roster = [
     {
       name: "Jono Clarke",
       role: "PGA Golf Pro",
       loc: "St Andrews",
+      // pexels.com/photo/114972 — golfer mid-swing on fairway
       image:
-        "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80",
+        "https://images.pexels.com/photos/114972/pexels-photo-114972.jpeg?auto=compress&cs=tinysrgb&w=900",
       rating: 4.9,
       price: "£120/hr",
     },
@@ -539,8 +544,9 @@ function InstructorsTeaser({ onSearchClick }: { onSearchClick: () => void }) {
       name: "Marta Romero",
       role: "Padel Level 3",
       loc: "Mallorca",
+      // pexels.com/photo/33641987 — portrait of padel player on indoor court
       image:
-        "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=80",
+        "https://images.pexels.com/photos/33641987/pexels-photo-33641987.jpeg?auto=compress&cs=tinysrgb&w=900",
       rating: 5.0,
       price: "€85/hr",
     },
@@ -548,8 +554,9 @@ function InstructorsTeaser({ onSearchClick }: { onSearchClick: () => void }) {
       name: "Emma Fischer",
       role: "Equestrian Trainer",
       loc: "Cotswolds",
+      // pexels.com/photo/4895011 — woman on horseback, indoor arena
       image:
-        "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=800&q=80",
+        "https://images.pexels.com/photos/4895011/pexels-photo-4895011.jpeg?auto=compress&cs=tinysrgb&w=900",
       rating: 4.8,
       price: "£95/hr",
     },
@@ -557,8 +564,9 @@ function InstructorsTeaser({ onSearchClick }: { onSearchClick: () => void }) {
       name: "Luca Romano",
       role: "IKO Kitesurf",
       loc: "Tarifa",
+      // pexels.com/photo/21855923 — man in wetsuit kitesurfing
       image:
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80",
+        "https://images.pexels.com/photos/21855923/pexels-photo-21855923.jpeg?auto=compress&cs=tinysrgb&w=900",
       rating: 4.9,
       price: "€110/hr",
     },
@@ -664,9 +672,9 @@ function Destinations({ onSearchClick }: { onSearchClick: () => void }) {
                 className="group flex w-full items-center justify-between gap-4 rounded-xl border border-white/10 bg-white/[0.02] p-3 pr-5 text-left transition-colors hover:bg-white/[0.06] sm:gap-5 sm:p-3 sm:pr-6"
               >
                 <div className="flex items-center gap-4 min-w-0">
-                  {/* Thumbnail — square, grayscales until hover */}
+                  {/* Thumbnail — always full colour, subtle zoom on hover */}
                   <div
-                    className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-cover bg-center grayscale transition-all duration-300 group-hover:grayscale-0 sm:h-16 sm:w-16"
+                    className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-cover bg-center transition-transform duration-300 group-hover:scale-105 sm:h-16 sm:w-16"
                     style={{ backgroundImage: `url(${d.thumb})` }}
                   />
                   <div className="min-w-0">

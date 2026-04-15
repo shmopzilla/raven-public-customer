@@ -348,45 +348,38 @@ export const fallbackSportOptions: SportOption[] = [
   }
 ];
 
+// Mirrors the six sports shown on the landing page (src/components/raven/
+// summer-landing.tsx → SPORTS) so the search modal's Discipline picker
+// matches what customers see at /.
 export const fallbackSportDisciplines: SportDiscipline[] = [
+  {
+    id: "golf",
+    name: "Golf",
+    image_url: "/images/sports/golf.png",
+  },
+  {
+    id: "horse-riding",
+    name: "Horse Riding",
+    image_url: "/images/sports/horseriding.png",
+  },
+  {
+    id: "kitesurfing",
+    name: "Kitesurfing",
+    image_url: "/images/sports/kitesurf.png",
+  },
+  {
+    id: "padel",
+    name: "Padel",
+    image_url: "/images/sports/padel.png",
+  },
   {
     id: "skiing",
     name: "Skiing",
-    image_url: "/assets/icons/skiing.png"
+    image_url: "/images/sports/ski.png",
   },
   {
     id: "snowboarding",
     name: "Snowboarding",
-    image_url: "/assets/icons/snowboarding.png"
+    image_url: "/images/sports/snowboard.png",
   },
-  {
-    id: "ski-touring",
-    name: "Ski-Touring",
-    image_url: "/assets/icons/Ski-Touring.png"
-  },
-  {
-    id: "free-ride",
-    name: "Free-ride (off-piste)",
-    image_url: "/assets/icons/free-ride-off-piste.png"
-  },
-  {
-    id: "cross-country",
-    name: "Cross-Country",
-    image_url: "/assets/icons/cross-country.png"
-  },
-  {
-    id: "free-style",
-    name: "Free-style (Snowpark)",
-    image_url: "/assets/icons/free-style-snowpark.png"
-  },
-  {
-    id: "telemark",
-    name: "Telemark",
-    image_url: "/assets/icons/telemark.png"
-  },
-  {
-    id: "adaptive",
-    name: "Adaptive",
-    image_url: "/assets/icons/adaptive.png"
-  }
 ];
