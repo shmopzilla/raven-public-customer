@@ -44,9 +44,9 @@ export function ToastNotification({
   }
 
   const colors = {
-    success: "bg-green-500/20 border-green-500/40 text-green-400",
-    info: "bg-blue-500/20 border-blue-500/40 text-blue-400",
-    error: "bg-red-500/20 border-red-500/40 text-red-400"
+    success: "bg-emerald-500/15 border-emerald-500/30 text-emerald-200",
+    info: "bg-white/10 border-white/25 text-white",
+    error: "bg-red-500/15 border-red-500/30 text-red-200",
   }
 
   return (

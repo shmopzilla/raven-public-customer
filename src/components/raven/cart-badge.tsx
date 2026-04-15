@@ -31,8 +31,8 @@ export function CartBadge({ onClick, className }: CartBadgeProps) {
       className={cn(
         "fixed bottom-8 right-8 z-50",
         "flex items-center gap-3 px-6 py-4 rounded-full",
-        "bg-blue-400 text-white shadow-2xl",
-        "hover:bg-blue-500 transition-colors",
+        "bg-white text-black shadow-2xl",
+        "hover:bg-white/90 transition-colors",
         "font-['Archivo'] font-semibold",
         className
       )}
@@ -62,7 +62,7 @@ export function CartBadge({ onClick, className }: CartBadgeProps) {
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.5, opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="flex items-center justify-center min-w-[24px] h-6 px-2 bg-white text-blue-400 rounded-full text-sm font-bold"
+          className="flex items-center justify-center min-w-[24px] h-6 px-2 bg-black text-white rounded-full text-sm font-bold"
         >
           {itemCount}
         </motion.span>

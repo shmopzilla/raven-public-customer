@@ -3,11 +3,12 @@
 import React, { useState, useCallback, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "motion/react";
+import { Search, MapPin, Calendar as CalendarIcon, Users } from "lucide-react";
 import { InstructorProfileCard } from "@/components/raven/instructor-profile-card";
-import { StickySearchHeader } from "@/components/raven/sticky-search-header";
 import { GlobalSearchModal } from "@/components/ui/global-search-modal";
 import { Instructor } from "@/lib/mock-data/instructors";
 import { useSearch } from "@/lib/contexts/search-context";
+import { SiteHeader, HeaderSpacer } from "@/components/raven/site-header";
 import { SiteFooter } from "@/components/raven/site-footer";
 
 // Loading fallback for Suspense
@@ -323,11 +324,17 @@ function SearchResultsContent() {
 
   return (
     <div className="min-h-screen bg-black">
-      {/* Sticky Search Header */}
-      <StickySearchHeader onSearchClick={handleSearchClick} />
+      <SiteHeader />
+      <HeaderSpacer />
+
+      {/* Search summary bar — current criteria + edit affordance */}
+      <SearchSummaryBar
+        onEditClick={handleSearchClick}
+        resultCount={allInstructors.length}
+      />
 
       {/* Search Results Grid */}
-      <div className="container mx-auto px-6 pt-32 pb-12">
+      <div className="container mx-auto px-6 pt-10 pb-12">
         <motion.div
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
           initial={{ opacity: 0 }}
@@ -407,5 +414,100 @@ export default function SearchResultsPage() {
     <Suspense fallback={<SearchLoading />}>
       <SearchResultsContent />
     </Suspense>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// SEARCH SUMMARY BAR
+// ---------------------------------------------------------------------------
+// Sits below SiteHeader on the search results page. Shows the active
+// criteria as compact pills and exposes a single "Edit search" affordance
+// that opens GlobalSearchModal so the user can refine without losing context.
+
+function SearchSummaryBar({
+  onEditClick,
+  resultCount,
+}: {
+  onEditClick: () => void;
+  resultCount: number;
+}) {
+  const { searchCriteria: criteria } = useSearch();
+  const adults = criteria?.participants?.adults ?? 0;
+  const children = criteria?.participants?.children ?? 0;
+  const totalParticipants = adults + children;
+
+  const formatDateRange = () => {
+    if (!criteria?.startDate || !criteria?.endDate) return null;
+    const opts: Intl.DateTimeFormatOptions = { day: "numeric", month: "short" };
+    const a = new Date(criteria.startDate).toLocaleDateString("en-GB", opts);
+    const b = new Date(criteria.endDate).toLocaleDateString("en-GB", opts);
+    return `${a} – ${b}`;
+  };
+
+  const dateRange = formatDateRange();
+
+  return (
+    <div className="border-b border-white/10 bg-black/85 backdrop-blur-sm">
+      <div className="mx-auto flex max-w-[1400px] flex-col gap-4 px-4 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-10">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+          <p className="font-['Archivo'] text-[11px] uppercase tracking-[0.2em] text-white/45">
+            {resultCount} {resultCount === 1 ? "match" : "matches"}
+          </p>
+          <span className="hidden text-white/20 sm:inline">·</span>
+
+          {criteria?.location && (
+            <SummaryPill
+              icon={<MapPin className="h-3.5 w-3.5" strokeWidth={2} />}
+            >
+              {criteria.location}
+            </SummaryPill>
+          )}
+          {dateRange && (
+            <SummaryPill
+              icon={<CalendarIcon className="h-3.5 w-3.5" strokeWidth={2} />}
+            >
+              {dateRange}
+            </SummaryPill>
+          )}
+          {totalParticipants > 0 && (
+            <SummaryPill
+              icon={<Users className="h-3.5 w-3.5" strokeWidth={2} />}
+            >
+              {totalParticipants}{" "}
+              {totalParticipants === 1 ? "person" : "people"}
+            </SummaryPill>
+          )}
+          {!criteria?.location && !dateRange && totalParticipants === 0 && (
+            <span className="font-['Archivo'] text-sm text-white/50">
+              Showing all instructors
+            </span>
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={onEditClick}
+          className="inline-flex shrink-0 items-center gap-2 rounded-full bg-white px-5 py-2.5 font-['Archivo'] text-sm font-semibold text-black transition-transform hover:scale-[1.02]"
+        >
+          <Search className="h-4 w-4" strokeWidth={2.4} />
+          Edit search
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function SummaryPill({
+  icon,
+  children,
+}: {
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 font-['Archivo'] text-xs text-white/85 sm:text-sm">
+      {icon}
+      {children}
+    </span>
   );
 }

@@ -1,10 +1,11 @@
 "use client"
 
 import { motion, AnimatePresence } from "motion/react"
+import { useRouter } from "next/navigation"
+import { ShoppingBag, X, ArrowRight } from "lucide-react"
 import { useCartStore } from "@/lib/stores/cart-store"
 import { CartItemComponent } from "./cart-item"
-import { cn } from "@/lib/utils"
-import { useRouter } from "next/navigation"
+import { Button } from "@/components/raven/ui"
 
 interface CartPanelProps {
   isOpen: boolean
@@ -40,7 +41,7 @@ export function CartPanel({ isOpen, onClose }: CartPanelProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm"
+            className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm"
             onClick={onClose}
           />
 
@@ -50,60 +51,54 @@ export function CartPanel({ isOpen, onClose }: CartPanelProps) {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-md bg-[#1a1a1f] border-l border-white/20 shadow-2xl flex flex-col"
+            className="fixed right-0 top-0 bottom-0 z-50 flex w-full max-w-md flex-col border-l border-white/10 bg-black shadow-2xl"
           >
             {/* Header */}
-            <div className="sticky top-0 bg-[#1a1a1f]/95 backdrop-blur-md border-b border-white/10 p-6 z-10">
+            <div className="sticky top-0 z-10 border-b border-white/10 bg-black/95 backdrop-blur-md p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="font-['PP_Editorial_New'] text-2xl text-white mb-1">
-                    Your Cart
-                  </h2>
-                  <p className="font-['Archivo'] text-sm text-[#d5d5d6]">
-                    {itemCount} {itemCount === 1 ? 'booking' : 'bookings'}
+                  <p className="font-['Archivo'] text-[11px] uppercase tracking-[0.22em] text-white/50">
+                    Your cart
                   </p>
+                  <h2 className="mt-1 font-['PP_Editorial_New'] text-3xl text-white">
+                    {itemCount} {itemCount === 1 ? 'booking' : 'bookings'}
+                  </h2>
                 </div>
                 <button
                   onClick={onClose}
-                  className="text-white/60 hover:text-white transition-colors text-2xl p-2"
                   aria-label="Close cart"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/[0.04] text-white/70 transition-colors hover:bg-white/[0.1] hover:text-white"
                 >
-                  ×
+                  <X className="h-4 w-4" strokeWidth={2.2} />
                 </button>
               </div>
             </div>
 
-            {/* Content - Scrollable */}
+            {/* Content */}
             <div className="flex-1 overflow-y-auto p-6">
               {items.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-center">
-                  <div className="w-24 h-24 mb-4 rounded-full bg-white/5 flex items-center justify-center">
-                    <svg
-                      className="w-12 h-12 text-white/40"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                      />
-                    </svg>
+                <div className="flex h-full flex-col items-center justify-center text-center">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full border border-white/15 bg-white/[0.04]">
+                    <ShoppingBag
+                      className="h-5 w-5 text-white/60"
+                      strokeWidth={1.6}
+                    />
                   </div>
-                  <h3 className="font-['PP_Editorial_New'] text-xl text-white mb-2">
-                    Your cart is empty
+                  <h3 className="mt-5 font-['PP_Editorial_New'] text-3xl text-white">
+                    Empty for now.
                   </h3>
-                  <p className="font-['Archivo'] text-sm text-[#d5d5d6] mb-6">
-                    Add some instructor sessions to get started
+                  <p className="mt-2 max-w-xs font-['Archivo'] text-sm text-white/55">
+                    Add a session to any instructor and they&apos;ll line up
+                    here.
                   </p>
-                  <button
+                  <Button
+                    variant="secondary"
+                    size="md"
+                    className="mt-6"
                     onClick={onClose}
-                    className="px-6 py-3 rounded-lg bg-blue-400 text-white font-['Archivo'] font-semibold hover:bg-blue-500 transition-colors"
                   >
-                    Continue Browsing
-                  </button>
+                    Continue browsing
+                  </Button>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -121,39 +116,31 @@ export function CartPanel({ isOpen, onClose }: CartPanelProps) {
               )}
             </div>
 
-            {/* Footer - Sticky */}
+            {/* Footer */}
             {items.length > 0 && (
-              <div className="sticky bottom-0 bg-[#1a1a1f]/95 backdrop-blur-md border-t border-white/10 p-6">
-                {/* Subtotal */}
-                <div className="flex items-center justify-between mb-4">
-                  <span className="font-['Archivo'] text-sm text-[#d5d5d6]">
+              <div className="sticky bottom-0 border-t border-white/10 bg-black/95 p-6 backdrop-blur-md">
+                <div className="mb-5 flex items-baseline justify-between">
+                  <span className="font-['Archivo'] text-[11px] uppercase tracking-[0.22em] text-white/55">
                     Subtotal
                   </span>
-                  <span className="font-['Archivo'] text-xl font-bold text-white">
+                  <span className="font-['PP_Editorial_New'] text-3xl text-white">
                     €{total}
                   </span>
                 </div>
 
-                {/* Action Buttons */}
                 <div className="space-y-3">
-                  <button
-                    onClick={handleCheckout}
-                    className={cn(
-                      "w-full py-4 rounded-xl font-['Archivo'] font-semibold transition-all",
-                      "bg-blue-400 text-white hover:bg-blue-500"
-                    )}
-                  >
-                    Proceed to Checkout
-                  </button>
-                  <button
+                  <Button fullWidth size="lg" onClick={handleCheckout}>
+                    Proceed to checkout
+                    <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
+                  </Button>
+                  <Button
+                    fullWidth
+                    size="lg"
+                    variant="secondary"
                     onClick={handleViewFullCart}
-                    className={cn(
-                      "w-full py-4 rounded-xl font-['Archivo'] font-semibold transition-all",
-                      "bg-white/10 text-white hover:bg-white/20 border border-white/20"
-                    )}
                   >
-                    View Full Cart
-                  </button>
+                    View full cart
+                  </Button>
                 </div>
               </div>
             )}
