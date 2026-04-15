@@ -356,7 +356,7 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
                 <InstructorAvatar
                   instructor={instructor ?? undefined}
                   size="lg"
-                  className="flex-shrink-0 rounded-full ring-4 ring-black"
+                  className="flex-shrink-0 rounded-full"
                 />
 
                 {/* Name + location + chips */}
@@ -893,9 +893,9 @@ function ProfileSubNav() {
         <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
           <Link
             href="/raven/search"
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.04] px-3 py-1.5 font-['Archivo'] text-xs text-white/80 transition-colors hover:border-white/30 hover:bg-white/[0.1] hover:text-white sm:text-sm"
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white px-4 py-2 font-['Archivo'] text-sm font-semibold text-black transition-transform hover:scale-[1.02]"
           >
-            <ArrowLeft className="h-3.5 w-3.5" strokeWidth={2.2} />
+            <ArrowLeft className="h-3.5 w-3.5" strokeWidth={2.4} />
             Back to results
           </Link>
 
