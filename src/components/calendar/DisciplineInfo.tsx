@@ -72,9 +72,9 @@ export function DisciplineInfo({
         <p className="leading-[24px]">{name}</p>
       </div>
 
-      {/* Price Tag */}
-      <div className="bg-[rgba(142,187,251,0.25)] border border-solid border-[#8ebbfb] flex items-center justify-center p-2 rounded-[8px] shrink-0">
-        <span className="font-['Archivo'] font-normal text-[14px] text-[#8ebbfb] leading-[18px] tracking-[0.07px]">
+      {/* Price Tag — matches the neutral chip style used across the site */}
+      <div className="shrink-0 rounded-full border border-white/15 bg-white/[0.06] px-3 py-1 shrink-0">
+        <span className="font-['Archivo'] text-[13px] text-white/85 leading-[18px]">
           €{minPrice}/h
         </span>
       </div>

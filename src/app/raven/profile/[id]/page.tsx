@@ -331,10 +331,15 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
     <div className="min-h-screen bg-black">
       <SiteHeader transparent />
 
-      {/* Hero Banner with identity overlay */}
+      {/* Hero Banner — identity block has different treatments per breakpoint:
+          - Mobile: banner is a pure photograph, identity block sits BELOW the
+            banner with the avatar pulled up via a negative margin so its top
+            edge breaks into the gradient fade. Everything centre-aligned.
+          - lg+: identity block is overlaid at bottom-left of the hero, left-
+            aligned, classic "hero card" pattern. */}
       <div
         ref={bannerRef}
-        className="relative w-full h-[360px] lg:h-[440px]"
+        className="relative w-full h-[260px] sm:h-[340px] lg:h-[440px]"
       >
         {instructor?.banner_url ? (
           <div
@@ -344,96 +349,30 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-slate-800 via-slate-900 to-black" />
         )}
-        {/* Gradient for identity legibility */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/55 to-black/10" />
+        {/* Gradient fade into black at the bottom so the avatar overlap reads */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
 
-        {/* Identity block — bottom-aligned over the photo */}
+        {/* Desktop-only: overlaid identity at bottom-left of the banner */}
         {instructor && (
-          <div className="absolute inset-x-0 bottom-0">
-            <div className="mx-auto max-w-[1100px] px-4 pb-8 sm:px-6 sm:pb-10 lg:px-8 lg:pb-12">
-              <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:gap-6">
-                {/* Avatar */}
+          <div className="absolute inset-x-0 bottom-0 hidden lg:block">
+            <div className="mx-auto max-w-[1100px] px-4 pb-10 sm:px-6 lg:px-8 lg:pb-12">
+              <div className="flex items-end gap-6">
                 <InstructorAvatar
                   instructor={instructor ?? undefined}
                   size="lg"
                   className="flex-shrink-0 rounded-full"
                 />
-
-                {/* Name + location + chips */}
                 <div className="min-w-0 flex-1 space-y-3">
-                  <h1 className="font-['PP_Editorial_New'] text-4xl leading-[1.05] tracking-[-0.01em] text-white sm:text-5xl lg:text-[56px]">
+                  <h1 className="font-['PP_Editorial_New'] text-5xl leading-[1.05] tracking-[-0.01em] text-white lg:text-[56px]">
                     {instructor.first_name}
                   </h1>
 
                   {instructorResorts.length > 0 && (
-                    <div className="flex items-center gap-2">
-                      <MapPinIcon
-                        className="h-4 w-4 text-white/70"
-                        strokeWidth={2}
-                      />
-                      <span className="font-['Archivo'] text-sm text-white/85 sm:text-base">
-                        {instructorResorts[0].name}
-                      </span>
-                      {instructorResorts.length > 1 && (
-                        <div className="relative group">
-                          <span className="cursor-help rounded-full border border-white/15 bg-white/10 px-2 py-0.5 font-['Archivo'] text-[11px] text-white/80">
-                            +{instructorResorts.length - 1} more
-                          </span>
-                          <div className="pointer-events-none absolute left-1/2 top-full z-10 mt-2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-white px-3 py-2 text-sm text-black opacity-0 transition-opacity group-hover:opacity-100">
-                            {instructorResorts.slice(1).map((resort: any, i: number) => (
-                              <div key={resort.id || i}>{resort.name}</div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                    <LocationLine resorts={instructorResorts} />
                   )}
 
-                  {/* Trust badges + stat chips */}
                   <div className="flex flex-wrap items-center gap-2">
-                    {instructor.id_verified && (
-                      <HeroChip
-                        icon={
-                          <svg
-                            width="14"
-                            height="14"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                            <polyline points="22 4 12 14.01 9 11.01" />
-                          </svg>
-                        }
-                        tone="success"
-                      >
-                        Verified
-                      </HeroChip>
-                    )}
-                    {instructor.instant_booking && (
-                      <HeroChip
-                        icon={
-                          <svg
-                            width="14"
-                            height="14"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-                          </svg>
-                        }
-                        tone="warning"
-                      >
-                        Instant booking
-                      </HeroChip>
-                    )}
+                    <TrustChips instructor={instructor} />
                     {instructorResorts.length > 0 && (
                       <HeroChip>
                         {instructorResorts.length}{' '}
@@ -453,6 +392,44 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
           </div>
         )}
       </div>
+
+      {/* Mobile identity block — sits below banner, avatar overlaps the fade */}
+      {instructor && (
+        <div className="relative z-10 px-6 text-center lg:hidden">
+          <div className="-mt-14 flex flex-col items-center sm:-mt-16">
+            <InstructorAvatar
+              instructor={instructor ?? undefined}
+              size="lg"
+              className="flex-shrink-0 rounded-full"
+            />
+            <h1 className="mt-5 font-['PP_Editorial_New'] text-4xl leading-[1.05] tracking-[-0.01em] text-white sm:text-5xl">
+              {instructor.first_name}
+            </h1>
+
+            {instructorResorts.length > 0 && (
+              <div className="mt-3">
+                <LocationLine resorts={instructorResorts} />
+              </div>
+            )}
+
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+              <TrustChips instructor={instructor} />
+              {instructorResorts.length > 0 && (
+                <HeroChip>
+                  {instructorResorts.length}{' '}
+                  {instructorResorts.length === 1 ? 'resort' : 'resorts'}
+                </HeroChip>
+              )}
+              {languageCount > 0 && (
+                <HeroChip>
+                  {languageCount}{' '}
+                  {languageCount === 1 ? 'language' : 'languages'}
+                </HeroChip>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Sub-nav: back-to-results + search summary + edit search */}
       <ProfileSubNav />
@@ -769,6 +746,89 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
 }
 
 // ---------------------------------------------------------------------------
+// HERO IDENTITY HELPERS
+// ---------------------------------------------------------------------------
+// Small, self-contained bits reused by the desktop + mobile hero blocks.
+
+function LocationLine({
+  resorts,
+}: {
+  resorts: Array<{ id?: string | number; name: string }>
+}) {
+  if (!resorts.length) return null
+  return (
+    <div className="flex items-center gap-2">
+      <MapPinIcon className="h-4 w-4 text-white/70" strokeWidth={2} />
+      <span className="font-['Archivo'] text-sm text-white/85 sm:text-base">
+        {resorts[0].name}
+      </span>
+      {resorts.length > 1 && (
+        <div className="group relative">
+          <span className="cursor-help rounded-full border border-white/15 bg-white/10 px-2 py-0.5 font-['Archivo'] text-[11px] text-white/80">
+            +{resorts.length - 1} more
+          </span>
+          <div className="pointer-events-none absolute left-1/2 top-full z-10 mt-2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-white px-3 py-2 text-sm text-black opacity-0 transition-opacity group-hover:opacity-100">
+            {resorts.slice(1).map((resort, i) => (
+              <div key={resort.id || i}>{resort.name}</div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function TrustChips({ instructor }: { instructor: Instructor }) {
+  return (
+    <>
+      {instructor.id_verified && (
+        <HeroChip
+          tone="success"
+          icon={
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+              <polyline points="22 4 12 14.01 9 11.01" />
+            </svg>
+          }
+        >
+          Verified
+        </HeroChip>
+      )}
+      {instructor.instant_booking && (
+        <HeroChip
+          tone="warning"
+          icon={
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+            </svg>
+          }
+        >
+          Instant booking
+        </HeroChip>
+      )}
+    </>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // LANGUAGE -> FLAG EMOJI
 // ---------------------------------------------------------------------------
 // Maps a language name (case-insensitive) to a Unicode flag emoji. Covers
@@ -888,17 +948,21 @@ function ProfileSubNav() {
 
   return (
     <div className="border-b border-white/10 bg-black/85 backdrop-blur-sm">
-      <div className="mx-auto flex max-w-[1100px] flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-        {/* Back link + context pills */}
-        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-          <Link
-            href="/raven/search"
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white px-4 py-2 font-['Archivo'] text-sm font-semibold text-black transition-transform hover:scale-[1.02]"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" strokeWidth={2.4} />
-            Back to results
-          </Link>
+      {/* Always a single row — on mobile the pills compact and context pills
+          collapse to icon-only to fit on one line. */}
+      <div className="mx-auto flex max-w-[1100px] items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4 lg:px-8">
+        {/* Back link */}
+        <Link
+          href="/raven/search"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.06] px-3 py-2 font-['Archivo'] text-xs text-white/85 transition-colors hover:bg-white/[0.1] hover:text-white sm:bg-white sm:px-4 sm:text-sm sm:font-semibold sm:text-black sm:hover:bg-white/90 sm:hover:text-black"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" strokeWidth={2.4} />
+          <span className="sm:hidden">Back</span>
+          <span className="hidden sm:inline">Back to results</span>
+        </Link>
 
+        {/* Context pills — desktop only, they'd eat the whole row on mobile */}
+        <div className="hidden min-w-0 flex-1 flex-wrap items-center justify-center gap-2 md:flex">
           {searchCriteria?.location && (
             <SubNavPill icon={<MapPinIcon className="h-3.5 w-3.5" strokeWidth={2} />}>
               {searchCriteria.location}
@@ -916,14 +980,17 @@ function ProfileSubNav() {
           )}
         </div>
 
-        {/* Edit search — opens GlobalSearchModal */}
+        {/* Edit / new search — label hidden on mobile, icon only */}
         <button
           type="button"
           onClick={() => openSearchModal()}
-          className="inline-flex shrink-0 items-center gap-2 rounded-full bg-white px-4 py-2 font-['Archivo'] text-sm font-semibold text-black transition-transform hover:scale-[1.02]"
+          aria-label={searchCriteria ? 'Edit search' : 'New search'}
+          className="inline-flex shrink-0 items-center gap-2 rounded-full bg-white px-3 py-2 font-['Archivo'] text-xs font-semibold text-black transition-transform hover:scale-[1.02] sm:px-4 sm:text-sm"
         >
           <Search className="h-3.5 w-3.5" strokeWidth={2.4} />
-          {searchCriteria ? 'Edit search' : 'New search'}
+          <span className="hidden sm:inline">
+            {searchCriteria ? 'Edit search' : 'New search'}
+          </span>
         </button>
       </div>
     </div>

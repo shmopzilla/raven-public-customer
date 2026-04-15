@@ -1,8 +1,9 @@
 "use client"
 
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'motion/react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 
 interface InstructorImage {
   id: string
@@ -20,12 +21,38 @@ interface InstructorCarouselProps {
 export function InstructorCarousel({ images, className = '' }: InstructorCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isScrolling, setIsScrolling] = useState(false)
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
   const [dimensions, setDimensions] = useState({
     imageWidth: 300,
     imageHeight: 250,
     gap: 20,
     maxVisible: 3
   })
+
+  // Lightbox keyboard + scroll-lock
+  useEffect(() => {
+    if (lightboxIndex === null) return
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLightboxIndex(null)
+      if (e.key === 'ArrowRight') {
+        setLightboxIndex((i) =>
+          i === null ? null : Math.min(i + 1, images.length - 1),
+        )
+      }
+      if (e.key === 'ArrowLeft') {
+        setLightboxIndex((i) => (i === null ? null : Math.max(i - 1, 0)))
+      }
+    }
+
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', onKey)
+    return () => {
+      document.body.style.overflow = prevOverflow
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [lightboxIndex, images.length])
 
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -256,15 +283,18 @@ export function InstructorCarousel({ images, className = '' }: InstructorCarouse
         >
           <AnimatePresence>
             {images.map((image, index) => (
-              <motion.div
+              <motion.button
+                type="button"
+                onClick={() => setLightboxIndex(index)}
                 key={image.id}
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.3, delay: index * 0.1 }}
-                className="flex-shrink-0 group cursor-pointer"
+                className="group flex-shrink-0 cursor-zoom-in"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
+                aria-label={`Open photo ${index + 1}`}
               >
                 <div
                   className="relative overflow-hidden rounded-lg bg-gray-800 transition-all duration-300 ease-in-out"
@@ -295,7 +325,7 @@ export function InstructorCarousel({ images, className = '' }: InstructorCarouse
                     </div>
                   )}
                 </div>
-              </motion.div>
+              </motion.button>
             ))}
           </AnimatePresence>
         </div>
@@ -322,6 +352,107 @@ export function InstructorCarousel({ images, className = '' }: InstructorCarouse
           ))}
         </div>
       )}
+
+      {/* Lightbox overlay — portalled to <body> so it escapes any Framer
+          `transform` ancestor that would otherwise contain `position:fixed` */}
+      {typeof document !== 'undefined' &&
+        createPortal(
+          <AnimatePresence>
+            {lightboxIndex !== null && (
+              <motion.div
+                key="lightbox"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 sm:p-8"
+                onClick={() => setLightboxIndex(null)}
+                role="dialog"
+                aria-modal="true"
+                aria-label="Photo viewer"
+              >
+            {/* Close */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                setLightboxIndex(null)
+              }}
+              aria-label="Close photo viewer"
+              className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/[0.08] text-white/85 backdrop-blur transition-colors hover:bg-white/[0.18] hover:text-white sm:right-6 sm:top-6"
+            >
+              <X className="h-5 w-5" strokeWidth={2.2} />
+            </button>
+
+            {/* Prev */}
+            {lightboxIndex > 0 && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setLightboxIndex((i) => (i === null ? null : Math.max(i - 1, 0)))
+                }}
+                aria-label="Previous photo"
+                className="absolute left-4 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-white/[0.08] text-white/85 backdrop-blur transition-colors hover:bg-white/[0.18] hover:text-white sm:left-6"
+              >
+                <ChevronLeft className="h-5 w-5" strokeWidth={2.2} />
+              </button>
+            )}
+
+            {/* Next */}
+            {lightboxIndex < images.length - 1 && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setLightboxIndex((i) =>
+                    i === null ? null : Math.min(i + 1, images.length - 1),
+                  )
+                }}
+                aria-label="Next photo"
+                className="absolute right-4 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-white/[0.08] text-white/85 backdrop-blur transition-colors hover:bg-white/[0.18] hover:text-white sm:right-6"
+              >
+                <ChevronRight className="h-5 w-5" strokeWidth={2.2} />
+              </button>
+            )}
+
+                {/* Image + caption */}
+                <motion.div
+                  key={images[lightboxIndex].id}
+                  initial={{ opacity: 0, scale: 0.96 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.98 }}
+                  transition={{ duration: 0.2 }}
+                  className="relative flex max-h-[88vh] max-w-[92vw] flex-col items-center justify-center"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <img
+                    src={images[lightboxIndex].image_url}
+                    alt={
+                      images[lightboxIndex].caption ||
+                      `Photo ${lightboxIndex + 1}`
+                    }
+                    className="max-h-[82vh] max-w-[92vw] rounded-xl object-contain shadow-2xl"
+                  />
+                  <div className="mt-4 flex items-center gap-4 font-['Archivo'] text-xs uppercase tracking-[0.22em] text-white/55">
+                    <span>
+                      {lightboxIndex + 1} / {images.length}
+                    </span>
+                    {images[lightboxIndex].caption && (
+                      <>
+                        <span className="h-px w-6 bg-white/20" />
+                        <span className="normal-case tracking-normal text-white/80">
+                          {images[lightboxIndex].caption}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>,
+          document.body,
+        )}
     </div>
   )
 }
