@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
+import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import { CalendarDay } from './CalendarDay'
 import { cn } from "@/lib/utils"
 import type { CalendarProps, CalendarDayData } from "@/lib/calendar/types"
@@ -289,23 +290,22 @@ export function Calendar({
     >
         {/* Month Header */}
         <div className="flex items-center justify-between w-full">
-          {/* Left Arrow - Bigger */}
+          {/* Previous month */}
           <motion.button
             onClick={goToPreviousMonth}
             disabled={isTransitioning}
-            className="text-white hover:text-blue-400 transition-all duration-200 p-4 rounded-lg hover:bg-white hover:bg-opacity-10 disabled:opacity-50 text-2xl"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/[0.04] text-white/70 transition-colors hover:bg-white/[0.1] hover:text-white disabled:opacity-50"
             aria-label="Previous month"
-            whileHover={{ scale: 1.15 }}
-            whileTap={{ scale: 0.9 }}
+            whileTap={{ scale: 0.92 }}
           >
-            ←
+            <ChevronLeft className="h-4 w-4" strokeWidth={2.2} />
           </motion.button>
 
           {/* Month/Year Dropdown */}
           <div className="flex items-center gap-3 relative" data-month-dropdown>
             <button
               onClick={() => setIsMonthDropdownOpen(!isMonthDropdownOpen)}
-              className="text-white text-lg font-medium hover:text-blue-400 transition-colors px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-10 flex items-center gap-2"
+              className="text-white text-lg font-medium hover:text-white transition-colors px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-10 flex items-center gap-2"
             >
               <AnimatePresence mode="wait">
                 <motion.span
@@ -318,12 +318,13 @@ export function Calendar({
                   {monthNames[currentMonth]} {currentYear}
                 </motion.span>
               </AnimatePresence>
-              <span className={cn(
-                "text-sm transition-transform duration-200",
-                isMonthDropdownOpen && "rotate-180"
-              )}>
-                ▼
-              </span>
+              <ChevronDown
+                className={cn(
+                  "h-3.5 w-3.5 transition-transform duration-200",
+                  isMonthDropdownOpen && "rotate-180",
+                )}
+                strokeWidth={2.2}
+              />
             </button>
 
             {/* Dropdown Menu */}
@@ -338,19 +339,21 @@ export function Calendar({
                   onClick={(e) => e.stopPropagation()}
                 >
                   {/* Year Selector */}
-                  <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
+                  <div className="mb-4 flex items-center justify-between border-b border-white/10 pb-3">
                     <button
                       onClick={() => handleYearChange(-1)}
-                      className="text-white hover:text-blue-400 p-2 rounded hover:bg-white/10 transition-all"
+                      className="flex h-8 w-8 items-center justify-center rounded-full text-white/70 transition-colors hover:bg-white/10 hover:text-white"
                     >
-                      ←
+                      <ChevronLeft className="h-3.5 w-3.5" strokeWidth={2.2} />
                     </button>
-                    <span className="text-white font-semibold text-lg">{currentYear}</span>
+                    <span className="font-['PP_Editorial_New'] text-xl text-white">
+                      {currentYear}
+                    </span>
                     <button
                       onClick={() => handleYearChange(1)}
-                      className="text-white hover:text-blue-400 p-2 rounded hover:bg-white/10 transition-all"
+                      className="flex h-8 w-8 items-center justify-center rounded-full text-white/70 transition-colors hover:bg-white/10 hover:text-white"
                     >
-                      →
+                      <ChevronRight className="h-3.5 w-3.5" strokeWidth={2.2} />
                     </button>
                   </div>
 
@@ -363,7 +366,7 @@ export function Calendar({
                         className={cn(
                           "px-3 py-2 rounded-lg text-sm font-medium transition-all",
                           currentMonth === index
-                            ? "bg-blue-400/20 text-blue-400 border border-blue-400/40"
+                            ? "bg-white text-black"
                             : "text-white/70 hover:text-white hover:bg-white/10"
                         )}
                       >
@@ -381,7 +384,7 @@ export function Calendar({
                 onClick={goToToday}
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="ml-2 px-3 py-2 text-xs bg-blue-400 bg-opacity-20 text-blue-400 rounded-md hover:bg-opacity-30 transition-colors"
+                className="ml-2 rounded-full border border-white/20 bg-white/[0.06] px-3 py-1.5 font-['Archivo'] text-xs text-white/85 transition-colors hover:bg-white/[0.12]"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -390,16 +393,15 @@ export function Calendar({
             )}
           </div>
 
-          {/* Right Arrow - Bigger */}
+          {/* Next month */}
           <motion.button
             onClick={goToNextMonth}
             disabled={isTransitioning}
-            className="text-white hover:text-blue-400 transition-all duration-200 p-4 rounded-lg hover:bg-white hover:bg-opacity-10 disabled:opacity-50 text-2xl"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/[0.04] text-white/70 transition-colors hover:bg-white/[0.1] hover:text-white disabled:opacity-50"
             aria-label="Next month"
-            whileHover={{ scale: 1.15 }}
-            whileTap={{ scale: 0.9 }}
+            whileTap={{ scale: 0.92 }}
           >
-            →
+            <ChevronRight className="h-4 w-4" strokeWidth={2.2} />
           </motion.button>
         </div>
 
@@ -440,7 +442,7 @@ export function Calendar({
                       delay: (rowIndex * 7 + dayIndex) * 0.01,
                       ease: "easeOut"
                     }}
-                    className="flex-1 h-20 flex items-center justify-center"
+                    className="flex h-12 flex-1 items-center justify-center sm:h-14"
                   >
                     <CalendarDay
                       date={dayData.date}

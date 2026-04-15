@@ -1,5 +1,5 @@
-import EnhancedRavenLanding from "@/components/raven/enhanced-raven-landing";
+import SummerLanding from "@/components/raven/summer-landing";
 
 export default function Home() {
-  return <EnhancedRavenLanding />;
+  return <SummerLanding />;
 }

@@ -95,7 +95,7 @@ export function CartItemComponent({ item, variant = "compact", onRemove }: CartI
                 {item.selectedSlots.map((slot, index) => (
                   <span
                     key={index}
-                    className="inline-block px-2 py-1 text-xs font-['Archivo'] bg-blue-400/10 text-blue-400 rounded border border-blue-400/20"
+                    className="inline-block px-2 py-1 text-xs font-['Archivo'] bg-white/10 text-white rounded-md border border-white/15"
                   >
                     {new Date(slot.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} • {slot.daySlotName}
                   </span>
