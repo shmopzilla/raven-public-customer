@@ -103,7 +103,7 @@ export function InstructorSwitcher({
                 </span>
 
                 {instructor.id === selectedInstructorId && (
-                  <div className="w-2 h-2 bg-blue-400 rounded-full" />
+                  <div className="w-2 h-2 bg-white rounded-full" />
                 )}
               </motion.button>
             ))

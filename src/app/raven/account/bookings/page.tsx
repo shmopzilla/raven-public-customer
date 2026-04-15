@@ -1,160 +1,207 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from 'react'
-import { motion } from 'motion/react'
+import { useEffect, useState } from "react";
+import { motion } from "motion/react";
+import { Calendar, Loader2 } from "lucide-react";
+import {
+  Badge,
+  Banner,
+  LinkButton,
+  Panel,
+  SectionHeading,
+} from "@/components/raven/ui";
 
-const BOOKING_STATUS_MAP: Record<number, { label: string; color: string; bg: string }> = {
-  1: { label: 'Requested', color: 'text-amber-400', bg: 'bg-amber-400/10 border-amber-400/30' },
-  2: { label: 'Instructor Request', color: 'text-amber-400', bg: 'bg-amber-400/10 border-amber-400/30' },
-  3: { label: 'Confirmed', color: 'text-green-400', bg: 'bg-green-400/10 border-green-400/30' },
-  4: { label: 'Declined', color: 'text-red-400', bg: 'bg-red-400/10 border-red-400/30' },
-  5: { label: 'Expired', color: 'text-[#9696a5]', bg: 'bg-white/5 border-white/10' },
-  6: { label: 'Cancelled', color: 'text-red-400', bg: 'bg-red-400/10 border-red-400/30' },
-  7: { label: 'Cancelled', color: 'text-red-400', bg: 'bg-red-400/10 border-red-400/30' },
-  8: { label: 'Completed', color: 'text-green-400', bg: 'bg-green-400/10 border-green-400/30' },
-  9: { label: 'Active', color: 'text-blue-400', bg: 'bg-blue-400/10 border-blue-400/30' },
-  10: { label: 'Pending Payment', color: 'text-amber-400', bg: 'bg-amber-400/10 border-amber-400/30' },
-  11: { label: 'Deposit Paid', color: 'text-blue-400', bg: 'bg-blue-400/10 border-blue-400/30' },
-}
+const BOOKING_STATUS_MAP: Record<
+  number,
+  { label: string; tone: "success" | "warning" | "danger" | "muted" | "info" }
+> = {
+  1: { label: "Requested", tone: "warning" },
+  2: { label: "Instructor request", tone: "warning" },
+  3: { label: "Confirmed", tone: "success" },
+  4: { label: "Declined", tone: "danger" },
+  5: { label: "Expired", tone: "muted" },
+  6: { label: "Cancelled", tone: "danger" },
+  7: { label: "Cancelled", tone: "danger" },
+  8: { label: "Completed", tone: "success" },
+  9: { label: "Active", tone: "info" },
+  10: { label: "Pending payment", tone: "warning" },
+  11: { label: "Deposit paid", tone: "info" },
+};
 
 interface Booking {
-  id: number
-  reference: string
-  start_date: string
-  end_date: string
-  price: number
-  status: number
-  payment_status: number
-  primary_name: string
-  created_at: string
-  instructors: { id: string; first_name: string; last_name: string; avatar_url?: string }
-  booking_items: { id: number; date: string; day_slot_id: number; start_time: string; end_time: string; hourly_rate: number; total_minutes: number }[]
+  id: number;
+  reference: string;
+  start_date: string;
+  end_date: string;
+  price: number;
+  status: number;
+  payment_status: number;
+  primary_name: string;
+  created_at: string;
+  instructors: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    avatar_url?: string;
+  };
+  booking_items: {
+    id: number;
+    date: string;
+    day_slot_id: number;
+    start_time: string;
+    end_time: string;
+    hourly_rate: number;
+    total_minutes: number;
+  }[];
 }
 
 export default function BookingsPage() {
-  const [bookings, setBookings] = useState<Booking[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchBookings() {
       try {
-        const res = await fetch('/api/account/bookings')
-        const data = await res.json()
+        const res = await fetch("/api/account/bookings");
+        const data = await res.json();
         if (!res.ok) {
-          setError(data.error || 'Failed to load bookings')
+          setError(data.error || "Failed to load bookings");
         } else {
-          setBookings(data.data || [])
+          setBookings(data.data || []);
         }
       } catch {
-        setError('Failed to load bookings')
+        setError("Failed to load bookings");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
-    fetchBookings()
-  }, [])
+    fetchBookings();
+  }, []);
 
-  const formatDate = (d: string) => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+  const formatDate = (d: string) =>
+    new Date(d).toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+      <div className="flex h-64 items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-white/60" />
       </div>
-    )
+    );
   }
 
   return (
-    <div>
-      <h1 className="font-['PP_Editorial_New'] text-2xl sm:text-3xl text-white mb-2">Booking Requests</h1>
-      <p className="font-['Archivo'] text-sm text-[#d5d5d6] mb-6 sm:mb-8">
-        Track the status of your instructor bookings
-      </p>
+    <div className="space-y-8">
+      <SectionHeading
+        eyebrow="Bookings"
+        title="Your sessions."
+        description="Track upcoming and past bookings with your instructors."
+      />
 
-      {error && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3 mb-6">
-          <p className="font-['Archivo'] text-sm text-red-400">{error}</p>
-        </div>
-      )}
+      {error && <Banner tone="error">{error}</Banner>}
 
       {bookings.length === 0 && !error ? (
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 sm:p-12 text-center">
-          <p className="font-['PP_Editorial_New'] text-xl text-white mb-2">No bookings yet</p>
-          <p className="font-['Archivo'] text-sm text-[#d5d5d6]">
-            When you book an instructor, your requests will appear here.
+        <Panel className="px-6 py-14 text-center sm:px-12 sm:py-20">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-white/15 bg-white/5">
+            <Calendar className="h-5 w-5 text-white/70" />
+          </div>
+          <p className="mt-5 font-['PP_Editorial_New'] text-3xl text-white">
+            No bookings yet.
           </p>
-        </div>
+          <p className="mt-2 max-w-sm mx-auto font-['Archivo'] text-sm text-white/55">
+            Browse instructors and book a session — your requests will appear
+            here.
+          </p>
+          <div className="mt-6">
+            <LinkButton href="/" size="md">
+              Find an instructor
+            </LinkButton>
+          </div>
+        </Panel>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {bookings.map((booking, idx) => {
-            const statusInfo = BOOKING_STATUS_MAP[booking.status] || { label: 'Unknown', color: 'text-[#9696a5]', bg: 'bg-white/5 border-white/10' }
-            const instructor = booking.instructors
+            const statusInfo = BOOKING_STATUS_MAP[booking.status] || {
+              label: "Unknown",
+              tone: "muted" as const,
+            };
+            const instructor = booking.instructors;
 
             return (
               <motion.div
                 key={booking.id}
-                initial={{ opacity: 0, y: 12 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.05 }}
-                className="bg-white/5 border border-white/10 rounded-2xl p-4 sm:p-6"
+                transition={{ delay: idx * 0.04, duration: 0.4 }}
               >
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
-                  <div className="flex items-start gap-3 sm:gap-4 min-w-0 flex-1">
-                    {/* Instructor avatar */}
-                    {instructor?.avatar_url ? (
-                      <img src={instructor.avatar_url} alt="" className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover flex-shrink-0" />
-                    ) : (
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-400/20 flex items-center justify-center flex-shrink-0">
-                        <span className="font-['Archivo'] text-xs sm:text-sm font-bold text-blue-400">
-                          {instructor?.first_name?.[0]?.toUpperCase() || '?'}
-                        </span>
+                <Panel hoverable className="p-5 sm:p-6">
+                  <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+                    <div className="flex min-w-0 flex-1 items-start gap-4">
+                      {instructor?.avatar_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={instructor.avatar_url}
+                          alt=""
+                          className="h-12 w-12 flex-shrink-0 rounded-full object-cover sm:h-14 sm:w-14"
+                        />
+                      ) : (
+                        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/5 font-['PP_Editorial_New'] text-base text-white sm:h-14 sm:w-14">
+                          {instructor?.first_name?.[0]?.toUpperCase() || "?"}
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <h3 className="truncate font-['PP_Editorial_New'] text-xl text-white sm:text-2xl">
+                          {instructor?.first_name} {instructor?.last_name}
+                        </h3>
+                        <p className="mt-0.5 font-['Archivo'] text-sm text-white/65">
+                          {formatDate(booking.start_date)} —{" "}
+                          {formatDate(booking.end_date)}
+                        </p>
+                        <p className="mt-1 truncate font-['Archivo'] text-[11px] uppercase tracking-[0.16em] text-white/40">
+                          Ref · {booking.reference}
+                        </p>
                       </div>
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <h3 className="font-['Archivo'] font-semibold text-white text-sm sm:text-base">
-                        {instructor?.first_name} {instructor?.last_name}
-                      </h3>
-                      <p className="font-['Archivo'] text-xs sm:text-sm text-[#d5d5d6] mt-0.5">
-                        {formatDate(booking.start_date)} — {formatDate(booking.end_date)}
-                      </p>
-                      <p className="font-['Archivo'] text-xs text-[#9696a5] mt-1 truncate">
-                        Ref: {booking.reference}
-                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-3 sm:flex-col sm:items-end">
+                      <Badge tone={statusInfo.tone}>{statusInfo.label}</Badge>
+                      <span className="font-['PP_Editorial_New'] text-2xl text-white">
+                        €{booking.price}
+                      </span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 sm:flex-col sm:items-end flex-shrink-0">
-                    <span className={`inline-flex px-3 py-1 rounded-full text-xs font-['Archivo'] font-semibold border ${statusInfo.bg} ${statusInfo.color}`}>
-                      {statusInfo.label}
-                    </span>
-                    <span className="font-['Archivo'] text-lg font-bold text-white">
-                      &euro;{booking.price}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Booking items */}
-                {booking.booking_items?.length > 0 && (
-                  <div className="mt-3 pt-3 sm:mt-4 sm:pt-4 border-t border-white/5">
-                    <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                      {booking.booking_items.map(item => (
-                        <span
-                          key={item.id}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white/5 rounded-lg font-['Archivo'] text-xs text-[#d5d5d6]"
-                        >
-                          {new Date(item.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-                          <span className="text-[#9696a5]">{item.start_time?.slice(0, 5)} - {item.end_time?.slice(0, 5)}</span>
-                        </span>
-                      ))}
+                  {booking.booking_items?.length > 0 && (
+                    <div className="mt-4 border-t border-white/10 pt-4">
+                      <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                        {booking.booking_items.map((item) => (
+                          <span
+                            key={item.id}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1 font-['Archivo'] text-xs text-white/75"
+                          >
+                            {new Date(item.date).toLocaleDateString("en-GB", {
+                              day: "numeric",
+                              month: "short",
+                            })}
+                            <span className="text-white/40">
+                              {item.start_time?.slice(0, 5)} -{" "}
+                              {item.end_time?.slice(0, 5)}
+                            </span>
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </Panel>
               </motion.div>
-            )
+            );
           })}
         </div>
       )}
     </div>
-  )
+  );
 }

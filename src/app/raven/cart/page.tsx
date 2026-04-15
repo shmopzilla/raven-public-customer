@@ -1,106 +1,86 @@
-"use client"
+"use client";
 
-import { motion, AnimatePresence } from "motion/react"
-import { useCartStore } from "@/lib/stores/cart-store"
-import { CartItemComponent } from "@/components/raven/cart-item"
-import { cn } from "@/lib/utils"
-import { useRouter } from "next/navigation"
+import { motion, AnimatePresence } from "motion/react";
+import { useRouter } from "next/navigation";
+import { ShoppingBag, ArrowRight } from "lucide-react";
+import { useCartStore } from "@/lib/stores/cart-store";
+import { CartItemComponent } from "@/components/raven/cart-item";
+import {
+  Button,
+  LinkButton,
+  Panel,
+  SectionHeading,
+} from "@/components/raven/ui";
+import { SiteHeader, HeaderSpacer } from "@/components/raven/site-header";
+import { SiteFooter } from "@/components/raven/site-footer";
 
 export default function CartPage() {
-  const router = useRouter()
-  const items = useCartStore((state) => state.items)
-  const removeFromCart = useCartStore((state) => state.removeFromCart)
-  const clearCart = useCartStore((state) => state.clearCart)
-  const getCartTotal = useCartStore((state) => state.getCartTotal)
+  const router = useRouter();
+  const items = useCartStore((state) => state.items);
+  const removeFromCart = useCartStore((state) => state.removeFromCart);
+  const clearCart = useCartStore((state) => state.clearCart);
+  const getCartTotal = useCartStore((state) => state.getCartTotal);
 
-  const total = getCartTotal()
-  const itemCount = items.length
-  const totalHours = items.reduce((sum, item) => sum + item.totalHours, 0)
-
-  const handleContinueShopping = () => {
-    router.push('/raven/search')
-  }
-
-  const handleCheckout = () => {
-    router.push('/raven/checkout')
-  }
-
-  const handleClearCart = () => {
-    if (confirm('Are you sure you want to clear your cart?')) {
-      clearCart()
-    }
-  }
+  const total = getCartTotal();
+  const itemCount = items.length;
+  const totalHours = items.reduce((sum, item) => sum + item.totalHours, 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0a0a0f] via-[#1a1a1f] to-[#0a0a0f]">
-      {/* Header */}
-      <div className="border-b border-white/10 bg-[#1a1a1f]/80 backdrop-blur-md sticky top-0 z-10">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="font-['PP_Editorial_New'] text-3xl sm:text-4xl text-white mb-2">
-                Shopping Cart
-              </h1>
-              <p className="font-['Archivo'] text-sm text-[#d5d5d6]">
-                {itemCount > 0
-                  ? `${itemCount} ${itemCount === 1 ? 'booking' : 'bookings'} • ${totalHours} hours total`
-                  : 'Your cart is empty'}
-              </p>
-            </div>
-            {itemCount > 0 && (
-              <button
-                onClick={handleClearCart}
-                className="font-['Archivo'] text-sm text-red-400 hover:text-red-300 transition-colors"
-              >
-                Clear Cart
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
+    <div className="flex min-h-screen flex-col bg-black text-white">
+      <SiteHeader />
+      <HeaderSpacer />
 
-      {/* Content */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {items.length === 0 ? (
-          /* Empty State */
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col items-center justify-center min-h-[60vh] text-center"
-          >
-            <div className="w-32 h-32 mb-6 rounded-full bg-white/5 flex items-center justify-center">
-              <svg
-                className="w-16 h-16 text-white/40"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                />
-              </svg>
-            </div>
-            <h2 className="font-['PP_Editorial_New'] text-3xl text-white mb-4">
-              Your cart is empty
-            </h2>
-            <p className="font-['Archivo'] text-base text-[#d5d5d6] mb-8 max-w-md">
-              Explore our ski instructors and add some sessions to your cart to get started on your ski adventure.
-            </p>
-            <button
-              onClick={handleContinueShopping}
-              className="px-8 py-4 rounded-xl bg-blue-400 text-white font-['Archivo'] font-semibold hover:bg-blue-500 transition-colors"
+      <div className="mx-auto w-full max-w-[1400px] flex-1 px-4 py-10 sm:px-6 sm:py-14 lg:px-10 lg:py-20">
+        <div className="mb-10 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
+          <SectionHeading
+            eyebrow="Cart"
+            title="Your sessions."
+            description={
+              itemCount > 0
+                ? `${itemCount} ${itemCount === 1 ? "booking" : "bookings"} · ${totalHours} hours total`
+                : "Add instructors to plan your trip."
+            }
+          />
+          {itemCount > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                if (confirm("Clear all items from your cart?")) clearCart();
+              }}
             >
-              Browse Instructors
-            </button>
-          </motion.div>
+              Clear cart
+            </Button>
+          )}
+        </div>
+
+        {items.length === 0 ? (
+          <Panel className="px-6 py-20 text-center sm:px-12 sm:py-28">
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-white/15 bg-white/5"
+            >
+              <ShoppingBag className="h-6 w-6 text-white/70" strokeWidth={1.6} />
+            </motion.div>
+            <h2 className="mt-6 font-['PP_Editorial_New'] text-4xl text-white sm:text-5xl">
+              Your cart is empty.
+            </h2>
+            <p className="mx-auto mt-3 max-w-md font-['Archivo'] text-sm text-white/55 sm:text-base">
+              Find a coach and pick the slots that work for you — we&apos;ll
+              line them up here.
+            </p>
+            <div className="mt-8">
+              <LinkButton href="/raven/search" size="lg">
+                Browse instructors
+                <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
+              </LinkButton>
+            </div>
+          </Panel>
         ) : (
-          /* Cart Items Grid */
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Cart Items List */}
-            <div className="lg:col-span-2 space-y-6">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
+            <div className="space-y-4 lg:col-span-2">
               <AnimatePresence mode="popLayout">
                 {items.map((item) => (
                   <CartItemComponent
@@ -113,88 +93,65 @@ export default function CartPage() {
               </AnimatePresence>
             </div>
 
-            {/* Order Summary Sidebar */}
-            <div className="lg:col-span-1">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="sticky top-28 bg-white/5 border border-white/10 rounded-2xl p-6 space-y-6"
-              >
+            <aside className="lg:col-span-1">
+              <Panel className="sticky top-28 space-y-6 p-6">
                 <h3 className="font-['PP_Editorial_New'] text-2xl text-white">
-                  Order Summary
+                  Order summary
                 </h3>
 
-                {/* Summary Details */}
                 <div className="space-y-3 border-b border-white/10 pb-6">
-                  <div className="flex items-center justify-between">
-                    <span className="font-['Archivo'] text-sm text-[#d5d5d6]">
-                      Bookings
-                    </span>
-                    <span className="font-['Archivo'] text-sm text-white">
-                      {itemCount}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="font-['Archivo'] text-sm text-[#d5d5d6]">
-                      Total Hours
-                    </span>
-                    <span className="font-['Archivo'] text-sm text-white">
-                      {totalHours}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="font-['Archivo'] text-sm text-[#d5d5d6]">
-                      Subtotal
-                    </span>
-                    <span className="font-['Archivo'] text-sm text-white">
-                      €{total}
-                    </span>
-                  </div>
+                  <SummaryRow label="Bookings" value={String(itemCount)} />
+                  <SummaryRow label="Hours" value={String(totalHours)} />
+                  <SummaryRow label="Subtotal" value={`€${total}`} />
                 </div>
 
-                {/* Total */}
                 <div className="flex items-center justify-between">
-                  <span className="font-['Archivo'] text-lg font-semibold text-white">
+                  <span className="font-['Archivo'] text-sm uppercase tracking-[0.16em] text-white/55">
                     Total
                   </span>
-                  <span className="font-['Archivo'] text-2xl font-bold text-white">
+                  <span className="font-['PP_Editorial_New'] text-3xl text-white">
                     €{total}
                   </span>
                 </div>
 
-                {/* Action Buttons */}
                 <div className="space-y-3">
-                  <button
-                    onClick={handleCheckout}
-                    className={cn(
-                      "w-full py-4 rounded-xl font-['Archivo'] font-semibold transition-all",
-                      "bg-blue-400 text-white hover:bg-blue-500"
-                    )}
+                  <Button
+                    fullWidth
+                    size="lg"
+                    onClick={() => router.push("/raven/checkout")}
                   >
-                    Proceed to Checkout
-                  </button>
-                  <button
-                    onClick={handleContinueShopping}
-                    className={cn(
-                      "w-full py-4 rounded-xl font-['Archivo'] font-semibold transition-all",
-                      "bg-white/10 text-white hover:bg-white/20 border border-white/20"
-                    )}
+                    Proceed to checkout
+                    <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
+                  </Button>
+                  <Button
+                    fullWidth
+                    size="lg"
+                    variant="secondary"
+                    onClick={() => router.push("/raven/search")}
                   >
-                    Continue Shopping
-                  </button>
+                    Continue browsing
+                  </Button>
                 </div>
 
-                {/* Additional Info */}
-                <div className="pt-6 border-t border-white/10">
-                  <p className="font-['Archivo'] text-xs text-[#d5d5d6] text-center">
-                    Secure checkout • All bookings are confirmed instantly
-                  </p>
-                </div>
-              </motion.div>
-            </div>
+                <p className="border-t border-white/10 pt-6 text-center font-['Archivo'] text-xs text-white/45">
+                  Secure checkout · Bookings confirmed instantly
+                </p>
+              </Panel>
+            </aside>
           </div>
         )}
       </div>
+
+      <SiteFooter />
     </div>
-  )
+  );
+}
+
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between font-['Archivo'] text-sm">
+      <span className="text-white/55">{label}</span>
+      <span className="text-white">{value}</span>
+    </div>
+  );
 }

@@ -9,6 +9,7 @@ import { ActionButton } from '@/components/calendar/ActionButton'
 import { InstructorAvatar } from '@/components/calendar/InstructorAvatar'
 import { InstructorCarousel } from '@/components/calendar/InstructorCarousel'
 import { GlobalSearchModal } from '@/components/ui/global-search-modal'
+import { SiteFooter } from '@/components/raven/site-footer'
 import { SlotSelectionModal } from '@/components/raven/slot-selection-modal'
 import { ToastNotification } from '@/components/raven/toast-notification'
 import type { SelectedSlot } from '@/lib/types/cart'
@@ -532,7 +533,7 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
                   {instructor.biography.length > 300 && (
                     <button
                       onClick={() => setBioExpanded(!bioExpanded)}
-                      className="mt-2 text-blue-400 font-['Archivo'] text-sm font-medium hover:text-blue-300 transition-colors"
+                      className="mt-2 text-white font-['Archivo'] text-sm font-medium underline-offset-4 hover:underline transition-colors"
                     >
                       {bioExpanded ? 'Read less' : 'Read more'}
                     </button>
@@ -758,6 +759,8 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
         onClose={() => setShowToast(false)}
         type="success"
       />
+
+      <SiteFooter />
     </div>
   )
 }

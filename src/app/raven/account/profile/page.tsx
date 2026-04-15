@@ -1,205 +1,206 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useRef } from 'react'
-import { motion } from 'motion/react'
-import { useAuth } from '@/lib/contexts/auth-context'
-import { createBrowserAuthClient } from '@/lib/supabase/browser-auth'
+import { useEffect, useRef, useState } from "react";
+import { Camera, Loader2 } from "lucide-react";
+import { useAuth } from "@/lib/contexts/auth-context";
+import { createBrowserAuthClient } from "@/lib/supabase/browser-auth";
+import {
+  Banner,
+  Button,
+  Field,
+  Panel,
+  SectionHeading,
+  Textarea,
+} from "@/components/raven/ui";
 
 export default function ProfilePage() {
-  const { user, refreshUser } = useAuth()
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const { user, refreshUser } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
-  const [bio, setBio] = useState('')
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [uploading, setUploading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [bio, setBio] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     async function fetchProfile() {
       try {
-        const res = await fetch('/api/account/profile')
-        const data = await res.json()
+        const res = await fetch("/api/account/profile");
+        const data = await res.json();
         if (res.ok && data.data) {
-          setAvatarUrl(data.data.avatar_url || null)
-          setBio(data.data.bio || '')
+          setAvatarUrl(data.data.avatar_url || null);
+          setBio(data.data.bio || "");
         }
       } catch {
-        setError('Failed to load profile')
+        setError("Failed to load profile");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
-    fetchProfile()
-  }, [])
+    fetchProfile();
+  }, []);
 
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file || !user) return
+  const handleAvatarUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
 
-    setUploading(true)
-    setError(null)
+    setUploading(true);
+    setError(null);
 
     try {
-      const supabase = createBrowserAuthClient()
-      const ext = file.name.split('.').pop()
-      const filePath = `${user.id}/avatar.${ext}`
+      const supabase = createBrowserAuthClient();
+      const ext = file.name.split(".").pop();
+      const filePath = `${user.id}/avatar.${ext}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file, { upsert: true })
+        .from("avatars")
+        .upload(filePath, file, { upsert: true });
 
       if (uploadError) {
-        setError('Failed to upload image: ' + uploadError.message)
-        setUploading(false)
-        return
+        setError("Failed to upload image: " + uploadError.message);
+        setUploading(false);
+        return;
       }
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath)
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("avatars").getPublicUrl(filePath);
 
-      // Save URL to profile
-      const res = await fetch('/api/account/profile', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/account/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ avatarUrl: publicUrl }),
-      })
+      });
 
       if (res.ok) {
-        setAvatarUrl(publicUrl)
-        await refreshUser()
+        setAvatarUrl(publicUrl);
+        await refreshUser();
       } else {
-        setError('Failed to save avatar')
+        setError("Failed to save avatar");
       }
     } catch {
-      setError('Failed to upload image')
+      setError("Failed to upload image");
     } finally {
-      setUploading(false)
+      setUploading(false);
     }
-  }
+  };
 
   const handleSaveBio = async () => {
-    setSaving(true)
-    setError(null)
-    setSuccess(false)
+    setSaving(true);
+    setError(null);
+    setSuccess(false);
 
     try {
-      const res = await fetch('/api/account/profile', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/account/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ bio }),
-      })
+      });
       if (res.ok) {
-        setSuccess(true)
-        setTimeout(() => setSuccess(false), 3000)
+        setSuccess(true);
+        setTimeout(() => setSuccess(false), 3000);
       } else {
-        const data = await res.json()
-        setError(data.error || 'Failed to save')
+        const data = await res.json();
+        setError(data.error || "Failed to save");
       }
     } catch {
-      setError('Failed to save')
+      setError("Failed to save");
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+      <div className="flex h-64 items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-white/60" />
       </div>
-    )
+    );
   }
 
   return (
-    <div>
-      <h1 className="font-['PP_Editorial_New'] text-2xl sm:text-3xl text-white mb-2">Profile & Photo</h1>
-      <p className="font-['Archivo'] text-sm text-[#d5d5d6] mb-6 sm:mb-8">
-        Manage your profile picture and bio
-      </p>
+    <div className="space-y-8">
+      <SectionHeading
+        eyebrow="Profile"
+        title="Photo & bio."
+        description="A friendly photo and a quick intro help instructors prepare for your session."
+      />
 
-      <div className="space-y-6">
-        {/* Avatar Section */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 sm:p-8">
-          <h2 className="font-['Archivo'] font-semibold text-lg text-white mb-5">Profile Picture</h2>
-          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+      <Panel className="p-6 sm:p-8">
+        <h2 className="font-['PP_Editorial_New'] text-2xl text-white">
+          Profile picture
+        </h2>
+        <div className="mt-5 flex flex-col items-center gap-5 sm:flex-row sm:gap-6">
+          <div className="relative">
             {avatarUrl ? (
-              <img src={avatarUrl} alt="" className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-2 border-white/10 flex-shrink-0" />
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={avatarUrl}
+                alt=""
+                className="h-24 w-24 flex-shrink-0 rounded-full border border-white/15 object-cover sm:h-28 sm:w-28"
+              />
             ) : (
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-blue-400/20 flex items-center justify-center border-2 border-white/10 flex-shrink-0">
-                <span className="font-['Archivo'] text-xl sm:text-2xl font-bold text-blue-400">
-                  {user?.user_metadata?.first_name?.[0]?.toUpperCase() || '?'}
-                </span>
+              <div className="flex h-24 w-24 flex-shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/5 font-['PP_Editorial_New'] text-3xl text-white sm:h-28 sm:w-28">
+                {user?.user_metadata?.first_name?.[0]?.toUpperCase() || "?"}
               </div>
             )}
-            <div className="flex flex-col items-center sm:items-start">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleAvatarUpload}
-                className="hidden"
-              />
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-                className={`px-5 sm:px-6 py-2.5 rounded-xl font-['Archivo'] text-sm font-semibold transition-all ${
-                  uploading
-                    ? 'bg-white/10 text-white/50 cursor-not-allowed'
-                    : 'bg-white/10 text-white hover:bg-white/20 border border-white/20'
-                }`}
-              >
-                {uploading ? 'Uploading...' : 'Upload new photo'}
-              </button>
-              <p className="font-['Archivo'] text-xs text-[#9696a5] mt-2">
-                JPG, PNG or WebP. Max 5MB.
-              </p>
-            </div>
+            <span className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border border-black bg-white text-black">
+              <Camera className="h-3.5 w-3.5" strokeWidth={2} />
+            </span>
           </div>
-        </div>
 
-        {/* Bio Section */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 sm:p-8">
-          <h2 className="font-['Archivo'] font-semibold text-lg text-white mb-5">About You</h2>
-          <div className="max-w-lg space-y-4">
-            <div>
-              <textarea
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                rows={4}
-                maxLength={500}
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white font-['Archivo'] placeholder:text-[#9696a5] focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all resize-none"
-                placeholder="Tell instructors about yourself, your experience level, and what you're looking for..."
-              />
-              <p className="font-['Archivo'] text-xs text-[#9696a5] mt-1 text-right">{bio.length}/500</p>
-            </div>
-
-            {error && (
-              <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3">
-                <p className="font-['Archivo'] text-sm text-red-400">{error}</p>
-              </div>
-            )}
-            {success && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-green-500/10 border border-green-500/30 rounded-lg px-4 py-3">
-                <p className="font-['Archivo'] text-sm text-green-400">Bio saved</p>
-              </motion.div>
-            )}
-
-            <button
-              onClick={handleSaveBio}
-              disabled={saving}
-              className={`px-8 py-3 rounded-xl font-['Archivo'] font-semibold transition-all ${
-                saving ? 'bg-blue-400/50 text-white/50 cursor-not-allowed' : 'bg-blue-400 text-white hover:bg-blue-500'
-              }`}
+          <div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleAvatarUpload}
+              className="hidden"
+            />
+            <Button
+              variant="secondary"
+              size="md"
+              loading={uploading}
+              onClick={() => fileInputRef.current?.click()}
             >
-              {saving ? 'Saving...' : 'Save bio'}
-            </button>
+              {uploading ? "Uploading…" : "Upload new photo"}
+            </Button>
+            <p className="mt-2 font-['Archivo'] text-xs text-white/45">
+              JPG, PNG or WebP. Max 5MB.
+            </p>
           </div>
         </div>
-      </div>
+      </Panel>
+
+      <Panel className="p-6 sm:p-8">
+        <h2 className="font-['PP_Editorial_New'] text-2xl text-white">
+          About you
+        </h2>
+        <div className="mt-5 max-w-lg space-y-4">
+          <Field label="Bio" hint={`${bio.length}/500`} htmlFor="bio">
+            <Textarea
+              id="bio"
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              rows={5}
+              maxLength={500}
+              placeholder="Tell instructors about yourself, your experience level, and what you're hoping to learn…"
+            />
+          </Field>
+
+          {error && <Banner tone="error">{error}</Banner>}
+          {success && <Banner tone="success">Bio saved.</Banner>}
+
+          <Button onClick={handleSaveBio} loading={saving}>
+            {saving ? "Saving…" : "Save bio"}
+          </Button>
+        </div>
+      </Panel>
     </div>
-  )
+  );
 }

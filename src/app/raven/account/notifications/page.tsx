@@ -1,130 +1,165 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from 'react'
-import { motion } from 'motion/react'
+import { useEffect, useState } from "react";
+import { motion } from "motion/react";
+import { Loader2 } from "lucide-react";
+import { Banner, Panel, SectionHeading } from "@/components/raven/ui";
+import { cn } from "@/lib/utils";
 
 interface NotificationType {
-  id: number
-  title: string
-  description: string
-  display_order: number
-  subscribed: boolean
+  id: number;
+  title: string;
+  description: string;
+  display_order: number;
+  subscribed: boolean;
 }
 
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState<NotificationType[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [toggling, setToggling] = useState<number | null>(null)
+  const [notifications, setNotifications] = useState<NotificationType[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [toggling, setToggling] = useState<number | null>(null);
 
   useEffect(() => {
     async function fetchNotifications() {
       try {
-        const res = await fetch('/api/account/notifications')
-        const data = await res.json()
-        if (res.ok) {
-          setNotifications(data.data || [])
-        } else {
-          setError(data.error || 'Failed to load notifications')
-        }
+        const res = await fetch("/api/account/notifications");
+        const data = await res.json();
+        if (res.ok) setNotifications(data.data || []);
+        else setError(data.error || "Failed to load notifications");
       } catch {
-        setError('Failed to load notifications')
+        setError("Failed to load notifications");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
-    fetchNotifications()
-  }, [])
+    fetchNotifications();
+  }, []);
 
   const handleToggle = async (id: number, currentState: boolean) => {
-    setToggling(id)
+    setToggling(id);
     try {
-      const res = await fetch('/api/account/notifications', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ notificationTypeId: id, subscribed: !currentState }),
-      })
+      const res = await fetch("/api/account/notifications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          notificationTypeId: id,
+          subscribed: !currentState,
+        }),
+      });
       if (res.ok) {
-        setNotifications(prev =>
-          prev.map(n => n.id === id ? { ...n, subscribed: !currentState } : n)
-        )
+        setNotifications((prev) =>
+          prev.map((n) =>
+            n.id === id ? { ...n, subscribed: !currentState } : n,
+          ),
+        );
       }
     } catch {
-      // Silently fail — toggle will stay in old state
+      // silently fail
     } finally {
-      setToggling(null)
+      setToggling(null);
     }
-  }
+  };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+      <div className="flex h-64 items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-white/60" />
       </div>
-    )
+    );
   }
 
   return (
-    <div>
-      <h1 className="font-['PP_Editorial_New'] text-2xl sm:text-3xl text-white mb-2">Notifications</h1>
-      <p className="font-['Archivo'] text-sm text-[#d5d5d6] mb-6 sm:mb-8">
-        Choose which email notifications you receive
-      </p>
+    <div className="space-y-8">
+      <SectionHeading
+        eyebrow="Notifications"
+        title="Stay in the loop."
+        description="Choose which Raven email updates you receive. You can change these any time."
+      />
 
-      {error && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3 mb-6">
-          <p className="font-['Archivo'] text-sm text-red-400">{error}</p>
-        </div>
-      )}
+      {error && <Banner tone="error">{error}</Banner>}
 
       {notifications.length === 0 && !error ? (
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 sm:p-12 text-center">
-          <p className="font-['PP_Editorial_New'] text-xl text-white mb-2">No notification types</p>
-          <p className="font-['Archivo'] text-sm text-[#d5d5d6]">
+        <Panel className="px-6 py-12 text-center sm:px-12">
+          <p className="font-['PP_Editorial_New'] text-2xl text-white">
+            Nothing here yet
+          </p>
+          <p className="mt-2 font-['Archivo'] text-sm text-white/55">
             Notification preferences will appear here when available.
           </p>
-        </div>
+        </Panel>
       ) : (
-        <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
-          {notifications.map((notification, idx) => (
-            <motion.div
-              key={notification.id}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: idx * 0.03 }}
-              className={`flex items-center justify-between px-4 py-3 sm:px-6 sm:py-5 ${
-                idx < notifications.length - 1 ? 'border-b border-white/5' : ''
-              }`}
-            >
-              <div className="flex-1 min-w-0 mr-3 sm:mr-4">
-                <h3 className="font-['Archivo'] font-semibold text-white text-sm">
-                  {notification.title}
-                </h3>
-                {notification.description && (
-                  <p className="font-['Archivo'] text-xs text-[#9696a5] mt-0.5">
-                    {notification.description}
-                  </p>
+        <Panel className="overflow-hidden">
+          <ul>
+            {notifications.map((n, idx) => (
+              <motion.li
+                key={n.id}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: idx * 0.03 }}
+                className={cn(
+                  "flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-white/[0.03] sm:px-6 sm:py-5",
+                  idx < notifications.length - 1 &&
+                    "border-b border-white/[0.06]",
                 )}
-              </div>
-
-              {/* Toggle Switch */}
-              <button
-                onClick={() => handleToggle(notification.id, notification.subscribed)}
-                disabled={toggling === notification.id}
-                className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors ${
-                  notification.subscribed ? 'bg-blue-400' : 'bg-white/10'
-                } ${toggling === notification.id ? 'opacity-50' : ''}`}
               >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    notification.subscribed ? 'translate-x-6' : 'translate-x-1'
-                  }`}
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-['Archivo'] text-sm font-semibold text-white">
+                    {n.title}
+                  </h3>
+                  {n.description && (
+                    <p className="mt-0.5 font-['Archivo'] text-xs text-white/55">
+                      {n.description}
+                    </p>
+                  )}
+                </div>
+
+                <Toggle
+                  checked={n.subscribed}
+                  disabled={toggling === n.id}
+                  onChange={() => handleToggle(n.id, n.subscribed)}
                 />
-              </button>
-            </motion.div>
-          ))}
-        </div>
+              </motion.li>
+            ))}
+          </ul>
+        </Panel>
       )}
     </div>
-  )
+  );
+}
+
+function Toggle({
+  checked,
+  disabled,
+  onChange,
+}: {
+  checked: boolean;
+  disabled?: boolean;
+  onChange: () => void;
+}) {
+  return (
+    <button
+      role="switch"
+      aria-checked={checked}
+      onClick={onChange}
+      disabled={disabled}
+      className={cn(
+        "relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full border transition-colors",
+        "focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black",
+        checked
+          ? "border-white bg-white"
+          : "border-white/15 bg-white/[0.06]",
+        disabled && "opacity-50",
+      )}
+    >
+      <span
+        className={cn(
+          "inline-block h-4 w-4 transform rounded-full transition-transform",
+          checked
+            ? "translate-x-6 bg-black"
+            : "translate-x-1 bg-white",
+        )}
+      />
+    </button>
+  );
 }

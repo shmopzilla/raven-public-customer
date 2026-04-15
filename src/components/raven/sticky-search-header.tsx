@@ -139,7 +139,7 @@ export function StickySearchHeader({ onSearchClick }: StickySearchHeaderProps = 
                   className="w-7 h-7 rounded-full object-cover"
                 />
               ) : (
-                <div className="w-7 h-7 rounded-full bg-blue-400 flex items-center justify-center">
+                <div className="w-7 h-7 rounded-full bg-black flex items-center justify-center">
                   <span className="font-['Archivo'] text-xs font-bold text-white">
                     {(user.user_metadata?.first_name?.[0] || user.email?.[0] || 'U').toUpperCase()}
                   </span>

@@ -362,7 +362,7 @@ export function SlotSelectionModal({
                                 ? isSelected
                                   ? isFullDay
                                     ? "bg-amber-400/15 border-amber-400 text-white"
-                                    : "bg-blue-400/15 border-blue-400 text-white"
+                                    : "bg-white text-black border-white"
                                   : "bg-white/[0.04] border-white/15 text-white hover:bg-white/[0.08] hover:border-white/25"
                                 : "bg-white/[0.02] border-white/10 text-white/25 cursor-not-allowed"
                             )}
@@ -372,7 +372,7 @@ export function SlotSelectionModal({
                             {/* Icon */}
                             <div className={cn(
                               "opacity-60",
-                              isSelected && (isFullDay ? "text-amber-400 opacity-100" : "text-blue-400 opacity-100")
+                              isSelected && (isFullDay ? "text-amber-400 opacity-100" : "text-black opacity-100")
                             )}>
                               {slotIcon(slot.daySlotId)}
                             </div>
@@ -390,7 +390,7 @@ export function SlotSelectionModal({
                             {/* Price */}
                             <div className={cn(
                               "font-['Archivo'] text-sm font-bold mt-0.5",
-                              isSelected && (isFullDay ? "text-amber-400" : "text-blue-400")
+                              isSelected && (isFullDay ? "text-amber-400" : "text-black")
                             )}>
                               €{slot.price}
                             </div>
@@ -439,7 +439,7 @@ export function SlotSelectionModal({
               className={cn(
                 "w-full py-4 rounded-xl font-['Archivo'] font-semibold transition-all",
                 totals.itemCount > 0
-                  ? "bg-blue-400 text-white hover:bg-blue-500"
+                  ? "bg-white text-black hover:bg-white/90"
                   : "bg-white/10 text-white/30 cursor-not-allowed"
               )}
             >

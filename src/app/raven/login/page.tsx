@@ -1,143 +1,142 @@
-"use client"
+"use client";
 
-import { useState, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import Link from 'next/link'
-import { motion } from 'motion/react'
-import { createBrowserAuthClient } from '@/lib/supabase/browser-auth'
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { Loader2 } from "lucide-react";
+import { createBrowserAuthClient } from "@/lib/supabase/browser-auth";
+import { AuthLayout } from "@/components/raven/auth-layout";
+import { Banner, Button, Field, Input } from "@/components/raven/ui";
 
 function LoginForm() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const redirectTo = searchParams.get('redirect') || '/raven/account'
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirect") || "/raven/account";
 
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
-    setLoading(true)
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
 
     try {
-      const supabase = createBrowserAuthClient()
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      const supabase = createBrowserAuthClient();
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
       if (error) {
-        setError(error.message)
-        setLoading(false)
-        return
+        setError(error.message);
+        setLoading(false);
+        return;
       }
 
-      router.push(redirectTo)
-      router.refresh()
+      router.push(redirectTo);
+      router.refresh();
     } catch {
-      setError('An unexpected error occurred')
-      setLoading(false)
+      setError("An unexpected error occurred");
+      setLoading(false);
     }
-  }
+  };
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center px-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="w-full max-w-md"
-      >
-        {/* Logo */}
-        <Link href="/raven" className="block text-center mb-10">
-          <h1 className="font-['PP_Editorial_New'] text-4xl text-white">Raven</h1>
-        </Link>
+    <AuthLayout
+      imageUrl="/images/sports/horseriding.png"
+      quote="My kids went from shy beginners to cantering on day three. The trainer was incredible — found her right here."
+      quoteAttribution="James R. — booked horse riding"
+    >
+      <div className="space-y-2">
+        <p className="font-['Archivo'] text-[11px] uppercase tracking-[0.22em] text-white/55">
+          Welcome back
+        </p>
+        <h1 className="font-['PP_Editorial_New'] text-4xl leading-[1.05] text-white sm:text-5xl">
+          Sign in to <span className="italic">Raven</span>.
+        </h1>
+        <p className="pt-1 font-['Archivo'] text-sm text-white/60">
+          Pick up where you left off — bookings, messages and all.
+        </p>
+      </div>
 
-        {/* Card */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-8 backdrop-blur-md">
-          <h2 className="font-['PP_Editorial_New'] text-2xl text-white mb-2">
-            Welcome back
-          </h2>
-          <p className="font-['Archivo'] text-sm text-[#d5d5d6] mb-8">
-            Sign in to your account
-          </p>
+      <form onSubmit={handleSubmit} className="mt-10 space-y-5">
+        <Field label="Email" required htmlFor="email">
+          <Input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            autoComplete="email"
+            placeholder="you@email.com"
+          />
+        </Field>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label className="block font-['Archivo'] text-sm text-[#d5d5d6] mb-2">
-                Email
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white font-['Archivo'] placeholder:text-[#9696a5] focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all"
-                placeholder="your@email.com"
-              />
-            </div>
-
-            <div>
-              <label className="block font-['Archivo'] text-sm text-[#d5d5d6] mb-2">
-                Password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white font-['Archivo'] placeholder:text-[#9696a5] focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all"
-                placeholder="••••••••"
-              />
-            </div>
-
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3"
-              >
-                <p className="font-['Archivo'] text-sm text-red-400">{error}</p>
-              </motion.div>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className={`w-full py-4 rounded-xl font-['Archivo'] font-semibold transition-all ${
-                loading
-                  ? 'bg-blue-400/50 text-white/50 cursor-not-allowed'
-                  : 'bg-blue-400 text-white hover:bg-blue-500'
-              }`}
+        <Field
+          label="Password"
+          required
+          htmlFor="password"
+          hint={
+            <Link
+              href="#"
+              className="underline-offset-4 transition-colors hover:text-white hover:underline"
             >
-              {loading ? 'Signing in...' : 'Sign in'}
-            </button>
-          </form>
+              Forgot?
+            </Link>
+          }
+        >
+          <Input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            autoComplete="current-password"
+            placeholder="Min 8 characters"
+          />
+        </Field>
 
-          <div className="mt-6 text-center">
-            <p className="font-['Archivo'] text-sm text-[#d5d5d6]">
-              Don&apos;t have an account?{' '}
-              <Link
-                href="/raven/signup"
-                className="text-blue-400 hover:text-blue-300 transition-colors"
-              >
-                Create account
-              </Link>
-            </p>
-          </div>
-        </div>
-      </motion.div>
-    </div>
-  )
+        {error && <Banner tone="error">{error}</Banner>}
+
+        <Button type="submit" size="lg" fullWidth loading={loading}>
+          {loading ? "Signing in…" : "Sign in"}
+        </Button>
+      </form>
+
+      <div className="mt-8 flex items-center gap-3">
+        <span className="h-px flex-1 bg-white/10" />
+        <span className="font-['Archivo'] text-[10px] uppercase tracking-[0.22em] text-white/40">
+          or
+        </span>
+        <span className="h-px flex-1 bg-white/10" />
+      </div>
+
+      <p className="mt-8 text-center font-['Archivo'] text-sm text-white/60">
+        New to Raven?{" "}
+        <Link
+          href="/raven/signup"
+          className="font-semibold text-white underline-offset-4 transition-colors hover:underline"
+        >
+          Create an account
+        </Link>
+      </p>
+    </AuthLayout>
+  );
 }
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-black">
+          <Loader2 className="h-6 w-6 animate-spin text-white/60" />
+        </div>
+      }
+    >
       <LoginForm />
     </Suspense>
-  )
+  );
 }

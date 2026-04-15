@@ -8,11 +8,12 @@ import { StickySearchHeader } from "@/components/raven/sticky-search-header";
 import { GlobalSearchModal } from "@/components/ui/global-search-modal";
 import { Instructor } from "@/lib/mock-data/instructors";
 import { useSearch } from "@/lib/contexts/search-context";
+import { SiteFooter } from "@/components/raven/site-footer";
 
 // Loading fallback for Suspense
 function SearchLoading() {
   return (
-    <div className="min-h-screen bg-[#0d0d0f] flex items-center justify-center">
+    <div className="min-h-screen bg-black flex items-center justify-center">
       <div className="flex flex-col items-center gap-4">
         <div className="w-12 h-12 border-2 border-white/30 border-t-white rounded-full animate-spin" />
         <span className="font-['Archivo'] text-lg text-white">
@@ -289,7 +290,7 @@ function SearchResultsContent() {
   // Loading state
   if (isLoadingInitial) {
     return (
-      <div className="min-h-screen bg-[#0d0d0f] flex items-center justify-center">
+      <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           <span className="font-['Archivo'] text-lg text-white">
@@ -303,18 +304,17 @@ function SearchResultsContent() {
   // Error state
   if (error) {
     return (
-      <div className="min-h-screen bg-[#0d0d0f] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4 max-w-md text-center px-6">
-          <span className="text-4xl">⚠️</span>
-          <h2 className="font-['PP_Editorial_New'] text-2xl text-white">
-            Oops! Something went wrong
+      <div className="flex min-h-screen items-center justify-center bg-black px-6">
+        <div className="max-w-md text-center">
+          <h2 className="font-['PP_Editorial_New'] text-3xl text-white sm:text-4xl">
+            Something went wrong.
           </h2>
-          <p className="font-['Archivo'] text-[#d5d5d6]">{error}</p>
+          <p className="mt-3 font-['Archivo'] text-sm text-white/65">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="mt-4 px-6 py-3 bg-white text-black rounded-full font-['Archivo'] font-medium hover:bg-white/90 transition-colors"
+            className="mt-6 inline-flex items-center justify-center rounded-full bg-white px-6 py-3 font-['Archivo'] text-sm font-semibold text-black transition-transform hover:scale-[1.02]"
           >
-            Try Again
+            Try again
           </button>
         </div>
       </div>
@@ -322,7 +322,7 @@ function SearchResultsContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0d0d0f]">
+    <div className="min-h-screen bg-black">
       {/* Sticky Search Header */}
       <StickySearchHeader onSearchClick={handleSearchClick} />
 
@@ -381,13 +381,12 @@ function SearchResultsContent() {
 
         {/* No results message */}
         {!isLoadingInitial && allInstructors.length === 0 && (
-          <div className="flex flex-col items-center justify-center mt-20">
-            <span className="text-6xl mb-4">🏔️</span>
-            <h3 className="font-['PP_Editorial_New'] text-2xl text-white mb-2">
-              No instructors found
+          <div className="mx-auto mt-20 max-w-md text-center">
+            <h3 className="font-['PP_Editorial_New'] text-3xl text-white sm:text-4xl">
+              No instructors found.
             </h3>
-            <p className="font-['Archivo'] text-[#d5d5d6]">
-              Try adjusting your search criteria
+            <p className="mt-3 font-['Archivo'] text-sm text-white/65">
+              Try widening your dates, location, or sport.
             </p>
           </div>
         )}
@@ -396,6 +395,8 @@ function SearchResultsContent() {
       {/* Global Search Modal - state managed via SearchContext */}
       {/* shouldNavigate=false means it stays on this page after search */}
       <GlobalSearchModal shouldNavigate={false} />
+
+      <SiteFooter />
     </div>
   );
 }
