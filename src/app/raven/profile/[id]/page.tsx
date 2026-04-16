@@ -306,7 +306,10 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-white text-lg">Loading instructor profile...</div>
+        <div className="flex flex-col items-center justify-center gap-4 h-full">
+          <div className="w-10 h-10 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          <span className="font-['Archivo'] text-sm text-[#d5d5d6]">Loading instructor profile...</span>
+        </div>
       </div>
     )
   }
@@ -577,7 +580,10 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
                   {/* Calendar */}
                   {loadingBookings ? (
                     <div className="flex items-center justify-center h-96">
-                      <div className="text-white">Loading calendar data...</div>
+                      <div className="flex flex-col items-center justify-center gap-4">
+                        <div className="w-10 h-10 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        <span className="font-['Archivo'] text-sm text-[#d5d5d6]">Loading calendar...</span>
+                      </div>
                     </div>
                   ) : (
                     <Calendar
@@ -656,8 +662,18 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
           {/* Sheet */}
           <div className="absolute bottom-0 left-0 right-0 max-h-[90vh] bg-[#0A0A0A] rounded-t-2xl border-t border-white/10 overflow-hidden flex flex-col animate-slide-up">
             {/* Handle */}
-            <div className="flex justify-center py-3">
+            <div className="flex items-center justify-between px-4 py-3">
+              <div className="w-8" />
               <div className="w-10 h-1 rounded-full bg-white/20" />
+              <button
+                onClick={() => setMobileSheetOpen(false)}
+                aria-label="Close calendar"
+                className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/20 transition-colors"
+              >
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                  <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              </button>
             </div>
             {/* Sheet Content */}
             <div className="overflow-y-auto flex-1 px-4 pb-8">
@@ -665,7 +681,10 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
                 {/* Calendar */}
                 {loadingBookings ? (
                   <div className="flex items-center justify-center h-48">
-                    <div className="text-white text-sm">Loading calendar...</div>
+                    <div className="flex flex-col items-center justify-center gap-4">
+                      <div className="w-10 h-10 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span className="font-['Archivo'] text-sm text-[#d5d5d6]">Loading calendar...</span>
+                    </div>
                   </div>
                 ) : (
                   <Calendar
@@ -1135,15 +1154,6 @@ function ReviewsSection({ instructorName }: { instructorName: string }) {
           ))}
         </div>
 
-        {/* Show all reviews — placeholder until pagination wired */}
-        <div className="mt-10 flex justify-center">
-          <button
-            type="button"
-            className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-5 py-2.5 font-['Archivo'] text-sm text-white/85 transition-colors hover:bg-white/[0.1]"
-          >
-            See all {totalReviews} reviews
-          </button>
-        </div>
       </div>
     </section>
   )

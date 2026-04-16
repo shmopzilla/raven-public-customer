@@ -808,12 +808,6 @@ function InstructorCTA() {
             Apply to coach
             <ArrowRight className="h-4 w-4" strokeWidth={2.4} />
           </Link>
-          <Link
-            href="#how"
-            className="inline-flex items-center justify-center gap-2 rounded-full border border-white/20 bg-white/5 px-6 py-4 font-['Archivo'] text-base text-white transition-colors hover:bg-white/10"
-          >
-            Learn more
-          </Link>
         </div>
       </div>
     </section>

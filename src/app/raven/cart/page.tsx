@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useRouter } from "next/navigation";
 import { ShoppingBag, ArrowRight } from "lucide-react";
@@ -13,9 +14,11 @@ import {
 } from "@/components/raven/ui";
 import { SiteHeader, HeaderSpacer } from "@/components/raven/site-header";
 import { SiteFooter } from "@/components/raven/site-footer";
+import { ToastNotification } from "@/components/raven/toast-notification";
 
 export default function CartPage() {
   const router = useRouter();
+  const [showToast, setShowToast] = useState(false);
   const items = useCartStore((state) => state.items);
   const removeFromCart = useCartStore((state) => state.removeFromCart);
   const clearCart = useCartStore((state) => state.clearCart);
@@ -46,7 +49,8 @@ export default function CartPage() {
               variant="ghost"
               size="sm"
               onClick={() => {
-                if (confirm("Clear all items from your cart?")) clearCart();
+                clearCart();
+                setShowToast(true);
               }}
             >
               Clear cart
@@ -143,6 +147,13 @@ export default function CartPage() {
       </div>
 
       <SiteFooter />
+
+      <ToastNotification
+        isVisible={showToast}
+        message="Cart cleared"
+        onClose={() => setShowToast(false)}
+        type="success"
+      />
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from "motion/react"
 import { useRouter } from "next/navigation"
+import { useModalA11y } from "@/lib/hooks/use-modal-a11y"
 import { ShoppingBag, X, ArrowRight } from "lucide-react"
 import { useCartStore } from "@/lib/stores/cart-store"
 import { CartItemComponent } from "./cart-item"
@@ -13,6 +14,7 @@ interface CartPanelProps {
 }
 
 export function CartPanel({ isOpen, onClose }: CartPanelProps) {
+  const { modalRef, handleKeyDown } = useModalA11y(isOpen, onClose)
   const router = useRouter()
   const items = useCartStore((state) => state.items)
   const removeFromCart = useCartStore((state) => state.removeFromCart)
@@ -52,6 +54,11 @@ export function CartPanel({ isOpen, onClose }: CartPanelProps) {
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
             className="fixed right-0 top-0 bottom-0 z-50 flex w-full max-w-md flex-col border-l border-white/10 bg-black shadow-2xl"
+            ref={modalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="cart-panel-title"
+            onKeyDown={handleKeyDown}
           >
             {/* Header */}
             <div className="sticky top-0 z-10 border-b border-white/10 bg-black/95 backdrop-blur-md p-6">
@@ -60,7 +67,7 @@ export function CartPanel({ isOpen, onClose }: CartPanelProps) {
                   <p className="font-['Archivo'] text-[11px] uppercase tracking-[0.22em] text-white/50">
                     Your cart
                   </p>
-                  <h2 className="mt-1 font-['PP_Editorial_New'] text-3xl text-white">
+                  <h2 id="cart-panel-title" className="mt-1 font-['PP_Editorial_New'] text-3xl text-white">
                     {itemCount} {itemCount === 1 ? 'booking' : 'bookings'}
                   </h2>
                 </div>

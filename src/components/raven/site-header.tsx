@@ -28,6 +28,7 @@ const NAV_LINKS: Array<[string, string]> = [
 
 export function SiteHeader({ transparent = false }: SiteHeaderProps) {
   const { user, loading: authLoading } = useAuth();
+  const [avatarError, setAvatarError] = useState(false);
   const [scrolled, setScrolled] = useState(!transparent);
 
   useEffect(() => {
@@ -76,12 +77,13 @@ export function SiteHeader({ transparent = false }: SiteHeaderProps) {
               href="/raven/account"
               className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 font-['Archivo'] text-sm font-semibold text-black transition-transform hover:scale-[1.02]"
             >
-              {user.user_metadata?.avatar_url ? (
+              {user.user_metadata?.avatar_url && !avatarError ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={user.user_metadata.avatar_url}
                   alt=""
                   className="h-5 w-5 rounded-full object-cover"
+                  onError={() => setAvatarError(true)}
                 />
               ) : (
                 <span className="flex h-5 w-5 items-center justify-center rounded-full bg-black text-[10px] font-bold text-white">

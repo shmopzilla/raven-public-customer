@@ -147,7 +147,6 @@ function SearchResultsContent() {
     const hasUrlParams = urlSearchParams.get('location') !== null;
 
     if (hasUrlParams && !searchCriteria) {
-      console.log('Initializing search from URL params:', Object.fromEntries(urlSearchParams.entries()));
       initializeFromUrl(urlSearchParams);
     }
 
@@ -159,7 +158,6 @@ function SearchResultsContent() {
   const { selectedDisciplines } = useSearch();
 
   const handleCardClick = (instructorId: string) => {
-    console.log("Navigate to instructor profile:", instructorId);
     router.push(`/raven/profile/${instructorId}`);
   };
 
@@ -193,15 +191,7 @@ function SearchResultsContent() {
         params.append('limit', '100'); // Get more results for client-side pagination
         params.append('offset', '0');
 
-        console.log("Searching instructors with criteria:", {
-          location: searchCriteria?.location,
-          startDate: searchCriteria?.startDate,
-          endDate: searchCriteria?.endDate,
-          disciplines: selectedDisciplines
-        });
-
         const endpoint = `/api/search/instructors?${params.toString()}`;
-        console.log("Fetching from:", endpoint);
 
         const response = await fetch(endpoint);
         const result = await response.json();
@@ -209,8 +199,6 @@ function SearchResultsContent() {
         if (!response.ok || !result.data) {
           throw new Error(result.error || "Failed to fetch instructors");
         }
-
-        console.log(`Found ${result.data.length} instructors matching search criteria`);
 
         // Create hybrid instructors: real name/age/avatar/languages/images + mock other fields
         const hybridInstructors = result.data.map((dbInstructor: any, index: number) =>
@@ -220,7 +208,6 @@ function SearchResultsContent() {
         setAllInstructors(hybridInstructors);
         setDisplayedCount(INITIAL_LOAD_COUNT); // Reset pagination
       } catch (err: any) {
-        console.error("Error fetching instructors:", err);
         setError(err.message || "Failed to load instructors");
       } finally {
         setIsLoadingInitial(false);

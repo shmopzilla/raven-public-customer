@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react"
 import { motion, AnimatePresence } from "motion/react"
 import { cn } from "@/lib/utils"
+import { useModalA11y } from "@/lib/hooks/use-modal-a11y"
 import { SelectedSlot, DAY_SLOT_NAMES, STANDARD_TIME_SLOTS, FULL_DAY_COVERS_SLOTS } from "@/lib/types/cart"
 import type { BookingItem } from "@/lib/calendar/types"
 
@@ -44,6 +45,7 @@ export function SlotSelectionModal({
   configuredSlotIds,
   onAddToCart
 }: SlotSelectionModalProps) {
+  const { modalRef, handleKeyDown } = useModalA11y(isOpen, onClose)
   const [selectedSlots, setSelectedSlots] = useState<Set<string>>(new Set())
 
   // Generate all days in the selected date range
@@ -280,6 +282,11 @@ export function SlotSelectionModal({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="slot-modal-title"
+        onKeyDown={handleKeyDown}
         onClick={onClose}
       >
         <motion.div
@@ -294,7 +301,7 @@ export function SlotSelectionModal({
           <div className="sticky top-0 bg-[#1a1a1f]/95 backdrop-blur-md border-b border-white/10 p-6 z-10">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="font-['PP_Editorial_New'] text-2xl text-white mb-1">
+                <h2 id="slot-modal-title" className="font-['PP_Editorial_New'] text-2xl text-white mb-1">
                   Select Your Sessions
                 </h2>
                 <p className="font-['Archivo'] text-sm text-[#d5d5d6]">
@@ -303,9 +310,12 @@ export function SlotSelectionModal({
               </div>
               <button
                 onClick={onClose}
-                className="text-white/60 hover:text-white transition-colors text-2xl p-2"
+                className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/20 transition-colors"
+                aria-label="Close"
               >
-                ×
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
               </button>
             </div>
           </div>
@@ -341,7 +351,8 @@ export function SlotSelectionModal({
                   </div>
 
                   {/* Slot cards — horizontal scroll */}
-                  <div className="flex-1 overflow-x-auto scrollbar-hide">
+                  <div className="flex-1 relative">
+                    <div className="overflow-x-auto scrollbar-hide">
                     <div className="flex gap-2 p-3 min-w-max">
                       {allSlots.map(slot => {
                         const slotKey = `${slot.date}-${slot.daySlotId}`
@@ -416,6 +427,8 @@ export function SlotSelectionModal({
                         )
                       })}
                     </div>
+                    </div>
+                    <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#1a1a1f] to-transparent pointer-events-none" />
                   </div>
                 </div>
               )

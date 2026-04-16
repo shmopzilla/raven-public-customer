@@ -130,8 +130,9 @@ export function InstructorProfileCard({
 
         {/* Navigation Arrows */}
         <button
-          className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full backdrop-blur-[10px] bg-[rgba(255,255,255,0.2)] hover:bg-[rgba(255,255,255,0.3)] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all z-20"
+          className="absolute left-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full backdrop-blur-[10px] bg-[rgba(255,255,255,0.2)] hover:bg-[rgba(255,255,255,0.3)] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all z-20"
           onClick={handlePrevImage}
+          aria-label="Previous image"
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path d="M10 12L6 8L10 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -139,8 +140,9 @@ export function InstructorProfileCard({
         </button>
 
         <button
-          className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full backdrop-blur-[10px] bg-[rgba(255,255,255,0.2)] hover:bg-[rgba(255,255,255,0.3)] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all z-20"
+          className="absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full backdrop-blur-[10px] bg-[rgba(255,255,255,0.2)] hover:bg-[rgba(255,255,255,0.3)] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all z-20"
           onClick={handleNextImage}
+          aria-label="Next image"
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path d="M6 12L10 8L6 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -148,18 +150,16 @@ export function InstructorProfileCard({
         </button>
 
         {/* Dot Indicators */}
-        <div className="absolute bottom-[17px] left-0 right-0 flex gap-1.5 items-center justify-center z-10">
+        <div className="absolute bottom-[17px] left-0 right-0 flex gap-1 items-center justify-center z-10">
           {instructor.actionShotUrls.map((_, index) => (
             <button
               key={index}
               onClick={handleDotClick(index)}
-              className={cn(
-                "w-[5px] h-[5px] rounded-full transition-all",
-                index === currentImageIndex
-                  ? "bg-white"
-                  : "bg-white/50"
-              )}
-            />
+              className="p-2 group/dot"
+              aria-label={`View image ${index + 1}`}
+            >
+              <span className={cn("block w-1.5 h-1.5 rounded-full transition-all", index === currentImageIndex ? "bg-white scale-125" : "bg-white/50 group-hover/dot:bg-white/70")} />
+            </button>
           ))}
         </div>
 

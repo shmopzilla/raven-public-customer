@@ -3,6 +3,7 @@ import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { SearchLoadingSpinner } from "@/components/ui/loading-spinner";
 import { Calendar } from "@/components/calendar/Calendar";
+import { useModalA11y } from "@/lib/hooks/use-modal-a11y";
 
 // TypeScript interfaces for Supabase integration
 export interface Location {
@@ -367,6 +368,8 @@ export const SearchModal = ({
   onParticipantCountsChange,
   onSearch,
 }: SearchModalProps) => {
+  const { modalRef, handleKeyDown } = useModalA11y(isOpen, onClose);
+
   // Local state for expanded section
   const [expandedSection, setExpandedSection] = useState<SectionId>('location');
   const [internalSearchValue, setInternalSearchValue] = useState(searchValue);
@@ -496,6 +499,11 @@ export const SearchModal = ({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      ref={modalRef}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="search-modal-title"
+      onKeyDown={handleKeyDown}
       onClick={onClose}
     >
       {/* Backdrop with blur */}
@@ -524,7 +532,7 @@ export const SearchModal = ({
 
           {/* Header */}
           <div className="flex items-center justify-between mb-2">
-            <h2 className="font-['Archivo'] font-semibold text-white text-xl sm:text-2xl">
+            <h2 id="search-modal-title" className="font-['Archivo'] font-semibold text-white text-xl sm:text-2xl">
               Find your instructor
             </h2>
             <motion.button
