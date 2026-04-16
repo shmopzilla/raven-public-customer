@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
 import { Check, Lock } from "lucide-react";
 import { useCartStore } from "@/lib/stores/cart-store";
@@ -25,6 +26,7 @@ export default function CheckoutPage() {
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [bookingError, setBookingError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -51,6 +53,7 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setBookingError(null);
     setIsProcessing(true);
     try {
       // TODO: real Stripe + booking creation
@@ -58,9 +61,8 @@ export default function CheckoutPage() {
       setShowSuccess(true);
       clearCart();
       setTimeout(() => router.push("/raven/search"), 3000);
-    } catch (error) {
-      console.error("Booking error:", error);
-      alert("There was an error processing your booking. Please try again.");
+    } catch {
+      setBookingError("There was an error processing your booking. Please try again.");
     } finally {
       setIsProcessing(false);
     }
@@ -104,12 +106,23 @@ export default function CheckoutPage() {
       <HeaderSpacer />
 
       <div className="mx-auto w-full max-w-[1400px] flex-1 px-4 py-10 sm:px-6 sm:py-14 lg:px-10 lg:py-20">
-        <SectionHeading
-          eyebrow="Checkout"
-          title="Confirm & pay."
-          description="A few quick details and we'll lock in your sessions."
-          className="mb-10"
-        />
+        <div className="sticky top-0 z-10 bg-black pb-6">
+          <Link href="/raven/cart" className="flex items-center gap-2 text-white/60 hover:text-white transition-colors font-['Archivo'] text-sm mb-4">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8L10 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            Back to Cart
+          </Link>
+          <SectionHeading
+            eyebrow="Checkout"
+            title="Confirm & pay."
+            description="A few quick details and we'll lock in your sessions."
+          />
+        </div>
+
+        {bookingError && (
+          <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3 mb-4">
+            <p className="font-['Archivo'] text-sm text-red-400">{bookingError}</p>
+          </div>
+        )}
 
         <form
           onSubmit={handleSubmit}
