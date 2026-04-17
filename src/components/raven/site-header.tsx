@@ -7,6 +7,11 @@
  * `transparent` = sits above hero photography on the landing page,
  * goes solid on scroll. Set to false on routes without hero imagery
  * so the bar is solid from page load.
+ *
+ * `unpinned` = renders in normal document flow instead of fixed. Use this
+ * on pages where a deeper sub-nav should become the sticky element as the
+ * user scrolls (e.g. instructor profile). The site header scrolls away
+ * normally and the page's own sub-nav takes over.
  */
 
 import React, { useEffect, useState } from "react";
@@ -17,6 +22,7 @@ import { useAuth } from "@/lib/contexts/auth-context";
 
 interface SiteHeaderProps {
   transparent?: boolean;
+  unpinned?: boolean;
 }
 
 const NAV_LINKS: Array<[string, string]> = [
@@ -26,26 +32,34 @@ const NAV_LINKS: Array<[string, string]> = [
   ["Become an instructor", "/raven/signup?type=instructor"],
 ];
 
-export function SiteHeader({ transparent = false }: SiteHeaderProps) {
+export function SiteHeader({
+  transparent = false,
+  unpinned = false,
+}: SiteHeaderProps) {
   const { user, loading: authLoading } = useAuth();
   const [avatarError, setAvatarError] = useState(false);
   const [scrolled, setScrolled] = useState(!transparent);
 
   useEffect(() => {
-    if (!transparent) return;
+    if (!transparent || unpinned) return;
     const onScroll = () => setScrolled(window.scrollY > 24);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, [transparent]);
+  }, [transparent, unpinned]);
 
   return (
     <header
       className={cn(
-        "fixed inset-x-0 top-0 z-50 transition-colors duration-300",
-        scrolled
-          ? "border-b border-white/10 bg-black/85 backdrop-blur-md"
-          : "bg-transparent",
+        "z-50 transition-colors duration-300",
+        unpinned
+          ? "relative bg-transparent"
+          : cn(
+              "fixed inset-x-0 top-0",
+              scrolled
+                ? "border-b border-white/10 bg-black/85 backdrop-blur-md"
+                : "bg-transparent",
+            ),
       )}
     >
       <div className="mx-auto flex h-16 max-w-[1400px] items-center justify-between px-4 sm:h-20 sm:px-6 lg:px-10">

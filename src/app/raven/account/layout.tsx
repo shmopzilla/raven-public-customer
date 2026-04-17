@@ -39,7 +39,7 @@ export default function AccountLayout({
   const pathname = usePathname();
 
   return (
-    <div className="flex min-h-screen flex-col bg-black text-white">
+    <div className="flex min-h-screen flex-col text-white">
       <SiteHeader />
       <HeaderSpacer />
 

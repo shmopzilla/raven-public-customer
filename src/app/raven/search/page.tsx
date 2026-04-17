@@ -8,13 +8,13 @@ import { InstructorProfileCard } from "@/components/raven/instructor-profile-car
 import { GlobalSearchModal } from "@/components/ui/global-search-modal";
 import { Instructor } from "@/lib/mock-data/instructors";
 import { useSearch } from "@/lib/contexts/search-context";
-import { SiteHeader, HeaderSpacer } from "@/components/raven/site-header";
+import { SiteHeader } from "@/components/raven/site-header";
 import { SiteFooter } from "@/components/raven/site-footer";
 
 // Loading fallback for Suspense
 function SearchLoading() {
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center">
       <div className="flex flex-col items-center gap-4">
         <div className="w-12 h-12 border-2 border-white/30 border-t-white rounded-full animate-spin" />
         <span className="font-['Archivo'] text-lg text-white">
@@ -278,7 +278,7 @@ function SearchResultsContent() {
   // Loading state
   if (isLoadingInitial) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           <span className="font-['Archivo'] text-lg text-white">
@@ -292,7 +292,7 @@ function SearchResultsContent() {
   // Error state
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-black px-6">
+      <div className="flex min-h-screen items-center justify-center px-6">
         <div className="max-w-md text-center">
           <h2 className="font-['PP_Editorial_New'] text-3xl text-white sm:text-4xl">
             Something went wrong.
@@ -310,18 +310,15 @@ function SearchResultsContent() {
   }
 
   return (
-    <div className="min-h-screen bg-black">
-      <SiteHeader />
-      <HeaderSpacer />
+    <div className="relative min-h-screen">
+      <SiteHeader transparent unpinned />
 
-      {/* Search summary bar — current criteria + edit affordance */}
-      <SearchSummaryBar
-        onEditClick={handleSearchClick}
-        resultCount={allInstructors.length}
-      />
+      {/* Search summary bar — current criteria + edit affordance
+          Becomes the sticky element once the unpinned SiteHeader scrolls away. */}
+      <SearchSummaryBar onEditClick={handleSearchClick} />
 
       {/* Search Results Grid */}
-      <div className="container mx-auto px-6 pt-10 pb-12">
+      <div className="mx-auto max-w-[1400px] px-4 pt-10 pb-12 sm:px-6 lg:px-10">
         <motion.div
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
           initial={{ opacity: 0 }}
@@ -413,10 +410,8 @@ export default function SearchResultsPage() {
 
 function SearchSummaryBar({
   onEditClick,
-  resultCount,
 }: {
   onEditClick: () => void;
-  resultCount: number;
 }) {
   const { searchCriteria: criteria } = useSearch();
   const adults = criteria?.participants?.adults ?? 0;
@@ -434,14 +429,9 @@ function SearchSummaryBar({
   const dateRange = formatDateRange();
 
   return (
-    <div className="border-b border-white/10 bg-black/85 backdrop-blur-sm">
+    <div className="sticky top-0 z-40 backdrop-blur-md">
       <div className="mx-auto flex max-w-[1400px] flex-col gap-4 px-4 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-10">
         <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-          <p className="font-['Archivo'] text-[11px] uppercase tracking-[0.2em] text-white/45">
-            {resultCount} {resultCount === 1 ? "match" : "matches"}
-          </p>
-          <span className="hidden text-white/20 sm:inline">·</span>
-
           {criteria?.location && (
             <SummaryPill
               icon={<MapPin className="h-3.5 w-3.5" strokeWidth={2} />}
@@ -492,7 +482,7 @@ function SummaryPill({
   children: React.ReactNode;
 }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 font-['Archivo'] text-xs text-white/85 sm:text-sm">
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/75 px-3 py-1.5 font-['Archivo'] text-xs text-white/90 backdrop-blur-md sm:text-sm">
       {icon}
       {children}
     </span>

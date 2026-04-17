@@ -7,7 +7,7 @@ import { Calendar } from '@/components/calendar/Calendar'
 import { DisciplinesList } from '@/components/calendar/DisciplinesList'
 import { ActionButton } from '@/components/calendar/ActionButton'
 import { InstructorAvatar } from '@/components/calendar/InstructorAvatar'
-import { InstructorCarousel } from '@/components/calendar/InstructorCarousel'
+import { InstructorPhotoGallery } from '@/components/raven/instructor-photo-gallery'
 import { GlobalSearchModal } from '@/components/ui/global-search-modal'
 import { SiteHeader } from '@/components/raven/site-header'
 import { SiteFooter } from '@/components/raven/site-footer'
@@ -58,6 +58,7 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
   const [selectedDaysCount, setSelectedDaysCount] = useState(0)
   const [selectionMode, setSelectionMode] = useState<'single' | 'range'>('range')
   const [isSlotModalOpen, setIsSlotModalOpen] = useState(false)
+  const [instructorDisciplines, setInstructorDisciplines] = useState<any[]>([])
   const [instructorResorts, setInstructorResorts] = useState<any[]>([])
   const [loadingResorts, setLoadingResorts] = useState(false)
   const [instructorImages, setInstructorImages] = useState<any[]>([])
@@ -196,6 +197,23 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
     fetchInstructorResorts()
   }, [instructorId])
 
+  // Fetch instructor disciplines
+  useEffect(() => {
+    async function fetchDisciplines() {
+      if (!instructorId) return
+      try {
+        const response = await fetch(`/api/calendar/disciplines?instructorId=${instructorId}`)
+        const result = await response.json()
+        if (response.ok && result.data) {
+          setInstructorDisciplines(result.data)
+        }
+      } catch {
+        setInstructorDisciplines([])
+      }
+    }
+    fetchDisciplines()
+  }, [instructorId])
+
   // Fetch instructor's configured slot types
   useEffect(() => {
     async function fetchConfiguredSlots() {
@@ -305,7 +323,7 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center justify-center gap-4 h-full">
           <div className="w-10 h-10 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           <span className="font-['Archivo'] text-sm text-[#d5d5d6]">Loading instructor profile...</span>
@@ -316,7 +334,7 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
 
   if (error && !instructor) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="text-white text-xl">Instructor not found</div>
           <Link
@@ -331,8 +349,8 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
   }
 
   return (
-    <div className="min-h-screen bg-black">
-      <SiteHeader transparent />
+    <div className="relative min-h-screen">
+      <SiteHeader transparent unpinned />
 
       {/* Hero Banner — identity block has different treatments per breakpoint:
           - Mobile: banner is a pure photograph, identity block sits BELOW the
@@ -343,6 +361,12 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
       <div
         ref={bannerRef}
         className="relative w-full h-[260px] sm:h-[340px] lg:h-[440px]"
+        style={{
+          WebkitMaskImage:
+            "linear-gradient(to bottom, black 0%, black 82%, transparent 100%)",
+          maskImage:
+            "linear-gradient(to bottom, black 0%, black 82%, transparent 100%)",
+        }}
       >
         {instructor?.banner_url ? (
           <div
@@ -352,8 +376,10 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-slate-800 via-slate-900 to-black" />
         )}
-        {/* Gradient fade into black at the bottom so the avatar overlap reads */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+        {/* Gradient darkens bottom of image for desktop identity block legibility.
+            The mask-image on the wrapper fades the whole thing into ambient at the
+            very bottom edge so there's no hard line against the page background. */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent" />
 
         {/* Desktop-only: overlaid identity at bottom-left of the banner */}
         {instructor && (
@@ -537,15 +563,6 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
               </Panel>
             )}
 
-            {/* Photos Carousel — heading baked into carousel */}
-            {instructorId && (
-              <Panel className="p-5 sm:p-6">
-                <InstructorCarousel
-                  images={instructorImages}
-                  className="w-full"
-                />
-              </Panel>
-            )}
           </div>
 
           {/* Right Column - Calendar Panel (Desktop only) */}
@@ -656,11 +673,11 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
         <div className="lg:hidden fixed inset-0 z-50">
           {/* Backdrop */}
           <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/60 backdrop-blur-md"
             onClick={() => setMobileSheetOpen(false)}
           />
           {/* Sheet */}
-          <div className="absolute bottom-0 left-0 right-0 max-h-[90vh] bg-[#0A0A0A] rounded-t-2xl border-t border-white/10 overflow-hidden flex flex-col animate-slide-up">
+          <div className="absolute bottom-0 left-0 right-0 max-h-[90vh] bg-[rgba(20,20,24,0.95)] rounded-t-3xl border-t border-[#3B3B40] overflow-hidden flex flex-col animate-slide-up backdrop-blur-[25px]">
             {/* Handle */}
             <div className="flex items-center justify-between px-4 py-3">
               <div className="w-8" />
@@ -732,7 +749,9 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
               instructorName: instructor.first_name,
               instructorAvatar: instructor.avatar_url || '',
               location: instructorResorts[0]?.resorts?.name || 'Unknown Location',
-              discipline: 'Ski Instruction',
+              discipline: instructorDisciplines[0]?.name || 'Ski Instruction',
+              resortId: instructorResorts[0]?.resorts?.id || 0,
+              disciplineId: instructorDisciplines[0]?.id || 0,
               selectedSlots,
               pricePerHour: instructorPricing.minHourlyRate
             })
@@ -740,6 +759,14 @@ export default function InstructorProfilePage({ params }: { params: Promise<{ id
             setToastMessage(`Added ${selectedSlots.length} ${selectedSlots.length === 1 ? 'session' : 'sessions'} to cart`)
             setShowToast(true)
           }}
+        />
+      )}
+
+      {/* Photos — full-width editorial gallery */}
+      {instructor && instructorImages.length > 0 && (
+        <InstructorPhotoGallery
+          images={instructorImages}
+          instructorName={instructor.first_name}
         />
       )}
 
@@ -966,7 +993,7 @@ function ProfileSubNav() {
   const totalParticipants = adults + children
 
   return (
-    <div className="border-b border-white/10 bg-black/85 backdrop-blur-sm">
+    <div className="sticky top-0 z-40 backdrop-blur-md">
       {/* Always a single row — on mobile the pills compact and context pills
           collapse to icon-only to fit on one line. */}
       <div className="mx-auto flex max-w-[1100px] items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4 lg:px-8">
@@ -1024,7 +1051,7 @@ function SubNavPill({
   children: React.ReactNode
 }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 font-['Archivo'] text-xs text-white/80 sm:text-sm">
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/75 px-3 py-1.5 font-['Archivo'] text-xs text-white/90 backdrop-blur-md sm:text-sm">
       {icon}
       {children}
     </span>
@@ -1050,21 +1077,21 @@ const PLACEHOLDER_REVIEWS = [
     location: 'Cotswolds · Family booking',
     date: 'Booked Feb 2026',
     rating: 5,
-    body: 'My kids went from shy beginners to confidently riding by day three. The trainer was incredible — calm with the kids and clear with feedback for me too.',
+    body: 'My kids went from shy beginners to confidently riding by day three. The trainer was incredible. Calm with the kids, and clear with feedback for me too.',
   },
   {
     name: 'Lucas M.',
     location: 'Tarifa · Kitesurf',
     date: 'Booked Jan 2026',
     rating: 4,
-    body: 'Rapid progression and zero faff. The lessons were structured perfectly — body drag, water start, riding upwind in three sessions.',
+    body: 'Rapid progression and zero faff. The lessons were structured perfectly. Body drag, water start, riding upwind in three sessions.',
   },
   {
     name: 'Sofia D.',
     location: 'Chamonix · Off-piste',
     date: 'Booked Jan 2026',
     rating: 5,
-    body: 'I’d been hesitant to leave the groomers — left feeling like I could ski anywhere. Outstanding awareness of conditions and great rapport.',
+    body: 'I’d been hesitant to leave the groomers, but left feeling like I could ski anywhere. Outstanding awareness of conditions and great rapport.',
   },
 ]
 
@@ -1074,7 +1101,7 @@ function ReviewsSection({ instructorName }: { instructorName: string }) {
     PLACEHOLDER_REVIEWS.reduce((sum, r) => sum + r.rating, 0) / totalReviews
 
   return (
-    <section className="bg-black border-t border-white/10">
+    <section className="border-t border-white/10">
       <div className="mx-auto max-w-[1100px] px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
         {/* Header row */}
         <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">

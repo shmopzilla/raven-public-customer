@@ -34,7 +34,7 @@ const playfairDisplay = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Raven — Book Sport Instructors",
+  title: "Raven | Book Sport Instructors",
   description: "Connect with handpicked ski and snowboard instructors at the world's best resorts.",
 };
 
@@ -46,7 +46,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${archivo.variable} ${inter.variable} ${playfairDisplay.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${archivo.variable} ${inter.variable} ${playfairDisplay.variable} bg-black antialiased`}
       >
         <MotionProvider>
           <SearchProvider>

@@ -335,7 +335,7 @@ export function Calendar({
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -10, scale: 0.95 }}
                   transition={{ duration: 0.2 }}
-                  className="absolute top-full mt-2 left-0 bg-[#1a1a1f] border border-white/20 rounded-xl shadow-2xl p-4 z-50 min-w-[320px]"
+                  className="absolute top-full mt-2 left-0 bg-[rgba(20,20,24,0.95)] border border-[#3B3B40] rounded-2xl shadow-2xl p-4 z-50 min-w-[320px] backdrop-blur-[25px]"
                   onClick={(e) => e.stopPropagation()}
                 >
                   {/* Year Selector */}

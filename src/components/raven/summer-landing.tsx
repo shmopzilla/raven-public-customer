@@ -129,7 +129,7 @@ const STEPS: Array<{
   {
     n: "03",
     title: "Book",
-    body: "Secure your sessions in seconds. Full schedule managed from your account — no back-and-forth.",
+    body: "Secure your sessions in seconds. Full schedule managed from your account, no back-and-forth.",
     icon: CalendarCheck,
     hint: "Instant confirmation",
   },
@@ -144,7 +144,7 @@ const TESTIMONIALS = [
   },
   {
     quote:
-      "My kids went from shy beginners to cantering on day three. The trainer was incredible — found her right here.",
+      "My kids went from shy beginners to cantering on day three. The trainer was incredible. Found her right here.",
     name: "James R.",
     role: "Booked horse riding · UK",
   },
@@ -308,9 +308,9 @@ function Hero({ onSearchClick }: { onSearchClick: () => void }) {
             transition={{ duration: 0.6, delay: 0.15 }}
             className="mt-6 max-w-xl font-['Archivo'] text-base leading-7 text-white/75 sm:text-lg"
           >
-            Raven is the marketplace for one-to-one coaching — golf, horse
-            riding, kitesurfing, padel and more. Hand-picked instructors,
-            transparent pricing, instant booking.
+            Raven is the marketplace for one-to-one coaching across golf,
+            horse riding, kitesurfing, padel, and more. Hand-picked
+            instructors, transparent pricing, instant booking.
           </motion.p>
 
           <div className="mt-8 sm:mt-10 lg:mt-12">
@@ -780,7 +780,7 @@ function InstructorCTA() {
           </h2>
           <p className="mt-5 font-['Archivo'] text-base leading-7 text-white/70">
             Set your own rates. Keep your own clients. We handle the
-            scheduling, payments, and marketing — so you can focus on what you
+            scheduling, payments, and marketing, so you can focus on what you
             do best.
           </p>
           <ul className="mt-6 space-y-2">

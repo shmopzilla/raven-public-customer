@@ -25,6 +25,8 @@ export interface CartItem {
   instructorAvatar: string
   location: string
   discipline: string
+  resortId: number              // Resort ID for booking API
+  disciplineId: number          // Discipline ID for booking API
   selectedSlots: SelectedSlot[] // Array of time slots selected across date range
   totalHours: number            // Sum of all slot hours
   totalPrice: number            // Sum of all slot prices

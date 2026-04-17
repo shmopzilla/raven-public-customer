@@ -113,7 +113,7 @@ export default function BookingsPage() {
             No bookings yet.
           </p>
           <p className="mt-2 max-w-sm mx-auto font-['Archivo'] text-sm text-white/55">
-            Browse instructors and book a session — your requests will appear
+            Browse instructors and book a session. Your requests will appear
             here.
           </p>
           <div className="mt-6">
@@ -158,7 +158,7 @@ export default function BookingsPage() {
                           {instructor?.first_name} {instructor?.last_name}
                         </h3>
                         <p className="mt-0.5 font-['Archivo'] text-sm text-white/65">
-                          {formatDate(booking.start_date)} —{" "}
+                          {formatDate(booking.start_date)} to{" "}
                           {formatDate(booking.end_date)}
                         </p>
                         <p className="mt-1 truncate font-['Archivo'] text-[11px] uppercase tracking-[0.16em] text-white/40">

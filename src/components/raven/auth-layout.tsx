@@ -31,7 +31,7 @@ const DEFAULT_IMAGE =
   "https://images.pexels.com/photos/1604869/pexels-photo-1604869.jpeg?auto=compress&cs=tinysrgb&w=1600";
 const DEFAULT_QUOTE =
   "The kitesurfing instructor I matched with in Tarifa was next level. Rapid progression, zero faff.";
-const DEFAULT_ATTR = "Lucas M. — booked via Raven";
+const DEFAULT_ATTR = "Lucas M., booked via Raven";
 
 export function AuthLayout({
   imageUrl = DEFAULT_IMAGE,

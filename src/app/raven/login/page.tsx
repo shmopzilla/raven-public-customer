@@ -47,8 +47,8 @@ function LoginForm() {
   return (
     <AuthLayout
       imageUrl="/images/sports/horseriding.png"
-      quote="My kids went from shy beginners to cantering on day three. The trainer was incredible — found her right here."
-      quoteAttribution="James R. — booked horse riding"
+      quote="My kids went from shy beginners to cantering on day three. The trainer was incredible. Found her right here."
+      quoteAttribution="James R., booked horse riding"
     >
       <div className="space-y-2">
         <p className="font-['Archivo'] text-[11px] uppercase tracking-[0.22em] text-white/55">
@@ -58,7 +58,7 @@ function LoginForm() {
           Sign in to <span className="italic">Raven</span>.
         </h1>
         <p className="pt-1 font-['Archivo'] text-sm text-white/60">
-          Pick up where you left off — bookings, messages and all.
+          Pick up where you left off. Bookings, messages, and all.
         </p>
       </div>
 

@@ -157,7 +157,7 @@ export function StickySearchHeader({ onSearchClick }: StickySearchHeaderProps = 
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -8, scale: 0.95 }}
                   transition={{ duration: 0.15 }}
-                  className="absolute right-0 top-full mt-2 w-48 bg-[#1a1a1f] border border-white/15 rounded-xl shadow-2xl overflow-hidden z-50"
+                  className="absolute right-0 top-full mt-2 w-48 bg-[rgba(20,20,24,0.95)] border border-[#3B3B40] rounded-2xl shadow-2xl overflow-hidden z-50 backdrop-blur-[25px]"
                 >
                   <Link
                     href="/raven/account"

@@ -80,7 +80,7 @@ export default function DetailsPage() {
       <SectionHeading
         eyebrow="Personal"
         title="Your details."
-        description="Keep this up to date — instructors see your name on bookings."
+        description="Keep this up to date. Instructors see your name on bookings."
       />
 
       <Panel className="p-6 sm:p-8">

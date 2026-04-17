@@ -29,7 +29,7 @@ export default function CartPage() {
   const totalHours = items.reduce((sum, item) => sum + item.totalHours, 0);
 
   return (
-    <div className="flex min-h-screen flex-col bg-black text-white">
+    <div className="flex min-h-screen flex-col text-white">
       <SiteHeader />
       <HeaderSpacer />
 
@@ -72,7 +72,7 @@ export default function CartPage() {
               Your cart is empty.
             </h2>
             <p className="mx-auto mt-3 max-w-md font-['Archivo'] text-sm text-white/55 sm:text-base">
-              Find a coach and pick the slots that work for you — we&apos;ll
+              Find a coach and pick the slots that work for you. We&apos;ll
               line them up here.
             </p>
             <div className="mt-8">

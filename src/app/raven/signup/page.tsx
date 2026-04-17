@@ -95,7 +95,7 @@ export default function SignUpPage() {
     <AuthLayout
       imageUrl="/images/sports/golf.png"
       quote="Booked a week of padel coaching in Mallorca in under five minutes. Genuinely felt like a private concierge."
-      quoteAttribution="Anya K. — Raven member"
+      quoteAttribution="Anya K., Raven member"
     >
       <div className="space-y-2">
         <p className="font-['Archivo'] text-[11px] uppercase tracking-[0.22em] text-white/55">
@@ -114,8 +114,8 @@ export default function SignUpPage() {
         </h1>
         <p className="pt-1 font-['Archivo'] text-sm text-white/60">
           {step === 1
-            ? "Bookings, messages, and instructor matching — all in one place."
-            : "Optional — gives instructors helpful context before your first session."}
+            ? "Bookings, messages, and instructor matching, all in one place."
+            : "Optional. Gives instructors helpful context before your first session."}
         </p>
       </div>
 

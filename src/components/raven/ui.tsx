@@ -248,14 +248,16 @@ interface PanelProps {
   hoverable?: boolean;
 }
 
-/** Standard glass-on-black panel used across forms, cards, lists. */
+/** Standard glass-on-black panel used across forms, cards, lists.
+ * Theme mirrors the search modal's inner section treatment so every
+ * surface across modals, drawers, and page panels feels unified. */
 export function Panel({ className, children, hoverable }: PanelProps) {
   return (
     <div
       className={cn(
-        "rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.05] to-white/[0.015] backdrop-blur-sm",
+        "rounded-2xl border border-[#3B3B40] bg-white/[0.04] backdrop-blur-sm",
         hoverable &&
-          "transition-colors hover:border-white/25 hover:from-white/[0.08]",
+          "transition-colors hover:border-white/25 hover:bg-white/[0.07]",
         className,
       )}
     >
