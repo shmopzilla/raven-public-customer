@@ -281,7 +281,7 @@ export function SlotSelectionModal({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
         ref={modalRef}
         role="dialog"
         aria-modal="true"
@@ -294,23 +294,23 @@ export function SlotSelectionModal({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ duration: 0.3, ease: "easeOut" }}
-          className="relative w-full max-w-4xl max-h-[90vh] bg-[#1a1a1f] border border-white/20 rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+          className="relative w-full max-w-4xl max-h-[90vh] bg-[rgba(20,20,24,0.95)] border border-[#3B3B40] rounded-3xl shadow-2xl overflow-hidden flex flex-col backdrop-blur-[25px]"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="sticky top-0 bg-[#1a1a1f]/95 backdrop-blur-md border-b border-white/10 p-6 z-10">
+          <div className="sticky top-0 border-b border-[#3B3B40] p-6 z-10">
             <div className="flex items-center justify-between">
               <div>
-                <h2 id="slot-modal-title" className="font-['PP_Editorial_New'] text-2xl text-white mb-1">
-                  Select Your Sessions
-                </h2>
-                <p className="font-['Archivo'] text-sm text-[#d5d5d6]">
-                  with {instructorName}
+                <p className="font-['Archivo'] text-[11px] uppercase tracking-[0.22em] text-white/50">
+                  Book sessions
                 </p>
+                <h2 id="slot-modal-title" className="mt-1 font-['PP_Editorial_New'] text-2xl text-white sm:text-3xl">
+                  with {instructorName}
+                </h2>
               </div>
               <button
                 onClick={onClose}
-                className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/20 transition-colors"
+                className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-colors"
                 aria-label="Close"
               >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -436,12 +436,12 @@ export function SlotSelectionModal({
           </div>
 
           {/* Footer - Sticky */}
-          <div className="sticky bottom-0 bg-[#1a1a1f]/95 backdrop-blur-md border-t border-white/10 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="font-['Archivo'] text-sm text-[#d5d5d6]">
+          <div className="sticky bottom-0 border-t border-[#3B3B40] p-6">
+            <div className="flex items-baseline justify-between mb-4">
+              <div className="font-['Archivo'] text-sm text-white/60">
                 {totals.itemCount} slot{totals.itemCount !== 1 ? 's' : ''} selected · {totals.totalHours} hours
               </div>
-              <div className="font-['Archivo'] text-2xl font-bold text-white">
+              <div className="font-['PP_Editorial_New'] text-2xl text-white sm:text-3xl">
                 €{totals.totalPrice}
               </div>
             </div>

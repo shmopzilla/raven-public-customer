@@ -532,7 +532,7 @@ export const SearchModal = ({
 
           {/* Header */}
           <div className="flex items-center justify-between mb-2">
-            <h2 id="search-modal-title" className="font-['Archivo'] font-semibold text-white text-xl sm:text-2xl">
+            <h2 id="search-modal-title" className="font-['PP_Editorial_New'] text-white text-2xl sm:text-3xl">
               Find your instructor
             </h2>
             <motion.button

@@ -102,7 +102,7 @@ export default function SecurityPage() {
         </h2>
         <p className="mt-1 font-['Archivo'] text-sm text-white/55">
           Current:{" "}
-          <span className="break-all text-white">{user?.email || "—"}</span>
+          <span className="break-all text-white">{user?.email || "Not set"}</span>
         </p>
 
         <form

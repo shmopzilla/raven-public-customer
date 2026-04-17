@@ -85,7 +85,7 @@ export default function PaymentsPage() {
       <SectionHeading
         eyebrow="Invoices"
         title="Payment history."
-        description="Every payment, refund and outstanding balance — all in one place."
+        description="Every payment, refund, and outstanding balance, all in one place."
       />
 
       {error && <Banner tone="error">{error}</Banner>}
@@ -125,12 +125,12 @@ export default function PaymentsPage() {
                       </h3>
                       {payment.booking && (
                         <p className="mt-0.5 font-['Archivo'] text-sm text-white/65">
-                          {formatDate(payment.booking.start_date)} —{" "}
+                          {formatDate(payment.booking.start_date)} to{" "}
                           {formatDate(payment.booking.end_date)}
                         </p>
                       )}
                       <p className="mt-1 truncate font-['Archivo'] text-[11px] uppercase tracking-[0.16em] text-white/40">
-                        Ref · {payment.booking?.reference || "—"} ·{" "}
+                        Ref · {payment.booking?.reference || "Pending"} ·{" "}
                         {payment.payment_type}
                         {payment.is_deposit && " · deposit"}
                       </p>

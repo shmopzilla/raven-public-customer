@@ -43,7 +43,7 @@ export function CartPanel({ isOpen, onClose }: CartPanelProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm"
+            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md"
             onClick={onClose}
           />
 
@@ -53,7 +53,7 @@ export function CartPanel({ isOpen, onClose }: CartPanelProps) {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="fixed right-0 top-0 bottom-0 z-50 flex w-full max-w-md flex-col border-l border-white/10 bg-black shadow-2xl"
+            className="fixed right-0 top-0 bottom-0 z-50 flex w-full max-w-md flex-col border-l border-[#3B3B40] bg-[rgba(20,20,24,0.95)] shadow-2xl backdrop-blur-[25px]"
             ref={modalRef}
             role="dialog"
             aria-modal="true"
@@ -61,20 +61,20 @@ export function CartPanel({ isOpen, onClose }: CartPanelProps) {
             onKeyDown={handleKeyDown}
           >
             {/* Header */}
-            <div className="sticky top-0 z-10 border-b border-white/10 bg-black/95 backdrop-blur-md p-6">
+            <div className="sticky top-0 z-10 border-b border-[#3B3B40] p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-['Archivo'] text-[11px] uppercase tracking-[0.22em] text-white/50">
                     Your cart
                   </p>
-                  <h2 id="cart-panel-title" className="mt-1 font-['PP_Editorial_New'] text-3xl text-white">
+                  <h2 id="cart-panel-title" className="mt-1 font-['PP_Editorial_New'] text-2xl text-white sm:text-3xl">
                     {itemCount} {itemCount === 1 ? 'booking' : 'bookings'}
                   </h2>
                 </div>
                 <button
                   onClick={onClose}
                   aria-label="Close cart"
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/[0.04] text-white/70 transition-colors hover:bg-white/[0.1] hover:text-white"
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white/70 transition-colors hover:bg-white/20 hover:text-white"
                 >
                   <X className="h-4 w-4" strokeWidth={2.2} />
                 </button>
@@ -85,16 +85,16 @@ export function CartPanel({ isOpen, onClose }: CartPanelProps) {
             <div className="flex-1 overflow-y-auto p-6">
               {items.length === 0 ? (
                 <div className="flex h-full flex-col items-center justify-center text-center">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-full border border-white/15 bg-white/[0.04]">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full border border-[#3B3B40] bg-white/[0.04]">
                     <ShoppingBag
                       className="h-5 w-5 text-white/60"
                       strokeWidth={1.6}
                     />
                   </div>
-                  <h3 className="mt-5 font-['PP_Editorial_New'] text-3xl text-white">
+                  <h3 className="mt-5 font-['PP_Editorial_New'] text-2xl text-white sm:text-3xl">
                     Empty for now.
                   </h3>
-                  <p className="mt-2 max-w-xs font-['Archivo'] text-sm text-white/55">
+                  <p className="mt-2 max-w-xs font-['Archivo'] text-sm text-white/60">
                     Add a session to any instructor and they&apos;ll line up
                     here.
                   </p>
@@ -125,12 +125,12 @@ export function CartPanel({ isOpen, onClose }: CartPanelProps) {
 
             {/* Footer */}
             {items.length > 0 && (
-              <div className="sticky bottom-0 border-t border-white/10 bg-black/95 p-6 backdrop-blur-md">
+              <div className="sticky bottom-0 border-t border-[#3B3B40] p-6">
                 <div className="mb-5 flex items-baseline justify-between">
-                  <span className="font-['Archivo'] text-[11px] uppercase tracking-[0.22em] text-white/55">
+                  <span className="font-['Archivo'] text-[11px] uppercase tracking-[0.22em] text-white/50">
                     Subtotal
                   </span>
-                  <span className="font-['PP_Editorial_New'] text-3xl text-white">
+                  <span className="font-['PP_Editorial_New'] text-2xl text-white sm:text-3xl">
                     €{total}
                   </span>
                 </div>

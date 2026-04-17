@@ -9,7 +9,7 @@ import Link from "next/link";
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-white/10 bg-black">
+    <footer className="border-t border-white/10">
       <div className="mx-auto max-w-[1400px] px-4 py-16 sm:px-6 sm:py-20 lg:px-10">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr]">
           <div>
@@ -21,8 +21,8 @@ export function SiteFooter() {
               className="block h-8 w-[128px] object-contain object-left"
             />
             <p className="mt-4 max-w-xs font-['Archivo'] text-sm text-white/60">
-              One-to-one coaching, booked in seconds. Sport, location, dates —
-              we&apos;ll do the rest.
+              One-to-one coaching, booked in seconds. Tell us the sport,
+              location, and dates. We&apos;ll do the rest.
             </p>
           </div>
           <FooterCol
