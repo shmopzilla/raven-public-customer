@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "motion/react"
 import { useCartStore } from "@/lib/stores/cart-store"
 import { cn } from "@/lib/utils"
@@ -10,9 +11,15 @@ interface CartBadgeProps {
   className?: string
 }
 
+// Routes that render their own mobile sticky bottom bar. On those routes
+// the cart badge is nudged up on mobile so it doesn't sit on top of the
+// page's primary CTA. Desktop is unaffected.
+const ROUTES_WITH_MOBILE_BOTTOM_BAR = ["/raven/profile/"]
+
 export function CartBadge({ onClick, className }: CartBadgeProps) {
   const [isMounted, setIsMounted] = useState(false)
   const itemCount = useCartStore((state) => state.getItemCount())
+  const pathname = usePathname()
 
   // Prevent hydration errors by only rendering after client mount
   useEffect(() => {
@@ -20,6 +27,14 @@ export function CartBadge({ onClick, className }: CartBadgeProps) {
   }, [])
 
   if (!isMounted || itemCount === 0) return null
+
+  const hasMobileBottomBar = ROUTES_WITH_MOBILE_BOTTOM_BAR.some((prefix) =>
+    pathname?.startsWith(prefix),
+  )
+
+  const positionClass = hasMobileBottomBar
+    ? "fixed bottom-24 right-6 z-50 lg:bottom-8 lg:right-8"
+    : "fixed bottom-8 right-8 z-50"
 
   return (
     <motion.button
@@ -29,7 +44,7 @@ export function CartBadge({ onClick, className }: CartBadgeProps) {
       transition={{ type: "spring", stiffness: 300, damping: 20 }}
       onClick={onClick}
       className={cn(
-        "fixed bottom-8 right-8 z-50",
+        positionClass,
         "flex items-center gap-3 px-6 py-4 rounded-full",
         "bg-white text-black shadow-2xl",
         "hover:bg-white/90 transition-colors",

@@ -430,8 +430,10 @@ function SearchSummaryBar({
 
   return (
     <div className="sticky top-0 z-40 backdrop-blur-md">
-      <div className="mx-auto flex max-w-[1400px] flex-col gap-4 px-4 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-10">
-        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+      <div className="mx-auto flex max-w-[1400px] items-center gap-3 px-4 py-3 sm:gap-4 sm:px-6 sm:py-4 lg:px-10">
+        {/* Chip row — single line that scrolls horizontally on narrow screens
+            so the toolbar height stays tight and the Edit button stays visible. */}
+        <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto scrollbar-hide">
           {criteria?.location && (
             <SummaryPill
               icon={<MapPin className="h-3.5 w-3.5" strokeWidth={2} />}
@@ -461,13 +463,15 @@ function SearchSummaryBar({
           )}
         </div>
 
+        {/* Edit search — icon-only on mobile, full label on sm+ */}
         <button
           type="button"
           onClick={onEditClick}
-          className="inline-flex shrink-0 items-center gap-2 rounded-full bg-white px-5 py-2.5 font-['Archivo'] text-sm font-semibold text-black transition-transform hover:scale-[1.02]"
+          aria-label="Edit search"
+          className="inline-flex shrink-0 items-center gap-2 rounded-full bg-white px-3 py-2 font-['Archivo'] text-sm font-semibold text-black transition-transform hover:scale-[1.02] sm:px-5 sm:py-2.5"
         >
           <Search className="h-4 w-4" strokeWidth={2.4} />
-          Edit search
+          <span className="hidden sm:inline">Edit search</span>
         </button>
       </div>
     </div>
