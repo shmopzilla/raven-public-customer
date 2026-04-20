@@ -36,24 +36,31 @@ export function CartPanel({ isOpen, onClose }: CartPanelProps) {
   return (
     <AnimatePresence>
       {isOpen && (
-        <>
+        <motion.div
+          key="cart-drawer"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-50"
+        >
           {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md"
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-md"
             onClick={onClose}
           />
 
-          {/* Panel */}
+          {/* Panel — slides in from the right. Heavy backdrop-blur is
+              deliberately NOT applied to the sliding element (iOS Safari
+              has bugs where transform + backdrop-filter creates stuck
+              animations). The opaque rgba bg handles content separation. */}
           <motion.div
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
-            transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="fixed right-0 top-0 bottom-0 z-50 flex w-full max-w-md flex-col border-l border-[#3B3B40] bg-[rgba(20,20,24,0.95)] shadow-2xl backdrop-blur-[25px]"
+            transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
+            style={{ willChange: "transform" }}
+            className="absolute right-0 top-0 bottom-0 flex w-full max-w-md flex-col border-l border-[#3B3B40] bg-[rgba(20,20,24,0.98)] shadow-2xl"
             ref={modalRef}
             role="dialog"
             aria-modal="true"
@@ -152,7 +159,7 @@ export function CartPanel({ isOpen, onClose }: CartPanelProps) {
               </div>
             )}
           </motion.div>
-        </>
+        </motion.div>
       )}
     </AnimatePresence>
   )
